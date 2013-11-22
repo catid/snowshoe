@@ -1,0 +1,40 @@
+p := 2^80 - 93;
+K<i> := GF(p^2);
+
+// But this is not the right field.  i^2 != 2, it's -1 with this setup...
+
+s := 4556;
+
+C := 9 * (1 + s * i);
+
+wa := 2 * (C - 24);
+wb := -8 * (C - 16);
+
+E := EllipticCurve([K | wa, wb]);
+
+time FactoredOrder(E);
+
+r := 9649340769776349618630915417390658987545854546732831752292126092801132327717;
+q := 3 * r;
+
+P := Random(E);
+
+x := P[1];
+y := P[2];
+
+ex := -x^p / (2+i*0) - C^p/(x^p - 4);
+ey := y^p / SquareRoot(-2+i*0) * (-1 / (2+i*0) + C^p / ((x^p - 4)^2));
+
+print "endo = ";
+print ex;
+print ey;
+
+print "sqrt(2) = ";
+print Modsqrt(2, q) * P;
+print "sqrt(-2) = ";
+print Modsqrt(q-2, q) * P;
+print "-sqrt(2) = ";
+print (q - Modsqrt(2, q)) * P;
+print "-sqrt(-2) = ";
+print (q - Modsqrt(q-2, q)) * P;
+

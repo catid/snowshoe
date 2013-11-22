@@ -1,0 +1,60 @@
+p := 2^127-1;
+K<i> := GF(p^2);
+
+u := 2 + i;
+a := -1;
+d := 109;
+
+x := 0*i + 15;
+y := SquareRoot((u * x^2 + 1) / (1 - d * u * x^2));
+
+wx := 68985359527028636873539608271459718931*i + 119563271493748934302613455993671912329;
+
+print "generator point =";
+print x;
+print y;
+
+print "Y point in hex =";
+print 146903287558952189405103841439676207536:Hex;
+print 160056629477888271617002104343968617643:Hex;
+
+t := x * y;
+print "generator point T =";
+print t;
+print "T in hex=";
+print 161855111858652060296309977004533844316:Hex;
+print 18872873721754830011409313137151784467:Hex;
+
+print "Verify point is on curve (should be 0):";
+t := u * x^2 - y^2 + 1 + d * u * x^2 * y^2;
+print t;
+
+print "endomorphism of generator point =";
+ex := x^p * wx;
+ey := y^p;
+
+print ex;
+print ey;
+
+print "Point X in hex=";
+print 13933292142614162712970301776591149603:Hex;
+print 92037237801541697222328802746237627665:Hex;
+
+print "Point Y in hex=";
+print 23237895901517042326583462276207898191:Hex;
+print 160056629477888271617002104343968617643:Hex;
+
+print "Point T=";
+et := ex * ey;
+
+print et;
+
+print "Point T in hex=";
+print 167305899711943876648223290265568923481:Hex;
+print 144813252756642254966966040761614638755:Hex;
+
+print "Verify endomorphism of point is on curve (should be 0):";
+et := u * ex^2 - ey^2 + 1 + d * u * ex^2 * ey^2;
+print et;
+
+

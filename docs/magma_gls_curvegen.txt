@@ -1,0 +1,69 @@
+p := 2^127 - 1;
+K<i> := GF(p^2);
+
+ds := 10;
+
+print ds;
+
+pwr := 2 ^ ds;
+
+h := pwr*i;
+
+hi := (h^-1);
+u := hi^2;
+a := -u;
+B := (2 + SquareRoot(4 + 48 * a)) / (2 * a);
+C := B * B / 2;
+s := (C / 9 - 1) / i;
+
+// Validate:
+
+C1 := 9 * (1 + s * i);
+
+print C;
+print C1;
+
+B1 := SquareRoot(2 * C);
+
+print B;
+print B1;
+
+a1 := (12 / B1 + 2) / B1;
+
+print a;
+print a1;
+
+if a1 eq a then
+	print "Checks out.";
+else
+	print "MAFF DOES NOT WORK";
+end if;
+
+wa := -6 * (5 - 3 * s * i);
+wb := 8 * (7 - 9 * s * i);
+
+E := EllipticCurve([K | wa, wb]);
+
+time EP := Order(E);
+
+if EP mod 8 eq 0 then
+   TEST := IsPrime(EP div 8);
+else
+   if EP mod 4 eq 0 then
+      TEST := IsPrime(EP div 4);
+   else
+      if EP mod 2 eq 0 then
+           TEST := IsPrime(EP div 2);
+      else
+           TEST := IsPrime(EP);
+      end if;
+   end if;
+end if;
+
+print h;
+if TEST eq true then
+   print "TWISTED EDWARDS CURVE IS GOOD";
+else
+   print "TWISTED EDWARDS CURVE SUCKS";
+end if;
+

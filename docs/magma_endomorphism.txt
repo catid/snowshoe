@@ -1,0 +1,35 @@
+p := 2^127-1;
+K<i> := GF(p^2);
+
+u := 2 + i;
+aa := -u;
+dd := 109*u;
+
+A2 := 2 * (aa + dd) / (aa - dd);
+A4 := 4 / (aa - dd);
+A := 1 / (A4 * A4) - A2 * A2 / (3 * A4 * A4);
+B := -A2 * A2 * A2 / (27 * A4 * A4 * A4) - A2 * A / (3 * A4);
+
+E := EllipticCurve([K | A, B]);
+
+G := Random(E);
+
+print "Random point=";
+print G;
+
+q := 7237005577332262213973186563042994240709941236554960197665975021634500559269;
+h := 4;
+lambda := Modsqrt(q-1, q);
+
+P := G * lambda;
+
+print "Lambda * Point=";
+print P;
+
+wx := u / u^p;
+wy := SquareRoot(u^3 / u^(3*p));
+
+print "Endo(Point)=";
+print G[1]^p * wx;
+print G[2]^p * wy;
+

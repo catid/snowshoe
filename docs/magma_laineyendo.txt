@@ -1,0 +1,57 @@
+p := 2^127 - 1;
+K<i> := GF(p^2);
+
+ds := 5;
+di := 38;
+
+h := ((2^(64 + ds)) + (2^(64 + di)))*i;
+
+hi := (h^-1);
+u := hi^2;
+a := -u;
+B := (2 + SquareRoot(4 + 48 * a)) / (2 * a);
+C := B * B / 2;
+s := (C / 9 - 1) / i;
+
+// Validate:
+C1 := 9 * (1 + s * i);
+B1 := SquareRoot(2 * C);
+a1 := (12 / B1 + 2) / B1;
+// Note a1 != a if guess +/- in B step wrong.  This is fine because we end up
+// on the same curve either way.
+
+//wa := -6 * (5 - 3 * s * i);
+//wb := 8 * (7 - 9 * s * i);
+
+wa := 2 * (C - 24);
+wb := -8 * (C - 16);
+
+E := EllipticCurve([K | wa, wb]);
+
+//time FactoredOrder(E);
+// [ <2, 3>, <3618502788666131106986593281521497120371237083410887286281128245103871805687, 1> ]
+
+q := 3618502788666131106986593281521497120371237083410887286281128245103871805687;
+r := 8 * q;
+
+P := Random(E);
+
+x := P[1];
+y := P[2];
+
+print P;
+
+ex := -x^p / (2+i*0) - C^p/(x^p - 4);
+ey := y^p / SquareRoot(-2+i*0) * (-1 / (2+i*0) + C^p / ((x^p - 4)^2));
+
+print ex;
+print ey;
+
+lambda := Modsqrt(2, q);
+
+print lambda;
+
+Q := lambda * P;
+
+print Q;
+

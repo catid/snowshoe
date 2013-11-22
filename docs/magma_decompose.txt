@@ -1,0 +1,115 @@
+p := 2^127-1;
+t := 14241963124919847500;
+q := 7237005577332262213973186563042994240709941236554960197665975021634500559269;
+r := 4 * q;
+l := 6675262090232833354261459078081456826396694204445414604517147996175437985167;
+
+//A := (p - 1) div 2;
+B := 0x62D2CF00A287A526;
+
+//x1 := A;
+//y1 := -B;
+//x2 := -B;
+//y2 := -A;
+
+//print "basis =";
+//print x1;
+//print y1;
+//print x2;
+//print y2;
+
+for i := 1 to 10000000 by 1 do
+
+k := Random(q);
+
+//print "k = ";
+//print k;
+
+//a1 := A * k;
+// Multiplication by A performed by shifting:
+a1 := k * 2^126 - k;
+a2 := B * k;
+
+if a1 lt 0 then
+print "FAILURE";
+end if;
+
+if a2 lt 0 then
+print "FAILURE";
+end if;
+
+//print "a1, a2 = ";
+//print a1;
+//print a2;
+
+//qround := q div 2;
+qround := 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD3130A0A606E43E9E74DB471D84F00D3;
+z1 := (a1 + qround) div q;
+z2 := (a2 + qround) div q;
+
+//print "z1, z2 = ";
+//print z1;
+//print z2;
+
+if z1 lt 0 then
+print "FAILURE";
+end if;
+
+if z1 ge (2^128) then
+print "FAILURE";
+end if;
+
+if z2 lt 0 then
+print "FAILURE";
+end if;
+
+if z2 ge (2^64) then
+print "FAILURE";
+end if;
+
+//k1 := k - z1 * A - z2 * B;
+//k2 := z1 * B - z2 * A;
+k1 := k - (z1 * 2^126 - z1) - z2 * B;
+k2 := z1 * B - (z2 * 2^126 - z2);
+
+if k1 ge (2^126) then
+print "FAILURE";
+end if;
+
+if k2 ge (2^126) then
+print "FAILURE";
+end if;
+
+if k1 le (-2^126) then
+print "FAILURE";
+end if;
+
+if k2 le (-2^126) then
+print "FAILURE";
+end if;
+
+//print "k1, k2 = ";
+//print k1;
+//print k2;
+
+kp := k1 + k2 * l;
+
+kn := (kp mod q);
+
+//print "k' =";
+//print kn;
+//print k;
+
+//check := k - kn;
+//print "check =";
+//print check;
+
+if k eq kn then
+else
+    print "FAILURE";
+end if;
+
+end for;
+
+print "DONE";
+

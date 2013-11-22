@@ -1,0 +1,29 @@
+p := 2^127 - 1;
+K<i> := GF(p^2);
+
+
+s := 1;
+
+wa := -6 * (5 - 3 * s * i);
+wb := 8 * (7 - 9 * s * i);
+
+E := EllipticCurve([K | wa, wb]);
+
+time FactoredOrder(E);
+
+
+C := 9 * (1 + s * i);
+
+B := SquareRoot(2 * C);
+
+a := (12 / B + 2) / B;
+
+print a;
+
+a := i;
+
+B := 2 + SquareRoot(4 - 48 * a) / (2 * a);
+
+a := (12 / B + 2) / B;
+
+print a;
