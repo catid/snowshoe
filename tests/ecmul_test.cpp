@@ -6,6 +6,11 @@ using namespace std;
 // Math library
 #include "../snowshoe/ecmul.cpp"
 
+// TODO:
+// ec_gen_table_4
+// ec_recode_scalars_4
+// ec_table_select_4
+
 
 static void fe_print(const ufe &x) {
 	cout << "Real(H:L) = " << hex << x.a.i[1] << " : " << x.a.i[0] << endl;
@@ -239,6 +244,23 @@ static bool ec_mul_ref(const u64 k[4], const ecpt &P0, ecpt &R) {
 	return true;
 }
 
+static bool ec_simul_ref(const u64 k1[4], const ecpt &P0, const u64 k2[4], const ecpt &Q0, ecpt &R) {
+	ecpt Pr, Qr;
+
+	ec_mul_ref(k1, P0, Pr);
+	ec_mul_ref(k2, Q0, Qr);
+
+	ec_expand(Pr);
+	ec_expand(Qr);
+
+	ufe t2b;
+	ec_add(Pr, Qr, R, false, true, false, t2b);
+
+	ec_affine(R, false, R);
+
+	return true;
+}
+
 
 //// Test Driver
 
@@ -247,7 +269,7 @@ bool ec_mul_test() {
 	ecpt R1, R2;
 	u8 a1[64], a2[64];
 
-	for (int jj = 0; jj < 1000; ++jj) {
+	for (int jj = 0; jj < 10000; ++jj) {
 		for (int ii = 0; ii < 4; ++ii) {
 			for (int jj = 0; jj < 30; ++jj) {
 				k[ii] ^= (k[ii] << 3) | (rand() >> 2);
@@ -257,6 +279,42 @@ bool ec_mul_test() {
 
 		ec_mul_ref(k, EC_G, R1);
 		ec_mul(k, EC_G, R2);
+
+		ec_save_xy(R1, a1);
+		ec_save_xy(R2, a2);
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (a1[ii] != a2[ii]) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+bool ec_simul_test() {
+	u64 k1[4] = {0};
+	u64 k2[4] = {0};
+	ecpt R1, R2;
+	u8 a1[64], a2[64];
+
+	for (int jj = 0; jj < 10000; ++jj) {
+		for (int ii = 0; ii < 4; ++ii) {
+			for (int jj = 0; jj < 30; ++jj) {
+				k1[ii] ^= (k1[ii] << 3) | (rand() >> 2);
+			}
+		}
+		for (int ii = 0; ii < 4; ++ii) {
+			for (int jj = 0; jj < 30; ++jj) {
+				k2[ii] ^= (k2[ii] << 3) | (rand() >> 2);
+			}
+		}
+		ec_mask_scalar(k1);
+		ec_mask_scalar(k2);
+
+		ec_simul_ref(k1, EC_G, k2, EC_EG, R1);
+		ec_simul(k1, EC_G, k2, EC_EG, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -295,9 +353,9 @@ int main() {
 
 	assert(ec_table_select_2_test());
 
-	for (int ii = 0; ii < 1000; ++ii) {
-		assert(ec_mul_test());
-	}
+	assert(ec_mul_test());
+
+	assert(ec_simul_test());
 
 	cout << "All tests passed successfully." << endl;
 

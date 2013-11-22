@@ -35,6 +35,13 @@ static const u64 TEST_K3[4] = {
 	0x0B4AD868CD1641ACULL
 };
 
+static const u64 TEST_K4[4] = {
+	0xc338c2c3e11432f1ULL,
+	0xb00daff41576987fULL,
+	0xa99381bdda6f7ee6ULL,
+	0x7edb73657b6b7f9ULL
+};
+
 static void gls_decompose_test() {
 	s32 k1sign, k2sign;
 	ufp k1, k2;
@@ -74,6 +81,15 @@ static void gls_decompose_test() {
 	assert(k2sign == 0);
 	assert(k2.i[0] == 0xE6809F829E581646ULL);
 	assert(k2.i[1] == 0x00A1D93A9F379601ULL);
+
+	gls_decompose(TEST_K4, k1sign, k1, k2sign, k2);
+
+	assert(k1sign == 1);
+	assert(k1.i[0] == 0x6EFAF5FF7E48AF30ULL);
+	assert(k1.i[1] == 0x0322E4DA2ACB9E83ULL);
+	assert(k2sign == 0);
+	assert(k2.i[0] == 0xC2064A0E2F72CA6CULL);
+	assert(k2.i[1] == 0x080E34A8B3BD7FA5ULL);
 }
 
 

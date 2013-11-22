@@ -212,7 +212,7 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
 		ec_set_mask(table[ii], mask, r);
 	}
 
-	ec_cond_neg((a.w >> index) & 1, r);
+	ec_cond_neg(((a.w >> index) & 1) ^ 1, r);
 }
 
 /*
@@ -312,14 +312,12 @@ void ec_simul(const u64 a[4], const ecpt &P, const u64 b[4], const ecpt &Q, ecpt
 
 	// Initialize working point
 	ecpt X;
-	ec_set(table[2], X);
-
-	const int l = 127;
+	ec_table_select_4(table, a0, a1, b0, b1, 126, X);
 
 	ufe t2b;
-	for (int ii = l - 1; ii >= 0; --ii) {
+	for (int ii = 125; ii >= 0; --ii) {
 		ecpt T;
-		ec_table_select_4(table, a0, b1, b0, b1, ii, T);
+		ec_table_select_4(table, a0, a1, b0, b1, ii, T);
 
 		ec_dbl(X, X, false, t2b);
 		ec_add(X, T, X, false, false, false, t2b);

@@ -400,7 +400,7 @@ static CAT_INLINE void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const boo
 	fe_mul(w1, r.z, r.z);
 }
 
-// Compute affine coordinates for (X, Y)
+// Compute affine coordinates for (X, Y) from (X : Y : Z)
 static CAT_INLINE void ec_affine(const ecpt &a, bool set_tz, ecpt &r) {
 	// B = 1 / in.Z
 	ufe b;
