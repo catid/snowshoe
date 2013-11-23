@@ -40,6 +40,66 @@ void ec_mask_scalar(u64 k[4]) {
  */
 
 void ec_gen_table_gen(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
+	for (u32 jj = 0; jj < 256; ++jj) {
+		u32 ii = jj;
+
+		if (ii & 128) {
+			ii ^= 0xf0;
+		}
+
+		s32 ak = 0;
+		if (ii & (1 << 4)) {
+			ak += 1;
+		} else {
+			ak -= 1;
+		}
+		if (ii & (1 << 5)) {
+			ak += 2;
+		} else {
+			ak -= 2;
+		}
+		if (ii & (1 << 6)) {
+			ak += 4;
+		} else {
+			ak -= 4;
+		}
+		if (ii & (1 << 7)) {
+			ak += 8;
+		} else {
+			ak -= 8;
+		}
+		s32 bk = 0;
+		if (ii & (1 << 0)) {
+			if (ii & (1 << 4)) {
+				bk += 1;
+			} else {
+				bk -= 1;
+			}
+		}
+		if (ii & (1 << 1)) {
+			if (ii & (1 << 5)) {
+				bk += 2;
+			} else {
+				bk -= 2;
+			}
+		}
+		if (ii & (1 << 2)) {
+			if (ii & (1 << 6)) {
+				bk += 4;
+			} else {
+				bk -= 4;
+			}
+		}
+		if (ii & (1 << 3)) {
+			if (ii & (1 << 7)) {
+				bk += 8;
+			} else {
+				bk -= 8;
+			}
+		}
+		cout << ii << " -> [" << ak << "]a + [" << bk << "]b" << endl;
+	}
+
 	ecpt bn;
 	ec_neg(b, bn);
 
@@ -127,7 +187,7 @@ static CAT_INLINE void ec_table_select_gen(const ecpt *table, const ufp &a, cons
  */
 
 // R = kP
-void ec_mul(const u64 k[4], ecpt &R) {
+void ec_mul_gen(const u64 k[4], ecpt &R) {
 	// Decompose scalar into subscalars
 	ufp a, b;
 	s32 asign, bsign;

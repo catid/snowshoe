@@ -264,6 +264,35 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt &P0, const u64 k2[4], const
 
 //// Test Driver
 
+bool ec_mul_gen_test() {
+	u64 k[4] = {0};
+	ecpt R1, R2;
+	u8 a1[64], a2[64];
+
+	for (int jj = 0; jj < 10000; ++jj) {
+		for (int ii = 0; ii < 4; ++ii) {
+			for (int jj = 0; jj < 30; ++jj) {
+				k[ii] ^= (k[ii] << 3) | (rand() >> 2);
+			}
+		}
+		ec_mask_scalar(k);
+
+		ec_mul_ref(k, EC_G, R1);
+		ec_mul_gen(k, R2);
+
+		ec_save_xy(R1, a1);
+		ec_save_xy(R2, a2);
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (a1[ii] != a2[ii]) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 bool ec_mul_test() {
 	u64 k[4] = {0};
 	ecpt R1, R2;
@@ -352,6 +381,8 @@ int main() {
 	assert(ec_recode_scalars_2_test(a, b));
 
 	assert(ec_table_select_2_test());
+
+	assert(ec_mul_gen_test());
 
 	assert(ec_mul_test());
 
