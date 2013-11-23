@@ -79,7 +79,7 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 	a1 = a;
 	b1 = b;
 
-	u32 lsb = ec_recode_scalars_2(a1, b1);
+	u32 lsb = ec_recode_scalars_2(a1, b1, 128);
 
 	// Follow the recoded bits to reconstruct the original scalars
 	ufp a2, b2;
@@ -298,7 +298,7 @@ bool ec_mul_test() {
 	ecpt R1, R2;
 	u8 a1[64], a2[64];
 
-	for (int jj = 0; jj < 10000; ++jj) {
+	for (int jj = 0; jj < 1000; ++jj) {
 		for (int ii = 0; ii < 4; ++ii) {
 			for (int jj = 0; jj < 30; ++jj) {
 				k[ii] ^= (k[ii] << 3) | (rand() >> 2);
@@ -328,7 +328,7 @@ bool ec_simul_test() {
 	ecpt R1, R2;
 	u8 a1[64], a2[64];
 
-	for (int jj = 0; jj < 10000; ++jj) {
+	for (int jj = 0; jj < 1000; ++jj) {
 		for (int ii = 0; ii < 4; ++ii) {
 			for (int jj = 0; jj < 30; ++jj) {
 				k1[ii] ^= (k1[ii] << 3) | (rand() >> 2);
@@ -382,11 +382,11 @@ int main() {
 
 	assert(ec_table_select_2_test());
 
-	assert(ec_mul_gen_test());
-
 	assert(ec_mul_test());
 
 	assert(ec_simul_test());
+
+	assert(ec_mul_gen_test());
 
 	cout << "All tests passed successfully." << endl;
 
