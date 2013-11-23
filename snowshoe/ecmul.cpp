@@ -25,6 +25,156 @@ void ec_mask_scalar(u64 k[4]) {
 	//   (      3       )(       2      )(       1      )(       0      )
 }
 
+
+//// Constant-time Generator Base Multiplication
+
+/*
+ * Precomputed table generation
+ *
+ * Using GLV-SAC Precomputation with m=2 [1], assuming window size of 2 bits
+ *
+ * Table index is simply = (a0 ^ a1) || b1 || b0
+ *
+ * The differences above from [1] seem to improve the efficiency of evaulation
+ * and they make the code easier to analyze.
+ */
+
+void ec_gen_table_gen(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
+	ecpt bn;
+	ec_neg(b, bn);
+
+	// P[4] = a
+	ec_set(a, TABLE[4]);
+
+	// P[5] = a - b
+	ufe t2b;
+	ec_add(a, bn, TABLE[5], true, true, true, t2b);
+
+	// P[7] = a + b
+	ec_add(a, b, TABLE[7], true, true, true, t2b);
+
+	// P[6] = a + 2b
+	ec_add(TABLE[7], b, TABLE[6], true, true, true, t2b);
+
+	ecpt a2;
+	ec_dbl(a, a2, true, t2b);
+
+	// P[0] = 3a
+	ec_add(a2, a, TABLE[0], true, false, true, t2b);
+
+	// P[1] = 3a + b
+	ec_add(TABLE[0], b, TABLE[1], true, true, true, t2b);
+
+	// P[2] = 3a + 2b
+	ec_add(TABLE[1], b, TABLE[2], true, true, true, t2b);
+
+	// P[3] = 3a + 3b
+	ec_add(TABLE[2], b, TABLE[3], true, true, true, t2b);
+}
+
+/*
+ * GLV-SAC Scalar Recoding Algorithm for m=2 [1]
+ *
+ * Returns low bit of 'a'.
+ */
+
+u32 ec_recode_scalars_gen(ufp &a, ufp &b) {
+	const int len = 128;
+
+	u32 lsb = ((u32)a.i[0] & 1) ^ 1;
+	a.w -= lsb;
+	a.w >>= 1;
+	a.w |= (u128)1 << (len - 1);
+
+	const u128 an = ~a.w;
+	u128 mask = 1;
+	for (int ii = 1; ii < len; ++ii) {
+		const u128 anmask = an & mask;
+		b.w += (b.w & anmask) << 1;
+		mask <<= 1;
+	}
+
+	return lsb;
+}
+
+/*
+ * Table index is simply = (a0 ^ a1) || b1 || b0
+ */
+
+static CAT_INLINE void ec_table_select_gen(const ecpt *table, const ufp &a, const ufp &b, const int index, ecpt &r) {
+	u32 bits = (u32)(a.w >> index);
+	u32 k = ((bits ^ (bits >> 1)) & 1) << 2;
+	k |= (u32)(b.w >> index) & 3;
+
+	for (int ii = 0; ii < 8; ++ii) {
+		// Generate a mask that is -1 if ii == index, else 0
+		const u128 mask = ec_gen_mask(ii, k);
+
+		// Add in the masked table entry
+		ec_set_mask(table[ii], mask, r);
+	}
+
+	ec_cond_neg(((bits >> 1) & 1) ^ 1, r);
+}
+
+/*
+ * Multiplication by variable base point
+ *
+ * Point must be in extended projective coordinates with T and Z values.
+ *
+ * The resulting point has undefined T and Z values, so must be expanded with
+ * ec_expand() before using as input to other math functions.
+ */
+
+// R = kP
+void ec_mul(const u64 k[4], ecpt &R) {
+	// Decompose scalar into subscalars
+	ufp a, b;
+	s32 asign, bsign;
+	gls_decompose(k, asign, a, bsign, b);
+
+	// Set base point signs
+	ecpt P, Q;
+	ec_set(EC_G, P);
+	ec_set(EC_EG, Q);
+	ec_cond_neg(asign, P);
+	ec_cond_neg(bsign, Q);
+
+	// Precompute multiplication table
+	ecpt table[128];
+	ec_gen_table_gen(P, Q, table);
+
+	// TODO: Store off the table
+
+	// Recode subscalars
+	u32 recode_bit = ec_recode_scalars_gen(a, b);
+
+	// Initialize working point
+	ecpt X;
+	ec_table_select_gen(table, a, b, 124, X);
+
+	ufe t2b;
+	for (int ii = 120; ii >= 0; ii -= 4) {
+		ecpt T;
+		ec_table_select_gen(table, a, b, ii, T);
+
+		ec_dbl(X, X, false, t2b);
+		ec_dbl(X, X, false, t2b);
+		ec_dbl(X, X, false, t2b);
+		ec_dbl(X, X, false, t2b);
+		ec_add(X, T, X, false, false, false, t2b);
+	}
+
+	// If bit == 1, X <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
+
+	// Compute affine coordinates in R
+	ec_affine(X, false, R);
+}
+
+
+//// Constant-time Variable Base Multiplication
+
 /*
  * Precomputed table generation
  *
@@ -90,39 +240,6 @@ void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
 }
 
 /*
- * Precomputed table generation
- *
- * Using GLV-SAC Precomputation with m=4 [1], assuming window size of 1 bit
- */
-
-void ec_gen_table_4(const ecpt &a, const ecpt &b, const ecpt &c, const ecpt &d, ecpt TABLE[8]) {
-	// P[0] = a
-	ec_set(a, TABLE[0]);
-
-	// P[1] = a + b
-	ufe t2b;
-	ec_add(a, b, TABLE[1], true, true, true, t2b);
-
-	// P[2] = a + c
-	ec_add(a, c, TABLE[2], true, true, true, t2b);
-
-	// P[3] = a + b + c
-	ec_add(TABLE[1], c, TABLE[3], true, true, true, t2b);
-
-	// P[4] = a + d
-	ec_add(a, d, TABLE[4], true, true, true, t2b);
-
-	// P[5] = a + b + d
-	ec_add(TABLE[1], d, TABLE[5], true, true, true, t2b);
-
-	// P[6] = a + c + d
-	ec_add(TABLE[2], d, TABLE[6], true, true, true, t2b);
-
-	// P[7] = a + b + c + d
-	ec_add(TABLE[3], d, TABLE[7], true, true, true, t2b);
-}
-
-/*
  * GLV-SAC Scalar Recoding Algorithm for m=2 [1]
  *
  * Returns low bit of 'a'.
@@ -148,33 +265,6 @@ u32 ec_recode_scalars_2(ufp &a, ufp &b) {
 }
 
 /*
- * GLV-SAC Scalar Recoding Algorithm for m=4 [1]
- *
- * Returns low bit of 'a'.
- */
-
-u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d) {
-	const int len = 127;
-
-	u32 lsb = ((u32)a.i[0] & 1) ^ 1;
-	a.w -= lsb;
-	a.w >>= 1;
-	a.w |= (u128)1 << (len - 1);
-
-	const u128 an = ~a.w;
-	u128 mask = 1;
-	for (int ii = 1; ii < len; ++ii) {
-		const u128 anmask = an & mask;
-		b.w += (b.w & anmask) << 1;
-		c.w += (c.w & anmask) << 1;
-		d.w += (d.w & anmask) << 1;
-		mask <<= 1;
-	}
-
-	return lsb;
-}
-
-/*
  * Table index is simply = (a0 ^ a1) || b1 || b0
  */
 
@@ -192,27 +282,6 @@ static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const 
 	}
 
 	ec_cond_neg(((bits >> 1) & 1) ^ 1, r);
-}
-
-/*
- * Constant-time table selection for m=4
- */
-
-static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, const ufp &c, const ufp &d, const int index, ecpt &r) {
-	int k = ((u32)(b.w >> index) & 1);
-	k |= ((u32)(c.w >> index) & 1) << 1;
-	k |= ((u32)(d.w >> index) & 1) << 2;
-
-	const int TABLE_SIZE = 8;
-	for (int ii = 0; ii < TABLE_SIZE; ++ii) {
-		// Generate a mask that is -1 if ii == index, else 0
-		const u128 mask = ec_gen_mask(ii, k);
-
-		// Add in the masked table entry
-		ec_set_mask(table[ii], mask, r);
-	}
-
-	ec_cond_neg(((a.w >> index) & 1) ^ 1, r);
 }
 
 /*
@@ -268,6 +337,90 @@ void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R) {
 
 	// Compute affine coordinates in R
 	ec_affine(X, false, R);
+}
+
+
+//// Constant-time Simultaneous Multiplication
+
+/*
+ * Precomputed table generation
+ *
+ * Using GLV-SAC Precomputation with m=4 [1], assuming window size of 1 bit
+ */
+
+void ec_gen_table_4(const ecpt &a, const ecpt &b, const ecpt &c, const ecpt &d, ecpt TABLE[8]) {
+	// P[0] = a
+	ec_set(a, TABLE[0]);
+
+	// P[1] = a + b
+	ufe t2b;
+	ec_add(a, b, TABLE[1], true, true, true, t2b);
+
+	// P[2] = a + c
+	ec_add(a, c, TABLE[2], true, true, true, t2b);
+
+	// P[3] = a + b + c
+	ec_add(TABLE[1], c, TABLE[3], true, true, true, t2b);
+
+	// P[4] = a + d
+	ec_add(a, d, TABLE[4], true, true, true, t2b);
+
+	// P[5] = a + b + d
+	ec_add(TABLE[1], d, TABLE[5], true, true, true, t2b);
+
+	// P[6] = a + c + d
+	ec_add(TABLE[2], d, TABLE[6], true, true, true, t2b);
+
+	// P[7] = a + b + c + d
+	ec_add(TABLE[3], d, TABLE[7], true, true, true, t2b);
+}
+
+/*
+ * GLV-SAC Scalar Recoding Algorithm for m=4 [1]
+ *
+ * Returns low bit of 'a'.
+ */
+
+u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d) {
+	const int len = 127;
+
+	u32 lsb = ((u32)a.i[0] & 1) ^ 1;
+	a.w -= lsb;
+	a.w >>= 1;
+	a.w |= (u128)1 << (len - 1);
+
+	const u128 an = ~a.w;
+	u128 mask = 1;
+	for (int ii = 1; ii < len; ++ii) {
+		const u128 anmask = an & mask;
+		b.w += (b.w & anmask) << 1;
+		c.w += (c.w & anmask) << 1;
+		d.w += (d.w & anmask) << 1;
+		mask <<= 1;
+	}
+
+	return lsb;
+}
+
+/*
+ * Constant-time table selection for m=4
+ */
+
+static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, const ufp &c, const ufp &d, const int index, ecpt &r) {
+	int k = ((u32)(b.w >> index) & 1);
+	k |= ((u32)(c.w >> index) & 1) << 1;
+	k |= ((u32)(d.w >> index) & 1) << 2;
+
+	const int TABLE_SIZE = 8;
+	for (int ii = 0; ii < TABLE_SIZE; ++ii) {
+		// Generate a mask that is -1 if ii == index, else 0
+		const u128 mask = ec_gen_mask(ii, k);
+
+		// Add in the masked table entry
+		ec_set_mask(table[ii], mask, r);
+	}
+
+	ec_cond_neg(((a.w >> index) & 1) ^ 1, r);
 }
 
 /*
