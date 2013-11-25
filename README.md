@@ -1,14 +1,11 @@
-This is a work in progress...  Believe it when you see it! =)
-
-
-# Snowshoe
+# Snowshoe 1.0
 
 This project aims to provide a simple C API for three types of elliptic
 curve point multiplication:
 
 + Fixed-base (key generation)
 + Variable-base (EC-DH)
-+ Simultaneous (signatures, EC-DH + PFS)
++ Simultaneous (signatures, EC-DH + FS)
 
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
@@ -17,9 +14,9 @@ It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
 which should be considered wherever you would use e.g. Curve25519/Ed25519.
 
-Snowshoe is one short C source file with thorough commenting and validation.
-Prebuilt static libraries are provided for ARMv7, ARMv7s, and x86-64, so
-integration is as easy as possible.
+The constant-time simultaneous multiplication is the only fast implementation
+available in the public domain at this time.  And this library also provides
+other math functions required to implement MQV-style protocols.
 
 
 #### Survey of other open-source constant-time ECC implementations:
@@ -38,7 +35,7 @@ Ed25519 ( http://ed25519.cr.yp.to/ed25519-20110926.pdf ) is:
 
 monfp127e2 ( http://eprint.iacr.org/2013/692.pdf ) is:
 
-- Slower, but slightly faster than Curve25519
+- Slower
 - Cannot be used for efficient signature-based EC-DH that provides Perfect Forward Secrecy
 - Available code is not portable (assembly only) nor truely built for the public domain
 
@@ -52,9 +49,8 @@ kumfp127g ( http://eprint.iacr.org/2012/670.pdf ) is:
 
 gls254 ( http://cacr.uwaterloo.ca/techreports/2013/cacr2013-14.pdf ) is:
 
-- Threatened by polynomial-time DLP algorithms over binary fields (may be very insecure)
-+ Faster on modern servers/laptops
 - Slower on commodity mobile devices without special math opcodes
+- Threatened by polynomial-time DLP algorithms over binary fields (may be insecure)
 - Cannot be used for signatures
 - Cannot be used for efficient signature-based EC-DH that provides Perfect Forward Secrecy
 - Not portable (uses assembly instructions specific to Intel x86-64)
