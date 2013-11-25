@@ -41,37 +41,39 @@ namespace cat {
 
 namespace snowshoe {
 
+/*
+ * Mask a provided 256-bit number so that it is less than q
+ * and can be used as a secret key
+ */
+void ec_mask_scalar(u64 k[4]);
 
 /*
  * R = kG
  *
- * Multiply by generator point
+ * Multiply generator point by k
+ *
+ * Preconditions:
+ *	0 < k < q (prime order of curve)
  */
-void ec_mul_gen(const u32 k[8], ecpt &R);
+void ec_mul_gen(const u64 k[4], ecpt_affine &R);
 
 /*
  * R = kP
  *
- * Multiply by variable point
+ * Multiply variable point by k
+ *
+ * Preconditions:
+ * 	0 < k < q (prime order of curve)
+ * 	P is in affine (X, Y) coordinates
  */
-void ec_mul(const u32 k[8], ecpt &P, ecpt &R);
+void ec_mul(const u64 k[4], ecpt_affine &P, ecpt_affine &R);
 
 /*
  * R = aP + bQ
  *
  * Simultaneously multiply two points and return the sum
  */
-void ec_simul(const u32 a[8], const ecpt &P, const u32 b[8], const ecpt &Q, ecpt &R);
-
-
-#ifdef SNOWSHOE_UNIT_TESTS
-
-void ec_mul_gen_ref1(const u32 k[8], ecpt &R);
-void ec_mul_gen_ref2(const u32 k[8], ecpt &R);
-void ec_mul_gen_ref3(const u32 k[8], ecpt &R);
-void test_ec_mul_gen();
-
-#endif // SNOWSHOE_UNIT_TESTS
+void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R);
 
 
 } // namespace snowshoe

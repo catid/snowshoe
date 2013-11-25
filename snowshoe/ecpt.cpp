@@ -1,29 +1,6 @@
 // Endomorphism
 #include "endo.cpp"
-
-/*
- * Extended Twisted Edwards Group Laws [5]
- *
- * Curve: a * u * x^2 + y^2 = d * u * x^2 * y^2 /Fp^2
- *
- * p = 2^127 - 1
- * a = -1
- * d = 109
- * u = 2 + i
- * i^2 = -1
- *
- * (0, 1) is the identity element
- * (0, -1) is of order 2
- * This codebase avoids x=0 entirely.
- *
- * -(x,y) = (-x, y)
- */
-
-struct ecpt {
-	ufe x, y, t, z;
-};
-
-static const u32 EC_D = 109;
+#include "ecpt.hpp"
 
 /*
  * "Generator point": The smallest X-coordinate point of q torsion
@@ -128,22 +105,15 @@ static const ecpt EC_EG = {
 };
 
 // Load (x,y) from endian-neutral data bytes (64)
-static void ec_load_xy(const u8 *a, ecpt &r) {
+static void ec_load_xy(const u8 *a, ecpt_affine &r) {
 	fe_load(a, r.x);
 	fe_load(a + 32, r.y);
 }
 
 // Save (x,y) to endian-neutral data bytes (64)
-static void ec_save_xy(const ecpt &a, u8 *r) {
+static void ec_save_xy(const ecpt_affine &a, u8 *r) {
 	fe_save(a.x, r);
 	fe_save(a.y, r + 32);
-}
-
-// Expand from affine coordinates to extended
-static CAT_INLINE void ec_expand(ecpt &r) {
-	// t = xy, z = 1
-	fe_mul(r.x, r.y, r.t);
-	fe_set_smallk(1, r.z);
 }
 
 // r = 0
@@ -183,6 +153,16 @@ static CAT_INLINE void ec_set(const ecpt &a, ecpt &r) {
 	fe_set(a.y, r.y);
 	fe_set(a.t, r.t);
 	fe_set(a.z, r.z);
+}
+
+// Expand from affine coordinates to extended
+static CAT_INLINE void ec_expand(const ecpt_affine &a, ecpt &r) {
+	fe_set(a.x, r.x);
+	fe_set(a.y, r.y);
+
+	// t = xy, z = 1
+	fe_mul(r.x, r.y, r.t);
+	fe_set_smallk(1, r.z);
 }
 
 // r = (mask == -1) ? a : r
@@ -401,7 +381,7 @@ static CAT_INLINE void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const boo
 }
 
 // Compute affine coordinates for (X, Y) from (X : Y : Z)
-static CAT_INLINE void ec_affine(const ecpt &a, bool set_tz, ecpt &r) {
+static CAT_INLINE void ec_affine(const ecpt &a, ecpt_affine &r) {
 	// B = 1 / in.Z
 	ufe b;
 	fe_inv(a.z, b);
@@ -415,11 +395,6 @@ static CAT_INLINE void ec_affine(const ecpt &a, bool set_tz, ecpt &r) {
 	// Final reduction
 	fe_complete_reduce(r.x);
 	fe_complete_reduce(r.y);
-
-	if (set_tz) {
-		fe_mul(r.x, r.y, r.t);
-		fe_set_smallk(1, r.z);
-	}
 }
 
 /*

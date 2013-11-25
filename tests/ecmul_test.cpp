@@ -146,7 +146,9 @@ void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
 			ec_add(p, p2, p, false, true, true, t2b);
 		}
 
-		ec_affine(p, true, p);
+		ecpt_affine q;
+		ec_affine(p, q);
+		ec_set_expand(q, p);
 
 		ec_set(p, TABLE[jj]);
 	}
@@ -221,7 +223,9 @@ static bool ec_gen_table_2_test() {
 	ec_dbl(a1, a1, false, t2b);
 	ec_add(a1, b1, a1, false, false, true, t2b);
 
-	ec_affine(a1, true, a1);
+	ecpt_affine q;
+	ec_affine(a1, q);
+	ec_set_expand(q, a1);
 
 	ufe one;
 	fe_set_smallk(1, one);
@@ -366,7 +370,7 @@ static bool ec_table_select_2_test() {
 
 //// Reference implementations for comparison
 
-static bool ec_mul_ref(const u64 k[4], const ecpt &P0, ecpt &R) {
+static bool ec_mul_ref(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	ufe t2b;
 
 	// Verify that curve has the specified order
@@ -399,24 +403,25 @@ static bool ec_mul_ref(const u64 k[4], const ecpt &P0, ecpt &R) {
 		}
 	}
 
-	ec_affine(p, false, R);
+	ec_affine(p, R);
 
 	return true;
 }
 
-static bool ec_simul_ref(const u64 k1[4], const ecpt &P0, const u64 k2[4], const ecpt &Q0, ecpt &R) {
-	ecpt Pr, Qr;
+static bool ec_simul_ref(const u64 k1[4], const ecpt_affine &P0, const u64 k2[4], const ecpt_affine &Q0, ecpt_affine &R) {
+	ecpt_affine Pr, Qr;
 
 	ec_mul_ref(k1, P0, Pr);
 	ec_mul_ref(k2, Q0, Qr);
 
-	ec_expand(Pr);
-	ec_expand(Qr);
+	ecpt P1, Q1;
+	ec_set_expand(Pr, P1);
+	ec_set_expand(Qr, Q1);
 
 	ufe t2b;
-	ec_add(Pr, Qr, R, false, true, false, t2b);
+	ec_add(P1, Q1, R, true, true, false, t2b);
 
-	ec_affine(R, false, R);
+	ec_affine(R, R);
 
 	return true;
 }
@@ -426,7 +431,7 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt &P0, const u64 k2[4], const
 
 bool ec_mul_gen_test() {
 	u64 k[4] = {0};
-	ecpt R1, R2;
+	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
 
 	for (int jj = 0; jj < 10000; ++jj) {

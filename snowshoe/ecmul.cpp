@@ -1,12 +1,6 @@
 // Elliptic curve point operations
 #include "ecpt.cpp"
 
-#include <iostream>
-#include <iomanip>
-using namespace std;
-
-#include "Clock.hpp"
-
 /*
  * Mask a random number to produce a compatible scalar for multiplication
  */
@@ -171,26 +165,23 @@ static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const 
  */
 
 // R = kP
-void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R) {
-	Clock clock;
-	clock.OnInitialize();
-	double t0 = clock.usec();
-
+void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp a, b;
 	s32 asign, bsign;
 	gls_decompose(k, asign, a, bsign, b);
 
 	// Q = endomorphism of P
+	ecpt_affine Qa;
+	gls_morph(P0.x, P0.y, Qa.x, Qa.y);
 	ecpt Q;
-	gls_morph(P0.x, P0.y, Q.x, Q.y);
-	ec_expand(Q);
+	ec_expand(Qa, Q);
+	ec_cond_neg(bsign, Q);
 
 	// Set base point signs
 	ecpt P;
-	ec_set(P0, P);
+	ec_expand(P0, P);
 	ec_cond_neg(asign, P);
-	ec_cond_neg(bsign, Q);
 
 	// Precompute multiplication table
 	ecpt table[8];
@@ -217,10 +208,17 @@ void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R) {
 	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
 
 	// Compute affine coordinates in R
-	ec_affine(X, false, R);
+	ec_affine(X, R);
+}
 
-	double t1 = clock.usec();
-	cout << (t1 - t0) << endl;
+void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
+	// P = G (affine)
+	ecpt_affine P;
+	fe_set(EC_GX, P.x);
+	fe_set(EC_GY, P.y);
+
+	// For simplicity, use the same ec_mul function for generator point multiplication
+	ec_mul(k, P, R);
 }
 
 
@@ -291,7 +289,7 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
  */
 
 // R = aP + bQ
-void ec_simul(const u64 a[4], const ecpt &P, const u64 b[4], const ecpt &Q, ecpt &R) {
+void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp a0, a1, b0, b1;
 	s32 a0sign, a1sign, b0sign, b1sign;
@@ -299,16 +297,18 @@ void ec_simul(const u64 a[4], const ecpt &P, const u64 b[4], const ecpt &Q, ecpt
 	gls_decompose(b, b0sign, b0, b1sign, b1);
 
 	// P1, Q1 = endomorphism points
-	ecpt P1, Q1;
-	gls_morph(P.x, P.y, P1.x, P1.y);
-	ec_expand(P1);
-	gls_morph(Q.x, Q.y, Q1.x, Q1.y);
-	ec_expand(Q1);
+	ecpt_affine P1a, Q1a;
+	gls_morph(P.x, P.y, P1a.x, P1a.y);
+	gls_morph(Q.x, Q.y, Q1a.x, Q1a.y);
+
+	// Expand base points
+	ecpt P0, Q0, P1, Q1;
+	ec_expand(P1a, P1);
+	ec_expand(Q1a, Q1);
+	ec_expand(P, P0);
+	ec_expand(Q, Q0);
 
 	// Set base point signs
-	ecpt P0, Q0;
-	ec_set(P, P0);
-	ec_set(Q, Q0);
 	ec_cond_neg(a0sign, P0);
 	ec_cond_neg(b0sign, Q0);
 	ec_cond_neg(a1sign, P1);
@@ -338,6 +338,6 @@ void ec_simul(const u64 a[4], const ecpt &P, const u64 b[4], const ecpt &Q, ecpt
 	ec_cond_add(recode_bit, X, P0, X, true, false, t2b);
 
 	// Compute affine coordinates in R
-	ec_affine(X, false, R);
+	ec_affine(X, R);
 }
 

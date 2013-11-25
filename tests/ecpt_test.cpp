@@ -104,7 +104,7 @@ static CAT_INLINE bool ec_isequal(const ecpt &a, const ecpt &b) {
 	return true;
 }
 
-static CAT_INLINE bool ec_isequal_xy(const ecpt &a, const ecpt &b) {
+static CAT_INLINE bool ec_isequal_xy(const ecpt_affine &a, const ecpt_affine &b) {
 	if (!fe_isequal(a.x, b.x)) {
 		return false;
 	}
@@ -245,9 +245,12 @@ static bool ec_dbl_add_ref_test(const u64 *scalar, int mode) {
 			}
 			ec_dbl_ref(q, q, false, tq);
 
+			ecpt_affine aa, ba;
 			ecpt a, b;
-			ec_affine(p, true, a);
-			ec_affine(q, true, b);
+			ec_affine(p, aa);
+			ec_affine(q, ba);
+			ec_expand(aa, a);
+			ec_expand(ba, b);
 
 			if (!ec_isequal(a, b)) {
 				cout << "Double mismatch mode " << mode << endl;
@@ -264,9 +267,12 @@ static bool ec_dbl_add_ref_test(const u64 *scalar, int mode) {
 			ec_add_ref(q, g, q, z2_one, false, false, tq);
 			seen = true;
 
+			ecpt_affine aa, ba;
 			ecpt a, b;
-			ec_affine(p, true, a);
-			ec_affine(q, true, b);
+			ec_affine(p, aa);
+			ec_affine(q, ba);
+			ec_expand(aa, a);
+			ec_expand(ba, b);
 
 			if (!ec_isequal(a, b)) {
 				cout << "Add mismatch mode " << mode << endl;
@@ -315,7 +321,9 @@ static bool ec_curve_order_test(bool use_eg, bool z2_one) {
 		}
 	}
 
-	ec_affine(p, true, p);
+	ecpt_affine pa;
+	ec_affine(p, pa);
+	ec_expand(pa, p);
 	//ec_print(p);
 
 	ufe one;
@@ -332,7 +340,8 @@ static bool ec_curve_order_test(bool use_eg, bool z2_one) {
 
 	// Verifies that doubling works on identity element
 
-	ec_affine(p, true, p);
+	ec_affine(p, pa);
+	ec_expand(pa, p);
 	//ec_print(p);
 
 	return fe_iszero(p.x) && fe_isequal(p.y, one);
@@ -434,23 +443,14 @@ static bool ec_zero_test() {
 }
 
 static bool ec_expand_test() {
-	ecpt r;
+	ecpt_affine s;
+	fe_set(EC_GX, s.x);
+	fe_set(EC_GY, s.y);
 
-	ec_set(EC_G, r);
+	ecpt t;
+	ec_expand(s, t);
 
-	fe_zero(r.t);
-	fe_zero(r.z);
-
-	if (!fe_iszero(r.t)) {
-		return false;
-	}
-	if (!fe_iszero(r.z)) {
-		return false;
-	}
-
-	ec_expand(r);
-
-	if (!ec_isequal(EC_G, r)) {
+	if (!ec_isequal(EC_G, t)) {
 		return false;
 	}
 
@@ -466,7 +466,9 @@ static bool ec_identity_test() {
 	ufe tp;
 	ec_dbl(p, p, false, tp);
 
-	ec_affine(p, true, p);
+	ecpt_affine pa;
+	ec_affine(p, pa);
+	ec_expand(pa, p);
 
 	if (!ec_isequal(a, p)) {
 		return false;
@@ -474,7 +476,8 @@ static bool ec_identity_test() {
 
 	ec_add(p, p, p, false, true, false, tp);
 
-	ec_affine(p, true, p);
+	ec_affine(p, pa);
+	ec_expand(pa, p);
 
 	if (!ec_isequal(a, p)) {
 		return false;
@@ -484,11 +487,12 @@ static bool ec_identity_test() {
 }
 
 static bool ec_save_load_test(const ecpt &P) {
-	ecpt a, r;
+	ecpt_affine a, r;
+
+	fe_set(P.x, a.x);
+	fe_set(P.y, a.y);
 
 	u8 buffer[65] = {0};
-
-	ec_set(P, a);
 
 	ec_save_xy(a, buffer);
 
@@ -556,7 +560,9 @@ static bool ec_neg_test(const ecpt &P) {
 
 	ec_add(a, n, p, false, true, false, tp);
 
-	ec_affine(p, true, p);
+	ecpt_affine pa;
+	ec_affine(p, pa);
+	ec_expand(pa, p);
 
 	if (!ec_isequal(i, p)) {
 		return false;
@@ -570,7 +576,8 @@ static bool ec_neg_test(const ecpt &P) {
 
 	ec_add(d, nd, p, false, false, false, tp);
 
-	ec_affine(p, true, p);
+	ec_affine(p, pa);
+	ec_expand(pa, p);
 
 	if (!ec_isequal(i, p)) {
 		return false;
@@ -755,14 +762,18 @@ static bool ec_cond_add_test(const ecpt &P) {
 	ufe tp, tb;
 	ec_add(p, p, p, false, true, false, tp);
 
-	ec_affine(p, true, p);
+	ecpt_affine pa;
+	ec_affine(p, pa);
+	ec_expand(pa, p);
 
 	ec_set(P, a);
 	ec_set(P, b);
 
 	ec_cond_add(0, b, a, b, false, true, tb);
 
-	ec_affine(b, true, c);
+	ecpt_affine ba;
+	ec_affine(b, ba);
+	ec_expand(ba, c);
 
 	if (!ec_isequal(P, c)) {
 		return false;
@@ -770,7 +781,8 @@ static bool ec_cond_add_test(const ecpt &P) {
 
 	ec_cond_add(1, b, a, b, false, false, tb);
 
-	ec_affine(b, true, c);
+	ec_affine(b, ba);
+	ec_expand(ba, c);
 
 	if (!ec_isequal(p, c)) {
 		return false;

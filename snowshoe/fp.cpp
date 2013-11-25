@@ -1,5 +1,4 @@
-#include "Platform.hpp"
-#include "EndianNeutral.hpp"
+#include "fp.hpp"
 using namespace cat;
 
 /*
@@ -23,12 +22,6 @@ using namespace cat;
 #include <intrin.h>
 #pragma intrinsic(_bittestandreset64)
 #endif
-
-// GCC: Use builtin 128-bit type
-union ufp {
-	u64 i[2];
-	u128 w;
-};
 
 // Load ufp from endian-neutral data bytes (16)
 static void fp_load(const u8 *x, ufp &r) {

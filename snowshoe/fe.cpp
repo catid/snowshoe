@@ -1,5 +1,6 @@
 // Based on Fp finite field
 #include "fp.cpp"
+#include "fe.hpp"
 
 /*
  * 254-bit GF(p^2) optimal extension field (OEF) arithmetic
@@ -9,10 +10,6 @@
  * Before storing the results of these math functions, it is important to
  * call fe_complete_reduce() to produce fully-reduced output.
  */
-
-struct ufe {
-	ufp a, b;
-};
 
 // Load ufe from endian-neutral data bytes (32)
 static void fe_load(const u8 *x, ufe &r) {
