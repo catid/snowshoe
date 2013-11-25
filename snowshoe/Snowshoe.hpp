@@ -40,32 +40,34 @@ extern "C" {
 void snowshoe_secret_gen(char k[32]);
 
 /*
- * R = kG
+ * R = k*4*G
  *
  * Multiply generator point by k
  *
  * Preconditions:
  *	0 < k < q (prime order of curve)
  */
-bool snowshoe_mul_gen(const char k[32], char R[64]);
+void snowshoe_mul_gen(const char k[32], char R[64]);
 
 /*
- * R = kP
+ * R = k*4*P
  *
  * Multiply variable point by k
  *
  * Preconditions:
  * 	0 < k < q (prime order of curve)
- * 	P is in affine (X, Y) coordinates
  */
-bool snowshoe_mul(const char k[32], char P[64], char R[64]);
+void snowshoe_mul(const char k[32], char P[64], char R[64]);
 
 /*
- * R = aP + bQ
+ * R = a*4*P + b*4*Q
+ *
+ * Preconditions:
+ * 	0 < a,b < q (prime order of curve)
  *
  * Simultaneously multiply two points and return the sum
  */
-bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
+void snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
 
 #ifdef __cplusplus
 }

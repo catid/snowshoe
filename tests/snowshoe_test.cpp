@@ -19,10 +19,9 @@ using namespace std;
  *
  * Required math operations:
  * H()
- * d = S + H*T (mod q)
+ * S + H*T (mod q)
  * ec_mul()
  * ec_simul()
- * a = H*T (mod q)
  */
 
 
@@ -105,5 +104,4 @@ int main() {
 
 	return 0;
 }
-
 
