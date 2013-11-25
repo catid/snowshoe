@@ -12,6 +12,164 @@ using namespace std;
 // ec_table_select_4
 
 
+#if 0
+
+/*
+ * Precomputed table generation for generator point
+ */
+
+void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
+	for (u32 jj = 0; jj < 128; ++jj) {
+		u32 ii = jj;
+
+		s32 ak = 0;
+		if (ii & (1 << 4)) {
+			ak += 1;
+		} else {
+			ak -= 1;
+		}
+		if (ii & (1 << 5)) {
+			ak += 2;
+		} else {
+			ak -= 2;
+		}
+		if (ii & (1 << 6)) {
+			ak += 4;
+		} else {
+			ak -= 4;
+		}
+		if (ii & (1 << 7)) {
+			ak += 8;
+		} else {
+			ak -= 8;
+		}
+		s32 bk = 0;
+		if (ii & (1 << 0)) {
+			if (ii & (1 << 4)) {
+				bk += 1;
+			} else {
+				bk -= 1;
+			}
+		}
+		if (ii & (1 << 1)) {
+			if (ii & (1 << 5)) {
+				bk += 2;
+			} else {
+				bk -= 2;
+			}
+		}
+		if (ii & (1 << 2)) {
+			if (ii & (1 << 6)) {
+				bk += 4;
+			} else {
+				bk -= 4;
+			}
+		}
+		if (ii & (1 << 3)) {
+			if (ii & (1 << 7)) {
+				bk += 8;
+			} else {
+				bk -= 8;
+			}
+		}
+
+		ii |= 0x80;
+		ii ^= 0x70;
+
+		ak = 0;
+		if (ii & (1 << 4)) {
+			ak += 1;
+		} else {
+			ak -= 1;
+		}
+		if (ii & (1 << 5)) {
+			ak += 2;
+		} else {
+			ak -= 2;
+		}
+		if (ii & (1 << 6)) {
+			ak += 4;
+		} else {
+			ak -= 4;
+		}
+		if (ii & (1 << 7)) {
+			ak += 8;
+		} else {
+			ak -= 8;
+		}
+		bk = 0;
+		if (ii & (1 << 0)) {
+			if (ii & (1 << 4)) {
+				bk += 1;
+			} else {
+				bk -= 1;
+			}
+		}
+		if (ii & (1 << 1)) {
+			if (ii & (1 << 5)) {
+				bk += 2;
+			} else {
+				bk -= 2;
+			}
+		}
+		if (ii & (1 << 2)) {
+			if (ii & (1 << 6)) {
+				bk += 4;
+			} else {
+				bk -= 4;
+			}
+		}
+		if (ii & (1 << 3)) {
+			if (ii & (1 << 7)) {
+				bk += 8;
+			} else {
+				bk -= 8;
+			}
+		}
+
+		ecpt p;
+		ufe t2b;
+
+		ec_set(a, p);
+		for (int kk = 1; kk < ak; ++kk) {
+			ec_add(p, a, p, false, true, true, t2b);
+		}
+
+		ecpt p2;
+		ec_set(b, p2);
+		if (bk < 0) {
+			ec_neg(p2, p2);
+			bk = -bk;
+		}
+
+		for (int kk = 0; kk < bk; ++kk) {
+			ec_add(p, p2, p, false, true, true, t2b);
+		}
+
+		ec_affine(p, true, p);
+
+		ec_set(p, TABLE[jj]);
+	}
+
+	int words = 128 * (4 * 4);
+	u64 *ptr = (u64*)&TABLE[0];
+	cout << "static const u64 PRECOMP_TABLE = {" << endl;
+	for (int ii = 0; ii < words; ii += 4) {
+		if (ii % 16 == 12) {
+			continue;
+		}
+		cout << hex << "\t0x" << ptr[ii] << "ULL, ";
+		cout << hex << "0x" << ptr[ii+1] << "ULL, ";
+		cout << hex << "0x" << ptr[ii+2] << "ULL, ";
+		cout << hex << "0x" << ptr[ii+3] << "ULL," << endl;
+	}
+	cout << "};" << endl;
+}
+
+#endif
+
+#if 0
+
 static void fe_print(const ufe &x) {
 	cout << "Real(H:L) = " << hex << x.a.i[1] << " : " << x.a.i[0] << endl;
 	cout << "Imag(H:L) = " << hex << x.b.i[1] << " : " << x.b.i[0] << endl;
@@ -24,6 +182,8 @@ static void ec_print(const ecpt &p) {
 	cout << "Z : = " << setw(16) << hex << p.z.a.i[1] << "," << setw(16) << p.z.a.i[0] << " + i * " << setw(16) << p.z.b.i[1] << "," << setw(16) << p.z.b.i[0] << endl;
 	cout << "T : = " << setw(16) << hex << p.t.a.i[1] << "," << setw(16) << p.t.a.i[0] << " + i * " << setw(16) << p.t.b.i[1] << "," << setw(16) << p.t.b.i[0] << endl;
 }
+
+#endif
 
 static bool ec_gen_table_2_test() {
 	ecpt a, b;

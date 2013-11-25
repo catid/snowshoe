@@ -74,231 +74,7 @@ static u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d, const int len) {
 }
 
 
-//// Constant-time Generator Base Multiplication
-
-/*
- * Precomputed table generation
- *
- * Using GLV-SAC Precomputation with m=2 [1], assuming window size of 2 bits
- *
- * Table index is simply = (a0 ^ a1) || b1 || b0
- *
- * The differences above from [1] seem to improve the efficiency of evaulation
- * and they make the code easier to analyze.
- */
-
-void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
-	for (u32 jj = 0; jj < 128; ++jj) {
-		u32 ii = jj;
-
-		s32 ak = 0;
-		if (ii & (1 << 4)) {
-			ak += 1;
-		} else {
-			ak -= 1;
-		}
-		if (ii & (1 << 5)) {
-			ak += 2;
-		} else {
-			ak -= 2;
-		}
-		if (ii & (1 << 6)) {
-			ak += 4;
-		} else {
-			ak -= 4;
-		}
-		if (ii & (1 << 7)) {
-			ak += 8;
-		} else {
-			ak -= 8;
-		}
-		s32 bk = 0;
-		if (ii & (1 << 0)) {
-			if (ii & (1 << 4)) {
-				bk += 1;
-			} else {
-				bk -= 1;
-			}
-		}
-		if (ii & (1 << 1)) {
-			if (ii & (1 << 5)) {
-				bk += 2;
-			} else {
-				bk -= 2;
-			}
-		}
-		if (ii & (1 << 2)) {
-			if (ii & (1 << 6)) {
-				bk += 4;
-			} else {
-				bk -= 4;
-			}
-		}
-		if (ii & (1 << 3)) {
-			if (ii & (1 << 7)) {
-				bk += 8;
-			} else {
-				bk -= 8;
-			}
-		}
-
-		ii |= 0x80;
-		ii ^= 0x70;
-
-		ak = 0;
-		if (ii & (1 << 4)) {
-			ak += 1;
-		} else {
-			ak -= 1;
-		}
-		if (ii & (1 << 5)) {
-			ak += 2;
-		} else {
-			ak -= 2;
-		}
-		if (ii & (1 << 6)) {
-			ak += 4;
-		} else {
-			ak -= 4;
-		}
-		if (ii & (1 << 7)) {
-			ak += 8;
-		} else {
-			ak -= 8;
-		}
-		bk = 0;
-		if (ii & (1 << 0)) {
-			if (ii & (1 << 4)) {
-				bk += 1;
-			} else {
-				bk -= 1;
-			}
-		}
-		if (ii & (1 << 1)) {
-			if (ii & (1 << 5)) {
-				bk += 2;
-			} else {
-				bk -= 2;
-			}
-		}
-		if (ii & (1 << 2)) {
-			if (ii & (1 << 6)) {
-				bk += 4;
-			} else {
-				bk -= 4;
-			}
-		}
-		if (ii & (1 << 3)) {
-			if (ii & (1 << 7)) {
-				bk += 8;
-			} else {
-				bk -= 8;
-			}
-		}
-
-		ecpt p;
-		ufe t2b;
-
-		ec_set(a, p);
-		for (int kk = 1; kk < ak; ++kk) {
-			ec_add(p, a, p, false, true, true, t2b);
-		}
-
-		ecpt p2;
-		ec_set(b, p2);
-		if (bk < 0) {
-			ec_neg(p2, p2);
-			bk = -bk;
-		}
-
-		for (int kk = 0; kk < bk; ++kk) {
-			ec_add(p, p2, p, false, true, true, t2b);
-		}
-
-		ec_affine(p, true, p);
-
-		ec_set(p, TABLE[jj]);
-	}
-}
-
-/*
- * Table selection rule:
- *
- * k = (a2^a3) || (a1^a3) || (a0^a3) || b3 || b2 || b1 || b0
- */
-
-static CAT_INLINE void ec_table_select_128(const ecpt *table, const ufp &a, const ufp &b, const int index, ecpt &r) {
-	u32 bits = (u32)(a.w >> index) & 15;
-	u32 mask = -(s32)(bits >> 3);
-	u32 k = ((bits ^ mask) & 7) << 4;
-	k |= (u32)(b.w >> index) & 15;
-
-	for (int ii = 0; ii < 128; ++ii) {
-		// Generate a mask that is -1 if ii == index, else 0
-		const u128 mask = ec_gen_mask(ii, k);
-
-		// Add in the masked table entry
-		ec_set_mask(table[ii], mask, r);
-	}
-
-	ec_cond_neg((mask & 1) ^ 1, r);
-}
-
-/*
- * Multiplication by variable base point
- *
- * Point must be in extended projective coordinates with T and Z values.
- *
- * The resulting point has undefined T and Z values, so must be expanded with
- * ec_expand() before using as input to other math functions.
- */
-
-// R = kP
-void ec_mul_gen(const u64 k[4], ecpt &R) {
-	// Decompose scalar into subscalars
-	ufp a, b;
-	s32 asign, bsign;
-	gls_decompose(k, asign, a, bsign, b);
-
-	// Set base point signs
-	ecpt P, Q;
-	ec_set(EC_G, P);
-	ec_set(EC_EG, Q);
-	ec_cond_neg(asign, P);
-	ec_cond_neg(bsign, Q);
-
-	// Precompute multiplication table
-	ecpt table[128];
-	ec_gen_table_128(P, Q, table);
-
-	// Recode subscalars
-	u32 recode_bit = ec_recode_scalars_2(a, b, 128);
-
-	// Initialize working point
-	ecpt X;
-	ec_table_select_128(table, a, b, 124, X);
-
-	ufe t2b;
-	for (int ii = 120; ii >= 0; ii -= 4) {
-		ecpt T;
-		ec_table_select_128(table, a, b, ii, T);
-
-		ec_dbl(X, X, false, t2b);
-		ec_dbl(X, X, false, t2b);
-		ec_dbl(X, X, false, t2b);
-		ec_dbl(X, X, false, t2b);
-		ec_add(X, T, X, true, false, false, t2b);
-	}
-
-	// If bit == 1, X <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
-
-	// Compute affine coordinates in R
-	ec_affine(X, false, R);
-}
-
-
-//// Constant-time Variable Base Multiplication
+//// Constant-time Point Multiplication
 
 /*
  * Precomputed table generation
@@ -331,7 +107,7 @@ void ec_mul_gen(const u64 k[4], ecpt &R) {
  * and they make the code easier to analyze.
  */
 
-void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
+static void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
 	ecpt bn;
 	ec_neg(b, bn);
 
@@ -387,7 +163,8 @@ static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const 
 /*
  * Multiplication by variable base point
  *
- * Point must be in extended projective coordinates with T and Z values.
+ * Point must be in extended projective coordinates with T and Z values,
+ * though Z must be 1.
  *
  * The resulting point has undefined T and Z values, so must be expanded with
  * ec_expand() before using as input to other math functions.
@@ -395,6 +172,10 @@ static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const 
 
 // R = kP
 void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R) {
+	Clock clock;
+	clock.OnInitialize();
+	double t0 = clock.usec();
+
 	// Decompose scalar into subscalars
 	ufp a, b;
 	s32 asign, bsign;
@@ -437,6 +218,9 @@ void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R) {
 
 	// Compute affine coordinates in R
 	ec_affine(X, false, R);
+
+	double t1 = clock.usec();
+	cout << (t1 - t0) << endl;
 }
 
 
@@ -448,7 +232,7 @@ void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R) {
  * Using GLV-SAC Precomputation with m=4 [1], assuming window size of 1 bit
  */
 
-void ec_gen_table_4(const ecpt &a, const ecpt &b, const ecpt &c, const ecpt &d, ecpt TABLE[8]) {
+static void ec_gen_table_4(const ecpt &a, const ecpt &b, const ecpt &c, const ecpt &d, ecpt TABLE[8]) {
 	// P[0] = a
 	ec_set(a, TABLE[0]);
 
@@ -499,7 +283,8 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
 /*
  * Simultaneous multiplication by two variable base points
  *
- * Points must be in extended projective coordinates with T and Z values.
+ * Points must be in extended projective coordinates with T and Z values,
+ * though Z must be 1.
  *
  * The resulting point has undefined T and Z values, so must be expanded with
  * ec_expand() before using as input to other math functions.
