@@ -20,12 +20,15 @@ LIBS =
 
 shared_o = EndianNeutral.o
 shared_test_o = Clock.o
+
+snowshoe_o = snowshoe.o $(shared_o)
+
 fp_test_o = fp_test.o $(shared_o) $(shared_test_o)
 fe_test_o = fe_test.o $(shared_o) $(shared_test_o)
 endo_test_o = endo_test.o $(shared_o) $(shared_test_o)
 ecpt_test_o = ecpt_test.o $(shared_o) $(shared_test_o)
 ecmul_test_o = ecmul_test.o $(shared_o) $(shared_test_o)
-snowshoe_o = snowshoe.o $(shared_o)
+snowshoe_test_o = snowshoe_test.o $(shared_o) $(shared_test_o)
 
 
 # Release target (default)
@@ -79,6 +82,10 @@ ecmultest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
 ecmultest : $(ecmul_test_o)
 	$(CCPP) $(LIBS) -o ecmultest $(ecmul_test_o)
 
+snowshoetest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
+snowshoetest : $(snowshoe_test_o) library
+	$(CCPP) $(LIBS) -L. -lsnowshoe -o snowshoetest $(snowshoe_test_o)
+
 
 # Shared objects
 
@@ -112,11 +119,14 @@ ecpt_test.o : tests/ecpt_test.cpp
 ecmul_test.o : tests/ecmul_test.cpp
 	$(CCPP) $(CFLAGS) -c tests/ecmul_test.cpp
 
+snowshoe_test.o : tests/snowshoe_test.cpp
+	$(CCPP) $(CFLAGS) -c tests/snowshoe_test.cpp
+
 
 # Cleanup
 
 .PHONY : clean
 
 clean :
-	-rm fptest fetest endotest ecpttest ecmultest libsnowshoe.a $(shared_o) $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_o)
+	-rm fptest fetest endotest ecpttest ecmultest snowshoetest libsnowshoe.a $(shared_o) $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
 

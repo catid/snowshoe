@@ -359,18 +359,6 @@ static bool ec_table_select_2_test() {
 	return !test;
 }
 
-/*
- * server side ecmul:
- * h = H(stuff) > 1000
- * d = (long-term server private key) + h * (ephemeral private key) (mod q) > 1000
- * d = (A0 + A1v) + h * (B0 + B1v) (mod q)
- * (private point) = d * (client public point)
- *
- * client side ecsimul:
- * h = H(stuff) > 1000
- * (private point) = h * (client private) * (ephemeral public) + (client private) * (server public)
- */
-
 //// Reference implementations for comparison
 
 static bool ec_mul_ref(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
@@ -405,6 +393,9 @@ static bool ec_mul_ref(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 			}
 		}
 	}
+
+	ec_dbl(p, p, false, t2b);
+	ec_dbl(p, p, false, t2b);
 
 	ec_affine(p, R);
 

@@ -157,14 +157,13 @@ static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const 
 /*
  * Multiplication by variable base point
  *
- * Point must be in extended projective coordinates with T and Z values,
- * though Z must be 1.
+ * Preconditions:
+ * 	0 < k < q
  *
- * The resulting point has undefined T and Z values, so must be expanded with
- * ec_expand() before using as input to other math functions.
+ * Multiplies the point by k * 4 and stores the result in R
  */
 
-// R = kP
+// R = k*4*P
 void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp a, b;
@@ -207,9 +206,17 @@ void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	// If bit == 1, X <- X + P (inverted logic from [1])
 	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
 
+	// Multiply by 4 to avoid small subgroup attack
+	ec_dbl(X, X, false, t2b);
+	ec_dbl(X, X, false, t2b);
+
 	// Compute affine coordinates in R
 	ec_affine(X, R);
 }
+
+/*
+ * Multiplication by generator base point
+ */
 
 void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 	// P = G (affine)
@@ -281,14 +288,13 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
 /*
  * Simultaneous multiplication by two variable base points
  *
- * Points must be in extended projective coordinates with T and Z values,
- * though Z must be 1.
+ * Preconditions:
+ * 	0 < a,b < q
  *
- * The resulting point has undefined T and Z values, so must be expanded with
- * ec_expand() before using as input to other math functions.
+ * Multiplies the result of aP + bQ by 4 and stores it in R
  */
 
-// R = aP + bQ
+// R = a*4*P + b*4*Q
 void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp a0, a1, b0, b1;
@@ -336,6 +342,10 @@ void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_a
 
 	// If bit == 1, X <- X + P (inverted logic from [1])
 	ec_cond_add(recode_bit, X, P0, X, true, false, t2b);
+
+	// Multiply by 4 to avoid small subgroup attack
+	ec_dbl(X, X, false, t2b);
+	ec_dbl(X, X, false, t2b);
 
 	// Compute affine coordinates in R
 	ec_affine(X, R);

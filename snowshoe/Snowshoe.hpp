@@ -29,23 +29,15 @@
 #ifndef CAT_SNOWSHOE_HPP
 #define CAT_SNOWSHOE_HPP
 
-#include "Platform.hpp"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
- * Snowshoe
- *
- * Elliptic Curve Math
- */
-
-namespace cat {
-
-namespace snowshoe {
-
-/*
- * Mask a provided 256-bit number so that it is less than q
+ * Mask a provided 256-bit random number so that it is less than q
  * and can be used as a secret key
  */
-void ec_mask_scalar(u64 k[4]);
+void snowshoe_secret_gen(char k[32]);
 
 /*
  * R = kG
@@ -55,7 +47,7 @@ void ec_mask_scalar(u64 k[4]);
  * Preconditions:
  *	0 < k < q (prime order of curve)
  */
-void ec_mul_gen(const u64 k[4], ecpt_affine &R);
+bool snowshoe_mul_gen(const char k[32], char R[64]);
 
 /*
  * R = kP
@@ -66,19 +58,18 @@ void ec_mul_gen(const u64 k[4], ecpt_affine &R);
  * 	0 < k < q (prime order of curve)
  * 	P is in affine (X, Y) coordinates
  */
-void ec_mul(const u64 k[4], ecpt_affine &P, ecpt_affine &R);
+bool snowshoe_mul(const char k[32], char P[64], char R[64]);
 
 /*
  * R = aP + bQ
  *
  * Simultaneously multiply two points and return the sum
  */
-void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R);
+bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
 
-
-} // namespace snowshoe
-
-} // namespace cat
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CAT_SNOWSHOE_HPP
 

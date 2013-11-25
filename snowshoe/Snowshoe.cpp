@@ -42,3 +42,114 @@
 
 #include "ecmul.cpp"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+static CAT_INLINE void ec_load_k(const char k_chars[32], u64 k[4]) {
+	const u64 *k_raw = reinterpret_cast<const u64 *>( k_chars );
+
+	k[0] = getLE(k_raw[0]);
+	k[1] = getLE(k_raw[1]);
+	k[2] = getLE(k_raw[2]);
+	k[3] = getLE(k_raw[3]);
+}
+
+void snowshoe_secret_gen(char k_chars[32]) {
+	u64 *k_raw = reinterpret_cast<u64 *>( k_chars );
+
+	u64 kq[4];
+	ec_load_k(k_chars, kq);
+
+	ec_mask_scalar(kq);
+
+	k_raw[0] = getLE(kq[0]);
+	k_raw[1] = getLE(kq[1]);
+	k_raw[2] = getLE(kq[2]);
+	k_raw[3] = getLE(kq[3]);
+}
+
+static bool fast_validate_k(const u64 k[4]) {
+	// If k is zero return failure
+	u64 zero_test = k[0] | k[1] | k[2] | k[3];
+	if (zero_test) {
+		return false;
+	}
+
+	// If any of high 4 bits are set, k > q
+	if (k[3] > 0x0fffffffffffffffULL) {
+		return false;
+	}
+
+	return true;
+}
+
+bool snowshoe_mul_gen(const char k[32], char R[64]) {
+	u64 kq[4];
+	ec_load_k(k, kq);
+
+	// If k seems invalid,
+	if (!fast_validate_k(kq)) {
+		return false;
+	}
+
+	// Run the math routine
+	ecpt_affine r;
+	ec_mul_gen(kq, r);
+
+	// Save result endian-neutral
+	ec_save_xy(r, (u8*)R);
+
+	return true;
+}
+
+bool snowshoe_mul(const char k[32], char P[64], char R[64]) {
+	u64 kq[4];
+	ec_load_k(k, kq);
+
+	// If k seems invalid,
+	if (!fast_validate_k(kq)) {
+		return false;
+	}
+
+	// Load point
+	ecpt_affine p1, r;
+	ec_load_xy((const u8*)P, p1);
+
+	// Run the math routine
+	ec_mul(kq, p1, r);
+
+	// Save result endian-neutral
+	ec_save_xy(r, (u8*)R);
+
+	return true;
+}
+
+bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
+	u64 k1[4], k2[4];
+	ec_load_k(a, k1);
+	ec_load_k(b, k2);
+
+	// If k seems invalid,
+	if (!fast_validate_k(k1) || !fast_validate_k(k2)) {
+		return false;
+	}
+
+	// Load point
+	ecpt_affine p1, p2, r;
+	ec_load_xy((const u8*)P, p1);
+	ec_load_xy((const u8*)Q, p1);
+
+	// Run the math routine
+	ec_simul(k1, p1, k2, p2, r);
+
+	// Save result endian-neutral
+	ec_save_xy(r, (u8*)R);
+
+	return true;
+}
+
+#ifdef __cplusplus
+}
+#endif
+
