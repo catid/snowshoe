@@ -6,10 +6,13 @@ using namespace std;
 // Math library
 #include "../snowshoe/ecmul.cpp"
 
-// TODO:
-// ec_gen_table_4
-// ec_recode_scalars_4
-// ec_table_select_4
+static const ecpt_affine EC_G_AFFINE = {
+	EC_GX, EC_GY
+};
+
+static const ecpt_affine EC_EG_AFFINE = {
+	EC_EGX, EC_EGY
+};
 
 
 #if 0
@@ -148,7 +151,7 @@ void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
 
 		ecpt_affine q;
 		ec_affine(p, q);
-		ec_set_expand(q, p);
+		ec_expand(q, p);
 
 		ec_set(p, TABLE[jj]);
 	}
@@ -225,7 +228,7 @@ static bool ec_gen_table_2_test() {
 
 	ecpt_affine q;
 	ec_affine(a1, q);
-	ec_set_expand(q, a1);
+	ec_expand(q, a1);
 
 	ufe one;
 	fe_set_smallk(1, one);
@@ -378,7 +381,7 @@ static bool ec_mul_ref(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	bool seen = false;
 
 	ecpt p, g;
-	ec_set(P0, g);
+	ec_expand(P0, g);
 
 	for (int ii = 255; ii >= 0; --ii) {
 		if (seen) {
@@ -397,7 +400,7 @@ static bool ec_mul_ref(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 			if (seen) {
 				ec_add(p, g, p, true, false, false, t2b);
 			} else {
-				ec_set(P0, p);
+				ec_expand(P0, p);
 				seen = true;
 			}
 		}
@@ -415,13 +418,14 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt_affine &P0, const u64 k2[4]
 	ec_mul_ref(k2, Q0, Qr);
 
 	ecpt P1, Q1;
-	ec_set_expand(Pr, P1);
-	ec_set_expand(Qr, Q1);
+	ec_expand(Pr, P1);
+	ec_expand(Qr, Q1);
 
 	ufe t2b;
-	ec_add(P1, Q1, R, true, true, false, t2b);
+	ecpt r;
+	ec_add(P1, Q1, r, true, true, false, t2b);
 
-	ec_affine(R, R);
+	ec_affine(r, R);
 
 	return true;
 }
@@ -442,7 +446,7 @@ bool ec_mul_gen_test() {
 		}
 		ec_mask_scalar(k);
 
-		ec_mul_ref(k, EC_G, R1);
+		ec_mul_ref(k, EC_G_AFFINE, R1);
 		ec_mul_gen(k, R2);
 
 		ec_save_xy(R1, a1);
@@ -460,10 +464,10 @@ bool ec_mul_gen_test() {
 
 bool ec_mul_test() {
 	u64 k[4] = {0};
-	ecpt R1, R2;
+	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
 
-	for (int jj = 0; jj < 1000; ++jj) {
+	for (int jj = 0; jj < 10000; ++jj) {
 		for (int ii = 0; ii < 4; ++ii) {
 			for (int jj = 0; jj < 30; ++jj) {
 				k[ii] ^= (k[ii] << 3) | (rand() >> 2);
@@ -471,8 +475,8 @@ bool ec_mul_test() {
 		}
 		ec_mask_scalar(k);
 
-		ec_mul_ref(k, EC_G, R1);
-		ec_mul(k, EC_G, R2);
+		ec_mul_ref(k, EC_G_AFFINE, R1);
+		ec_mul(k, EC_G_AFFINE, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -490,10 +494,10 @@ bool ec_mul_test() {
 bool ec_simul_test() {
 	u64 k1[4] = {0};
 	u64 k2[4] = {0};
-	ecpt R1, R2;
+	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
 
-	for (int jj = 0; jj < 1000; ++jj) {
+	for (int jj = 0; jj < 10000; ++jj) {
 		for (int ii = 0; ii < 4; ++ii) {
 			for (int jj = 0; jj < 30; ++jj) {
 				k1[ii] ^= (k1[ii] << 3) | (rand() >> 2);
@@ -507,8 +511,8 @@ bool ec_simul_test() {
 		ec_mask_scalar(k1);
 		ec_mask_scalar(k2);
 
-		ec_simul_ref(k1, EC_G, k2, EC_EG, R1);
-		ec_simul(k1, EC_G, k2, EC_EG, R2);
+		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
+		ec_simul(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
