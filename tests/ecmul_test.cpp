@@ -165,7 +165,7 @@ static bool ec_table_select_2_test_try(ecpt *table, u32 a, u32 b, int expected) 
 }
 
 static bool ec_table_select_2_test() {
-	ecpt p1, p2, r;
+	ecpt p1, p2;
 	ec_set(EC_G, p1);
 	ec_set(EC_EG, p2);
 

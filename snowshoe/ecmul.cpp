@@ -141,7 +141,6 @@ void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
 				bk -= 8;
 			}
 		}
-		cout << ii << " : [" << ak << "]a + [" << bk << "]b";
 
 		ii |= 0x80;
 		ii ^= 0x70;
@@ -196,7 +195,6 @@ void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
 				bk -= 8;
 			}
 		}
-		cout << " -> [" << ak << "]a + [" << bk << "]b";
 
 		ecpt p;
 		ufe t2b;
@@ -211,7 +209,6 @@ void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
 		if (bk < 0) {
 			ec_neg(p2, p2);
 			bk = -bk;
-			cout << "-";
 		}
 
 		for (int kk = 0; kk < bk; ++kk) {
@@ -221,8 +218,6 @@ void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
 		ec_affine(p, true, p);
 
 		ec_set(p, TABLE[jj]);
-
-		cout << endl;
 	}
 }
 
@@ -234,11 +229,9 @@ void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
 
 static CAT_INLINE void ec_table_select_128(const ecpt *table, const ufp &a, const ufp &b, const int index, ecpt &r) {
 	u32 bits = (u32)(a.w >> index) & 15;
-	u32 mask = -(s32)(bits >> 3) & 7;
-	u32 k = (bits & mask) << 4;
+	u32 mask = -(s32)(bits >> 3);
+	u32 k = ((bits ^ mask) & 7) << 4;
 	k |= (u32)(b.w >> index) & 15;
-
-	cout << k << endl;
 
 	for (int ii = 0; ii < 128; ++ii) {
 		// Generate a mask that is -1 if ii == index, else 0
@@ -294,11 +287,11 @@ void ec_mul_gen(const u64 k[4], ecpt &R) {
 		ec_dbl(X, X, false, t2b);
 		ec_dbl(X, X, false, t2b);
 		ec_dbl(X, X, false, t2b);
-		ec_add(X, T, X, false, false, false, t2b);
+		ec_add(X, T, X, true, false, false, t2b);
 	}
 
 	// If bit == 1, X <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, X, false, false, t2b);
+	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
 
 	// Compute affine coordinates in R
 	ec_affine(X, false, R);
