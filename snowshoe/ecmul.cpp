@@ -143,12 +143,14 @@ static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const 
 	u32 k = ((bits ^ (bits >> 1)) & 1) << 2;
 	k |= (u32)(b.w >> index) & 3;
 
+	ec_zero(r);
+
 	for (int ii = 0; ii < 8; ++ii) {
 		// Generate a mask that is -1 if ii == index, else 0
 		const u128 mask = ec_gen_mask(ii, k);
 
 		// Add in the masked table entry
-		ec_set_mask(table[ii], mask, r);
+		ec_xor_mask(table[ii], mask, r);
 	}
 
 	ec_cond_neg(((bits >> 1) & 1) ^ 1, r);
@@ -273,13 +275,15 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
 	k |= ((u32)(c.w >> index) & 1) << 1;
 	k |= ((u32)(d.w >> index) & 1) << 2;
 
+	ec_zero(r);
+
 	const int TABLE_SIZE = 8;
 	for (int ii = 0; ii < TABLE_SIZE; ++ii) {
 		// Generate a mask that is -1 if ii == index, else 0
 		const u128 mask = ec_gen_mask(ii, k);
 
 		// Add in the masked table entry
-		ec_set_mask(table[ii], mask, r);
+		ec_xor_mask(table[ii], mask, r);
 	}
 
 	ec_cond_neg(((a.w >> index) & 1) ^ 1, r);

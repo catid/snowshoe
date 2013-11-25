@@ -1,3 +1,17 @@
+// ecpt.hpp
+struct ecpt_z1 {
+	ufe x, y, t;
+};
+
+// ecpt.cpp
+static CAT_INLINE void ec_xor_mask_z1(const ecpt_z1 &a, const u128 mask, ecpt &r) {
+	fe_xor_mask(a.x, mask, r.x);
+	fe_xor_mask(a.y, mask, r.y);
+	fe_xor_mask(a.t, mask, r.t);
+}
+
+#ifdef EC_MUL_GEN_128
+
 // This approach was abandoned for key generation since the constant-time table lookups on a
 // table of size 128 ecpts were actually dominating the runtime and ended up making it slower
 // than normal variable base point multiplication.
@@ -386,8 +400,7 @@ static const u64 PRECOMP_TABLE1[] = {
 	0x44282e6bebe6f17dULL, 0x124a23b3083597f5ULL, 0x3d6711cfe410a19cULL, 0x1a2f688ebdf902a9ULL,
 	0x97ece2c42c6371afULL, 0x26f707d5789aa581ULL, 0x199268fc7bd19011ULL, 0x241e2b24c0a86dcbULL,
 	0x61db087bfd1f030cULL, 0x76138b5d0c6638a8ULL, 0x4a2c4a14e4e04f15ULL, 0x1dfe4539597c066fULL,
-	0xd76ff3509ba8ba55ULL, 0x5cdeb34277e6d5a3ULL, 0x3352b13e0c4a69b5ULL, 0x72f778a1dabe269eULL,
-	0, 0, 0, 0 // Extra scratch buffer to avoid reading off end of array
+	0xd76ff3509ba8ba55ULL, 0x5cdeb34277e6d5a3ULL, 0x3352b13e0c4a69b5ULL, 0x72f778a1dabe269eULL
 };
 
 static const u64 PRECOMP_TABLE2[] = {
@@ -774,16 +787,11 @@ static const u64 PRECOMP_TABLE2[] = {
 	0x335714408e9bcc7ULL, 0x1aad6d7ddb227f18ULL, 0xa06d491e24b29c38ULL, 0x1f0847d2a80717dcULL,
 	0x7d16efc16713800ULL, 0x27b1b41b0e344bd4ULL, 0xba21f18cdbb21affULL, 0x1017fba7c509f598ULL,
 	0x61db087bfd1f030cULL, 0x76138b5d0c6638a8ULL, 0xb5d3b5eb1b1fb0eaULL, 0x6201bac6a683f990ULL,
-	0xa7915484c1a3eb19ULL, 0x1e66112083ecd96dULL, 0x6a104a4f557c7e7dULL, 0x29514e74efe01076ULL,
-	0, 0, 0, 0 // Extra scratch buffer to avoid reading off end of array
+	0xa7915484c1a3eb19ULL, 0x1e66112083ecd96dULL, 0x6a104a4f557c7e7dULL, 0x29514e74efe01076ULL
 };
 
-struct ecpt_affine {
-	ufe x, y, t;
-};
-
-static const ecpt_affine *SAME_SIGN_GEN_TABLE = (ecpt_affine*)PRECOMP_TABLE1;
-static const ecpt_affine *DIFF_SIGN_GEN_TABLE = (ecpt_affine*)PRECOMP_TABLE2;
+static const ecpt_z1 *SAME_SIGN_GEN_TABLE = (ecpt_z1*)PRECOMP_TABLE1;
+static const ecpt_z1 *DIFF_SIGN_GEN_TABLE = (ecpt_z1*)PRECOMP_TABLE2;
 
 
 //// Constant-time Generator Base Multiplication
@@ -794,18 +802,20 @@ static const ecpt_affine *DIFF_SIGN_GEN_TABLE = (ecpt_affine*)PRECOMP_TABLE2;
  * k = (a2^a3) || (a1^a3) || (a0^a3) || b3 || b2 || b1 || b0
  */
 
-static CAT_INLINE void ec_table_select_128(const ecpt_affine *table, const ufp &a, const ufp &b, const int index, ecpt &r) {
+static CAT_INLINE void ec_table_select_128(const ecpt_z1 *table, const ufp &a, const ufp &b, const int index, ecpt &r) {
 	u32 bits = (u32)(a.w >> index) & 15;
 	u32 mask = -(s32)(bits >> 3);
 	u32 k = ((bits ^ mask) & 7) << 4;
 	k |= (u32)(b.w >> index) & 15;
+
+	ec_zero(r);
 
 	for (int ii = 0; ii < 128; ++ii) {
 		// Generate a mask that is -1 if ii == index, else 0
 		const u128 mask = ec_gen_mask(ii, k);
 
 		// Add in the masked table entry
-		ec_set_mask((const ecpt&)table[ii], mask, r);
+		ec_xor_mask_z1(table[ii], mask, r);
 	}
 
 	ec_cond_neg((mask & 1) ^ 1, r);
@@ -814,7 +824,7 @@ static CAT_INLINE void ec_table_select_128(const ecpt_affine *table, const ufp &
 /*
  * Load either the same or different sign table
  */
-static void ec_choose_table_128(u32 sign, ecpt_affine table[128]) {
+static void ec_choose_table_128(u32 sign, ecpt_z1 table[128]) {
 	const int WORDS = 3 * 4 * 128;
 	memcpy(table, SAME_SIGN_GEN_TABLE, WORDS*8);
 	if (sign) {
@@ -822,11 +832,15 @@ static void ec_choose_table_128(u32 sign, ecpt_affine table[128]) {
 	}
 }
 
+//#include "Clock.hpp"
+//#include <iostream>
+//using namespace std;
+
 // R = kG
-void ec_mul_gen(const u64 k[4], ecpt &R) {
-	Clock clock;
-	clock.OnInitialize();
-	double t0 = clock.usec();
+void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
+	//Clock clock;
+	//clock.OnInitialize();
+	//double t0 = clock.usec();
 
 	// Decompose scalar into subscalars
 	ufp a, b;
@@ -834,7 +848,7 @@ void ec_mul_gen(const u64 k[4], ecpt &R) {
 	gls_decompose(k, asign, a, bsign, b);
 
 	// Precompute multiplication table
-	ecpt_affine table[128];
+	ecpt_z1 table[128];
 	ec_choose_table_128(asign ^ bsign, table);
 
 	// Recode subscalars
@@ -866,9 +880,11 @@ void ec_mul_gen(const u64 k[4], ecpt &R) {
 	ec_cond_neg(asign, X);
 
 	// Compute affine coordinates in R
-	ec_affine(X, false, R);
+	ec_affine(X, R);
 
-	double t1 = clock.usec();
+	//double t1 = clock.usec();
 	//cout << (t1 - t0) << endl;
 }
+
+#endif // EC_MUL_GEN_128
 
