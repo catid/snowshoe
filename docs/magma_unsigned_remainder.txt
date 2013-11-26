@@ -1,0 +1,33 @@
+d := 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA6261414C0DC87D3CE9B68E3B09E01A5;
+
+l := 252; // d < 2^l
+n := Random(d) * Random(2^256);
+N := 256 + 252;
+
+quot := n div d;
+rem := n mod d;
+
+mp := 2^(N+l) div d - 2^N + 1;
+
+print mp;
+print 20320438794797923088800193309000281241044727321160239353067774495651706225708:Hex;
+
+// Live computation starts here:
+
+// t <- MULUH m' * n
+t := (mp * n) div (2^N);
+
+// s <- t + SRL(n - t, 1)
+s := t + ((n - t) div 2);
+
+// quotient <- s >> (l - 1)
+quotp := s div (2^(l-1));
+
+print quot;
+print quotp;
+
+remp := n - quot * d;
+
+print remp;
+print rem;
+

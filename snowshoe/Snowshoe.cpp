@@ -55,6 +55,15 @@ static CAT_INLINE void ec_load_k(const char k_chars[32], u64 k[4]) {
 	k[3] = getLE(k_raw[3]);
 }
 
+static CAT_INLINE void ec_save_k(const u64 k[4], char k_chars[32]) {
+	u64 *k_raw = reinterpret_cast<u64 *>( k_chars );
+
+	k_raw[0] = getLE(k[0]);
+	k_raw[1] = getLE(k[1]);
+	k_raw[2] = getLE(k[2]);
+	k_raw[3] = getLE(k[3]);
+}
+
 void snowshoe_secret_gen(char k_chars[32]) {
 	u64 *k_raw = reinterpret_cast<u64 *>( k_chars );
 
@@ -63,10 +72,20 @@ void snowshoe_secret_gen(char k_chars[32]) {
 
 	ec_mask_scalar(kq);
 
-	k_raw[0] = getLE(kq[0]);
-	k_raw[1] = getLE(kq[1]);
-	k_raw[2] = getLE(kq[2]);
-	k_raw[3] = getLE(kq[3]);
+	ec_save_k(kq, k_chars);
+}
+
+void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
+	u64 *k_raw = reinterpret_cast<u64 *>( k_chars );
+
+	u64 x1[4], y1[4], z1[4];
+	ec_load_k(x, x1);
+	ec_load_k(y, y1);
+	ec_load_k(z, z1);
+
+	mul_mod_q(x1, y1, z1, x1);
+
+	ec_save_k(x1, r);
 }
 
 void snowshoe_mul_gen(const char k[32], char R[64]) {

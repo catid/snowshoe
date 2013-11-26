@@ -40,6 +40,17 @@ extern "C" {
 void snowshoe_secret_gen(char k[32]);
 
 /*
+ * r = (x * y + z) (mod q)
+ *
+ * Only one of the inputs (x) may exceed q.
+ * You may pass NULL in place of z to skip the addition.
+ *
+ * Preconditions:
+ *	y,z < q
+ */
+void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
+
+/*
  * R = k*4*G
  *
  * Multiply generator point by k
