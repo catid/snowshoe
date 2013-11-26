@@ -3,6 +3,9 @@
 #include <cassert>
 using namespace std;
 
+#include "Clock.hpp"
+using namespace cat;
+
 // Math library
 #include "../snowshoe/Snowshoe.hpp"
 

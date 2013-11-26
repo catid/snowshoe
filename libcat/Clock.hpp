@@ -35,6 +35,9 @@
 namespace cat {
 
 
+#define CAT_CLOCK_EXTRA
+
+
 class CAT_EXPORT Clock
 {
 #ifdef CAT_OS_WINDOWS
