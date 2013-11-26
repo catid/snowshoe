@@ -224,7 +224,7 @@ static void gls_decompose(const u64 k[4], s32 &k1sign, ufp &k1, s32 &k2sign, ufp
 	t[4] >>= 59;
 
 	// a1 -= t
-	diff = a1[0] - t[0];
+	diff = (s128)a1[0] - t[0];
 	a1[0] = (u64)diff;
 	diff = ((diff >> 64) + a1[1]) - t[1];
 	a1[1] = (u64)diff;
@@ -324,7 +324,7 @@ static void gls_decompose(const u64 k[4], s32 &k1sign, ufp &k1, s32 &k2sign, ufp
 	t[3] >>= 60;
 
 	// a2 -= t
-	diff = a2[0] - t[0];
+	diff = (s128)a2[0] - t[0];
 	a2[0] = (u64)diff;
 	diff = ((diff >> 64) + a2[1]) - t[1];
 	a2[1] = (u64)diff;

@@ -5,6 +5,7 @@ using namespace std;
 
 // Math library
 #include "../snowshoe/ecmul.cpp"
+#include "../snowshoe/misc.cpp"
 
 static const ecpt_affine EC_G_AFFINE = {
 	EC_GX, EC_GY
@@ -518,11 +519,63 @@ bool ec_simul_test() {
 	return true;
 }
 
+bool mul_mod_q_test() {
+	u64 x[4], y[4], z[4], r[4];
+
+	x[0] = 0xFB8A86C9E6022515ULL;
+	x[1] = 0xD97FE1124FD8CC92ULL;
+	x[2] = 0x782777E7572BA130ULL;
+	x[3] = 0x0A64E21CF80B9B64ULL;
+	y[0] = 0xEC7442A2DDA82CE0ULL;
+	y[1] = 0x85F16DA062E80241ULL;
+	y[2] = 0x21309454C67D3636ULL;
+	y[3] = 0xE9296E5F048E01CCULL;
+	z[0] = 0x140A07B4AD54B996ULL;
+	z[1] = 0x5B73600FD51C45CDULL;
+	z[2] = 0xC83C13EF9A0A3AC3ULL;
+	z[3] = 0x003445C52BC607CFULL;
+
+	mul_mod_q(x, y, z, r);
+
+	if (r[0] != 0x9A5FC58C4E29F36EULL ||
+		r[1] != 0x0A03DAB8CF16D699ULL ||
+		r[2] != 0x6F161E3B5D31BBCEULL ||
+		r[3] != 0x063D680741CBB9A1ULL) {
+		return false;
+	}
+
+	x[0] = 0xffffffffffffffffULL;
+	x[1] = 0xffffffffffffffffULL;
+	x[2] = 0xffffffffffffffffULL;
+	x[3] = 0xffffffffffffffffULL;
+	y[0] = EC_Q[0] - 1;
+	y[1] = EC_Q[1];
+	y[2] = EC_Q[2];
+	y[3] = EC_Q[3];
+	z[0] = EC_Q[0] - 1;
+	z[1] = EC_Q[1];
+	z[2] = EC_Q[2];
+	z[3] = EC_Q[3];
+
+	mul_mod_q(x, y, z, r);
+
+	if (r[0] != 0xB851F71EBA7E1BF5ULL ||
+		r[1] != 0x08875560CEA50510ULL ||
+		r[2] != 0xFFFFFFFFFFFFFFFAULL ||
+		r[3] != 0x0FFFFFFFFFFFFFFFULL) {
+		return false;
+	}
+
+	return true;
+}
+
 
 //// Entrypoint
 
 int main() {
 	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
+
+	assert(mul_mod_q_test());
 
 	srand(0);
 

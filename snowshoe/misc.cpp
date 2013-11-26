@@ -9,45 +9,6 @@ static const u64 EC_Q[4] = {
 	0x0FFFFFFFFFFFFFFFULL
 };
 
-
-/*
- * Constant time modular multiplication
- *
-d := 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA6261414C0DC87D3CE9B68E3B09E01A5;
-
-l := 252; // d < 2^l
-n := Random(2^256) * Random(2^256);
-N := 512;
-
-quot := n div d;
-rem := n mod d;
-
-mp := 2^(N+l) div d - 2^N + 1;
-
-print mp;
-print 221269984318908782116022557274131459378616010318126502992777998111130512380382470982435267452138673041816973846238807:Hex;
-
-// Live computation starts here:
-
-// t <- MULUH m' * n
-t := (mp * n) div (2^N);
-
-// s <- t + SRL(n - t, 1)
-s := t + ((n - t) div 2);
-
-// quotient <- s >> (l - 1)
-quotp := s div (2^(l-1));
-
-print quot;
-print quotp;
-
-remp := n - quot * d;
-
-print remp;
-print rem;
- * 
- */
-
 // r = x * y + z (mod q), z optional
 static void mul_mod_q(const u64 x[4], const u64 y[4], const u64 z[4], u64 r[4]) {
 	u64 p[8], t[7], n[4];
@@ -309,7 +270,7 @@ static void mul_mod_q(const u64 x[4], const u64 y[4], const u64 z[4], u64 r[4]) 
 	t[6] >>= 60;
 
 	// p -= t
-	diff = p[0] - t[0];
+	diff = (s128)p[0] - t[0];
 	p[0] = (u64)diff;
 	diff = ((diff >> 64) + p[1]) - t[1];
 	p[1] = (u64)diff;
@@ -360,17 +321,17 @@ static void mul_mod_q(const u64 x[4], const u64 y[4], const u64 z[4], u64 r[4]) 
 	// NOTE: p is now the quotient of (x * y + z) / q
 	// To recover the remainder, we need to multiply by q again:
 
-	// p = p * q (only need low 4 words of it)
+	// t = p * q (only need low 4 words of it)
 
 	// Comba multiplication: Right to left schoolbook column approach
 	prod = (u128)p[0] * EC_Q[0];
-	p[0] = (u64)prod;
+	t[0] = (u64)prod;
 
 	prod = (u128)p[1] * EC_Q[0] + (u64)(prod >> 64);
 	carry = (u64)(prod >> 64);
 	prod = (u128)p[0] * EC_Q[1] + (u64)prod;
 	carry += (u64)(prod >> 64);
-	p[1] = (u64)prod;
+	t[1] = (u64)prod;
 
 	prod = (u128)p[2] * EC_Q[0] + (u64)carry;
 	carry >>= 64;
@@ -379,7 +340,7 @@ static void mul_mod_q(const u64 x[4], const u64 y[4], const u64 z[4], u64 r[4]) 
 	carry += (u64)(prod >> 64);
 	prod = (u128)p[0] * EC_Q[2] + (u64)prod;
 	carry += (u64)(prod >> 64);
-	p[2] = (u64)prod;
+	t[2] = (u64)prod;
 
 	prod = (u128)p[3] * EC_Q[0] + (u64)carry;
 	carry >>= 64;
@@ -389,18 +350,18 @@ static void mul_mod_q(const u64 x[4], const u64 y[4], const u64 z[4], u64 r[4]) 
 	prod = (u128)p[1] * EC_Q[2] + (u64)prod;
 	carry += (u64)(prod >> 64);
 	prod = (u128)p[0] * EC_Q[3] + (u64)prod;
-	p[3] = (u64)prod;
+	t[3] = (u64)prod;
 
 	// And then subtract it from the original result to get the remainder:
 
-	// r = n - p
-	diff = n[0] - p[0];
+	// r = n - t
+	diff = (s128)n[0] - t[0];
 	r[0] = (u64)diff;
-	diff = ((diff >> 64) + n[1]) - p[1];
+	diff = ((diff >> 64) + n[1]) - t[1];
 	r[1] = (u64)diff;
-	diff = ((diff >> 64) + n[2]) - p[2];
+	diff = ((diff >> 64) + n[2]) - t[2];
 	r[2] = (u64)diff;
-	diff = ((diff >> 64) + n[3]) - p[3];
+	diff = ((diff >> 64) + n[3]) - t[3];
 	r[3] = (u64)diff;
 }
 
