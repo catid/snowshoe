@@ -77,7 +77,9 @@ Server side: Multiply server secret key by client public point
 	assert(snowshoe_mul(sk_s, pp_c, sp_s));
 ~~~
 
-Server and client both arrive at `sp_c == sp_s`, which is the secret key for the session
+Server and client both arrive at `sp_c == sp_s`, which is the secret key for the session.
+
+The assertions used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return false, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
 
 
 #### Example Usage: EC-FHMQV
@@ -103,7 +105,7 @@ Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV
 	// Online: Client setup
 
 	generate_k(sk_c);
-	assert(snowshoe_secret_gen(sk_c));
+	snowshoe_secret_gen(sk_c);
 	assert(snowshoe_mul_gen(sk_c, pp_c));
 
 	generate_k(h);
@@ -120,6 +122,8 @@ Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV
 	assert(snowshoe_mul_mod_q(h, sk_c, 0, a));
 	assert(snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
 ~~~
+
+Similar to the EC-DH example, assert() is used in place of appropriate error handling.  `generate_k` should be replaced by a CSPRNG.  And `h` should be the output of a hash function.
 
 
 #### Building: Mac
