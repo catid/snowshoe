@@ -35,7 +35,7 @@ extern "C" {
 
 /*
  * Mask a provided 256-bit random number so that it is less than q
- * and can be used as a secret key
+ * and can be used as a secret key.
  */
 void snowshoe_secret_gen(char k[32]);
 
@@ -47,8 +47,11 @@ void snowshoe_secret_gen(char k[32]);
  *
  * Preconditions:
  *	y,z < q
+ *
+ * Returns false if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
  */
-void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
+bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
 
 /*
  * R = k*4*G
@@ -57,8 +60,11 @@ void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
  *
  * Preconditions:
  *	0 < k < q (prime order of curve)
+ *
+ * Returns false if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
  */
-void snowshoe_mul_gen(const char k[32], char R[64]);
+bool snowshoe_mul_gen(const char k[32], char R[64]);
 
 /*
  * R = k*4*P
@@ -67,8 +73,11 @@ void snowshoe_mul_gen(const char k[32], char R[64]);
  *
  * Preconditions:
  * 	0 < k < q (prime order of curve)
+ *
+ * Returns false if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
  */
-void snowshoe_mul(const char k[32], char P[64], char R[64]);
+bool snowshoe_mul(const char k[32], char P[64], char R[64]);
 
 /*
  * R = a*4*P + b*4*Q
@@ -77,8 +86,11 @@ void snowshoe_mul(const char k[32], char P[64], char R[64]);
  * 	0 < a,b < q (prime order of curve)
  *
  * Simultaneously multiply two points and return the sum
+ *
+ * Returns false if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
  */
-void snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
+bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
 
 #ifdef __cplusplus
 }

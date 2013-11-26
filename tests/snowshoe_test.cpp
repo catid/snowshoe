@@ -55,13 +55,13 @@ bool ec_dh_test() {
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
 
-	snowshoe_mul_gen(sk_c, pp_c);
+	assert(snowshoe_mul_gen(sk_c, pp_c));
 
-	snowshoe_mul_gen(sk_s, pp_s);
+	assert(snowshoe_mul_gen(sk_s, pp_s));
 
-	snowshoe_mul(sk_c, pp_s, sp_c);
+	assert(snowshoe_mul(sk_c, pp_s, sp_c));
 
-	snowshoe_mul(sk_s, pp_c, sp_s);
+	assert(snowshoe_mul(sk_s, pp_c, sp_s));
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (sp_c[ii] != sp_s[ii]) {
@@ -94,31 +94,31 @@ bool ec_dh_fs_test() {
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	snowshoe_mul_gen(sk_s, pp_s);
+	assert(snowshoe_mul_gen(sk_s, pp_s));
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	snowshoe_mul_gen(sk_e, pp_e);
+	assert(snowshoe_mul_gen(sk_e, pp_e));
 
 	// Online: Client setup
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	snowshoe_mul_gen(sk_c, pp_c);
+	assert(snowshoe_mul_gen(sk_c, pp_c));
 
 	generate_k(h);
 
 	// Online: Server handles client request
 
 	// d = h * sk_e + sk_s (mod q)
-	snowshoe_mul_mod_q(h, sk_e, sk_s, d);
-	snowshoe_mul(d, pp_c, sp_s);
+	assert(snowshoe_mul_mod_q(h, sk_e, sk_s, d));
+	assert(snowshoe_mul(d, pp_c, sp_s));
 
 	// Online: Client handles server response
 
 	// a = h * sk_c (mod q)
-	snowshoe_mul_mod_q(h, sk_c, 0, a);
-	snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c);
+	assert(snowshoe_mul_mod_q(h, sk_c, 0, a));
+	assert(snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (sp_c[ii] != sp_s[ii]) {

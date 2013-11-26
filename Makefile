@@ -18,17 +18,16 @@ LIBS =
 
 # Object files
 
-shared_o = EndianNeutral.o
 shared_test_o = Clock.o
 
-snowshoe_o = snowshoe.o $(shared_o)
+snowshoe_o = snowshoe.o
 
-fp_test_o = fp_test.o $(shared_o) $(shared_test_o)
-fe_test_o = fe_test.o $(shared_o) $(shared_test_o)
-endo_test_o = endo_test.o $(shared_o) $(shared_test_o)
-ecpt_test_o = ecpt_test.o $(shared_o) $(shared_test_o)
-ecmul_test_o = ecmul_test.o $(shared_o) $(shared_test_o)
-snowshoe_test_o = snowshoe_test.o $(shared_o) $(shared_test_o)
+fp_test_o = fp_test.o $(shared_test_o)
+fe_test_o = fe_test.o $(shared_test_o)
+endo_test_o = endo_test.o $(shared_test_o)
+ecpt_test_o = ecpt_test.o $(shared_test_o)
+ecmul_test_o = ecmul_test.o $(shared_test_o)
+snowshoe_test_o = snowshoe_test.o $(shared_test_o)
 
 
 # Release target (default)
@@ -89,9 +88,6 @@ snowshoetest : $(snowshoe_test_o) library
 
 # Shared objects
 
-EndianNeutral.o : libcat/EndianNeutral.cpp
-	$(CCPP) $(CFLAGS) -c libcat/EndianNeutral.cpp
-
 Clock.o : libcat/Clock.cpp
 	$(CCPP) $(CFLAGS) -c libcat/Clock.cpp
 
@@ -128,5 +124,5 @@ snowshoe_test.o : tests/snowshoe_test.cpp
 .PHONY : clean
 
 clean :
-	-rm fptest fetest endotest ecpttest ecmultest snowshoetest libsnowshoe.a $(shared_o) $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
+	-rm fptest fetest endotest ecpttest ecmultest snowshoetest libsnowshoe.a $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
 

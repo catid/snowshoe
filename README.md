@@ -22,15 +22,115 @@ other math functions required to implement MQV-style protocols.
 #### Usage
 
 You can either compile-in the software or link to it.  I recommend statically linking
-the code, since that enables full optimization.
+the code, since that enables full optimization and speeds up your compilation.
+
+To build the project you only need to compile `snowshoe/Snowshoe.cpp`, which includes
+all of the other source files.  Or link to a prebuilt static library.
+
+To use the project you only need to include `snowshoe/Snowshoe.h`, which declares the
+C exports from the source files.
+
+
+#### Example Usage: EC-DH
+
+[Elliptic Curve Diffie-Hellman](http://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman)
+
+Allocate memory for the keys:
+
+~~~
+	char sk_c[32], sk_s[32];
+~~~
+
+Fill `sk_c` and `sk_s` with random bytes here.  Snowshoe does not provide a random number generator.
+
+Now generate the server public/private key pair:
+
+~~~
+	char pp_s[64];
+	snowshoe_secret_gen(sk_s);
+	assert(snowshoe_mul_gen(sk_s, pp_s));
+~~~
+
+`snowshoe_secret_gen` will mask off some bits of the random input string to make it suitable for use as a private key.
+
+`snowshoe_mul_gen` takes a prepared private key and multiplies it by the base point (described below) to produce public point (X,Y) coordinates encoded as 64 bytes.
+
+Generate client public/private key pair:
+
+~~~
+	char pp_c[64];
+	snowshoe_secret_gen(sk_c);
+	assert(snowshoe_mul_gen(sk_c, pp_c));
+~~~
+
+Client side: Multiply client secret key by server public point
+
+~~~
+	char sp_c[64];
+	assert(snowshoe_mul(sk_c, pp_s, sp_c));
+~~~
+
+Server side: Multiply server secret key by client public point
+
+~~~
+	char sp_s[64];
+	assert(snowshoe_mul(sk_s, pp_c, sp_s));
+~~~
+
+Server and client both arrive at `sp_c == sp_s`, which is the secret key for the session
+
+
+#### Example Usage: EC-FHMQV
+
+Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV):
+
+~~~
+	char h[32], d[32], a[32];
+	char sk_c[32], sk_s[32], sk_e[32];
+	char pp_c[64], pp_s[64], pp_e[64];
+	char sp_c[64], sp_s[64];
+
+	// Offline precomputation:
+
+	generate_k(sk_s);
+	snowshoe_secret_gen(sk_s);
+	assert(snowshoe_mul_gen(sk_s, pp_s));
+
+	generate_k(sk_e);
+	snowshoe_secret_gen(sk_e);
+	assert(snowshoe_mul_gen(sk_e, pp_e));
+
+	// Online: Client setup
+
+	generate_k(sk_c);
+	assert(snowshoe_secret_gen(sk_c));
+	assert(snowshoe_mul_gen(sk_c, pp_c));
+
+	generate_k(h);
+
+	// Online: Server handles client request
+
+	// d = h * sk_e + sk_s (mod q)
+	assert(snowshoe_mul_mod_q(h, sk_e, sk_s, d));
+	assert(snowshoe_mul(d, pp_c, sp_s));
+
+	// Online: Client handles server response
+
+	// a = h * sk_c (mod q)
+	assert(snowshoe_mul_mod_q(h, sk_c, 0, a));
+	assert(snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
+~~~
+
 
 #### Building: Mac
+
+To build the static library, install command-line Xcode tools and simply run the make script:
 
 ~~~
 make release
 ~~~
 
-#### Building: Windows
+This produces `libsnowshoe.a` with optimizations.
 
 
 #### Survey of other open-source constant-time ECC implementations:

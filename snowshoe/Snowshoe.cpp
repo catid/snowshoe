@@ -40,6 +40,7 @@
  * functions that are not constant-time are commented with warnings.
  */
 
+#include "EndianNeutral.cpp"
 #include "ecmul.cpp"
 #include "misc.cpp"
 
@@ -74,61 +75,126 @@ void snowshoe_secret_gen(char k_chars[32]) {
 	ec_save_k(kq, k_chars);
 }
 
-void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
+// Check if k == 0 in constant-time
+static bool is_zero(const u64 k[4]) {
+	u64 zero = k[0] | k[1] | k[2] | k[3];
+	u32 z = (u32)(zero | (zero >> 32));
+	return z == 0;
+}
+
+// Verify that 0 < k < q
+static bool invalid_key(const u64 k[4]) {
+	// If zero,
+	if (is_zero(k)) {
+		return true;
+	}
+
+	// If not less than q,
+	if (!less_q(k)) {
+		return true;
+	}
+
+	return false;
+}
+
+bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
 	u64 x1[4], y1[4], z1[4];
 	ec_load_k(x, x1);
 	ec_load_k(y, y1);
 	if (z) {
 		ec_load_k(z, z1);
+
+		// Validate key
+		if (invalid_key(z1)) {
+			return false;
+		}
+	}
+
+	// Validate keys
+	if (is_zero(x1) || invalid_key(y1)) {
+		return false;
 	}
 
 	mul_mod_q(x1, y1, z ? z1 : 0, x1);
 
 	ec_save_k(x1, r);
+
+	return true;
 }
 
-void snowshoe_mul_gen(const char k[32], char R[64]) {
-	u64 kq[4];
-	ec_load_k(k, kq);
+bool snowshoe_mul_gen(const char k_raw[32], char R[64]) {
+	u64 k[4];
+	ec_load_k(k_raw, k);
+
+	// Validate key
+	if (invalid_key(k)) {
+		return false;
+	}
 
 	// Run the math routine
 	ecpt_affine r;
-	ec_mul_gen(kq, r);
+	ec_mul_gen(k, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
+
+	return true;
 }
 
-void snowshoe_mul(const char k[32], char P[64], char R[64]) {
-	u64 kq[4];
-	ec_load_k(k, kq);
+bool snowshoe_mul(const char k_raw[32], char P[64], char R[64]) {
+	u64 k[4];
+	ec_load_k(k_raw, k);
+
+	// Validate key
+	if (invalid_key(k)) {
+		return false;
+	}
 
 	// Load point
 	ecpt_affine p1, r;
 	ec_load_xy((const u8*)P, p1);
 
+	// Validate point
+	if (!ec_valid(p1.x, p1.y)) {
+		return false;
+	}
+
 	// Run the math routine
-	ec_mul(kq, p1, r);
+	ec_mul(k, p1, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
+
+	return true;
 }
 
-void snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
+bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
 	u64 k1[4], k2[4];
 	ec_load_k(a, k1);
 	ec_load_k(b, k2);
+
+	// Validate keys
+	if (invalid_key(k1) || invalid_key(k2)) {
+		return false;
+	}
 
 	// Load point
 	ecpt_affine p1, p2, r;
 	ec_load_xy((const u8*)P, p1);
 	ec_load_xy((const u8*)Q, p2);
 
+	// Validate points
+	if (!ec_valid(p1.x, p1.y) || !ec_valid(p2.x, p2.y)) {
+		return false;
+	}
+
 	// Run the math routine
 	ec_simul(k1, p1, k2, p2, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
+
+	return true;
 }
 
 #ifdef __cplusplus

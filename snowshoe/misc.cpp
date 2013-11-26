@@ -9,6 +9,18 @@ static const u64 EC_Q[4] = {
 	0x0FFFFFFFFFFFFFFFULL
 };
 
+// Returns true if k is less than q
+static bool less_q(const u64 k[4]) {
+	// p -= t
+	s128 diff = (s128)k[0] - EC_Q[0];
+	diff = ((diff >> 64) + k[1]) - EC_Q[1];
+	diff = ((diff >> 64) + k[2]) - EC_Q[2];
+	diff = ((diff >> 64) + k[3]) - EC_Q[3];
+
+	// If there was a borrow out, then it was less than q
+	return diff < 0;
+}
+
 // r = x * y + z (mod q), z optional
 static void mul_mod_q(const u64 x[4], const u64 y[4], const u64 z[4], u64 r[4]) {
 	u64 p[8], t[7], n[4];
