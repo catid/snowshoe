@@ -46,7 +46,8 @@ void snowshoe_secret_gen(char k[32]);
  * You may pass NULL in place of z to skip the addition.
  *
  * Preconditions:
- *	y,z < q
+ *	0 < x
+ *	0 < y,z < q
  *
  * Returns false if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
