@@ -7,7 +7,7 @@ using namespace std;
 using namespace cat;
 
 // Math library
-#include "../snowshoe/Snowshoe.hpp"
+#include "../snowshoe/Snowshoe.h"
 
 //// Test Driver
 

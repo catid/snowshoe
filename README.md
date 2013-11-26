@@ -19,6 +19,20 @@ available in the public domain at this time.  And this library also provides
 other math functions required to implement MQV-style protocols.
 
 
+#### Usage
+
+You can either compile-in the software or link to it.  I recommend statically linking
+the code, since that enables full optimization.
+
+#### Building: Mac
+
+~~~
+make release
+~~~
+
+#### Building: Windows
+
+
 #### Survey of other open-source constant-time ECC implementations:
 
 Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ) is:
