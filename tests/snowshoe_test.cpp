@@ -6,25 +6,6 @@ using namespace std;
 // Math library
 #include "../snowshoe/Snowshoe.hpp"
 
-/*
- * server side ec_mul:
- * h = H(stuff) > 1000
- * d = (long-term server private key) + h * (ephemeral private key) (mod q) > 1000
- * (private point) = d * 4 * (client public point)
- *
- * client side ec_simul:
- * h = H(stuff) > 1000
- * a = h * (client private) (mod q)
- * (private point) = a * 4 * (ephemeral public) + (client private) * 4 * (server public)
- *
- * Required math operations:
- * H()
- * S + H*T (mod q)
- * ec_mul()
- * ec_simul()
- */
-
-
 //// Test Driver
 
 static void generate_k(char kb[32]) {
@@ -88,15 +69,76 @@ bool ec_dh_test() {
 	return true;
 }
 
+/*
+ * server side ec_mul:
+ * h = H(stuff) > 1000
+ * d = (long-term server private key) + h * (ephemeral private key) (mod q) > 1000
+ * (private point) = d * 4 * (client public point)
+ *
+ * client side ec_simul:
+ * h = H(stuff) > 1000
+ * a = h * (client private) (mod q)
+ * (private point) = a * 4 * (ephemeral public) + (client private) * 4 * (server public)
+ */
+
+bool ec_dh_fs_test() {
+	char h[32], d[32], a[32];
+	char sk_c[32], sk_s[32], sk_e[32];
+	char pp_c[64], pp_s[64], pp_e[64];
+	char sp_c[64], sp_s[64];
+
+	// Offline precomputation:
+
+	generate_k(sk_s);
+	snowshoe_secret_gen(sk_s);
+	snowshoe_mul_gen(sk_s, pp_s);
+
+	generate_k(sk_e);
+	snowshoe_secret_gen(sk_e);
+	snowshoe_mul_gen(sk_e, pp_e);
+
+	// Online: Client setup
+
+	generate_k(sk_c);
+	snowshoe_secret_gen(sk_c);
+	snowshoe_mul_gen(sk_c, pp_c);
+
+	generate_k(h);
+
+	// Online: Server handles client request
+
+	// d = h * sk_e + sk_s (mod q)
+	snowshoe_mul_mod_q(h, sk_e, sk_s, d);
+	snowshoe_mul(d, pp_c, sp_s);
+
+	// Online: Client handles server response
+
+	// a = h * sk_c (mod q)
+	snowshoe_mul_mod_q(h, sk_c, 0, a);
+	snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c);
+
+	for (int ii = 0; ii < 64; ++ii) {
+		if (sp_c[ii] != sp_s[ii]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 //// Entrypoint
 
 int main() {
-	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
+	cout << "Snowshoe Unit Tester" << endl;
 
 	srand(0);
 
-	for (int ii = 0; ii < 100000; ++ii) {
+	for (int ii = 0; ii < 10000; ++ii) {
+		assert(ec_dh_fs_test());
+	}
+
+	for (int ii = 0; ii < 10000; ++ii) {
 		assert(ec_dh_test());
 	}
 

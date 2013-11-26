@@ -41,6 +41,7 @@
  */
 
 #include "ecmul.cpp"
+#include "misc.cpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,8 +66,6 @@ static CAT_INLINE void ec_save_k(const u64 k[4], char k_chars[32]) {
 }
 
 void snowshoe_secret_gen(char k_chars[32]) {
-	u64 *k_raw = reinterpret_cast<u64 *>( k_chars );
-
 	u64 kq[4];
 	ec_load_k(k_chars, kq);
 
@@ -76,14 +75,14 @@ void snowshoe_secret_gen(char k_chars[32]) {
 }
 
 void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
-	u64 *k_raw = reinterpret_cast<u64 *>( k_chars );
-
 	u64 x1[4], y1[4], z1[4];
 	ec_load_k(x, x1);
 	ec_load_k(y, y1);
-	ec_load_k(z, z1);
+	if (z) {
+		ec_load_k(z, z1);
+	}
 
-	mul_mod_q(x1, y1, z1, x1);
+	mul_mod_q(x1, y1, z ? z1 : 0, x1);
 
 	ec_save_k(x1, r);
 }
@@ -123,7 +122,7 @@ void snowshoe_simul(const char a[32], const char P[64], const char b[32], const 
 	// Load point
 	ecpt_affine p1, p2, r;
 	ec_load_xy((const u8*)P, p1);
-	ec_load_xy((const u8*)Q, p1);
+	ec_load_xy((const u8*)Q, p2);
 
 	// Run the math routine
 	ec_simul(k1, p1, k2, p2, r);
