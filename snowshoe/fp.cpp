@@ -89,12 +89,46 @@ static CAT_INLINE void fp_set(const ufp &a, ufp &r) {
 
 // r = (mask == -1) ? a : r
 static CAT_INLINE void fp_set_mask(const ufp &a, const u128 mask, ufp &r) {
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+
+	const u32 m = static_cast<const u32>( mask );
+
+	CAT_ASM_BEGIN
+		"testl %2, %2\n\t"
+		"cmovnzq %3, %0\n\t"
+		"cmovnzq %4, %1"
+		: "+r" (r.i[0]), "+r" (r.i[1])
+		: "r" (m), "m" (a.i[0]), "m" (a.i[1])
+		: "cc"
+	CAT_ASM_END
+
+#else
+
 	r.w = (a.w & mask) ^ (r.w & ~mask);
+
+#endif
 }
 
 // r ^= a & mask
 static CAT_INLINE void fp_xor_mask(const ufp &a, const u128 mask, ufp &r) {
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+
+	const u32 m = static_cast<const u32>( mask );
+
+	CAT_ASM_BEGIN
+		"testl %2, %2\n\t"
+		"cmovnzq %3, %0\n\t"
+		"cmovnzq %4, %1"
+		: "+r" (r.i[0]), "+r" (r.i[1])
+		: "r" (m), "m" (a.i[0]), "m" (a.i[1])
+		: "cc"
+	CAT_ASM_END
+
+#else
+
 	r.w ^= a.w & mask;
+
+#endif
 }
 
 /*
@@ -126,8 +160,8 @@ static CAT_INLINE void fp_add_reduce(ufp &x) {
 		"btrq $63, %1\n\t"
 		"adcq $0, %0\n\t"
 		"adcq $0, %1"
-		: "=r" (x.i[0]), "=r" (x.i[1])
-		: "0" (x.i[0]), "1" (x.i[1])
+		: "+r" (x.i[0]), "+r" (x.i[1])
+		:
 		: "cc"
 	CAT_ASM_END
 
@@ -188,8 +222,8 @@ static CAT_INLINE void fp_sub_reduce(ufp &x) {
 		"btrq $63, %1\n\t"
 		"sbbq $0, %0\n\t"
 		"sbbq $0, %1"
-		: "=r" (x.i[0]), "=r" (x.i[1])
-		: "0" (x.i[0]), "1" (x.i[1])
+		: "+r" (x.i[0]), "+r" (x.i[1])
+		:
 		: "cc"
 	CAT_ASM_END
 
@@ -219,7 +253,27 @@ static CAT_INLINE void fp_neg(const ufp &a, ufp &r) {
 
 // r = (mask==-1 ? r : -r)
 static CAT_INLINE void fp_neg_mask(const u128 mask, ufp &r) {
-	r.w = ((0 - r.w) & mask) ^ (r.w & ~mask);
+	ufp s;
+	s.w = 0 - r.w;
+
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+
+	const u32 m = static_cast<const u32>( mask );
+
+	CAT_ASM_BEGIN
+		"testl %2, %2\n\t"
+		"cmovnzq %3, %0\n\t"
+		"cmovnzq %4, %1"
+		: "+r" (r.i[0]), "+r" (r.i[1])
+		: "r" (m), "r" (s.i[0]), "r" (s.i[1])
+		: "cc"
+	CAT_ASM_END
+
+#else
+
+	r.w = (s.w & mask) ^ (r.w & ~mask);
+
+#endif
 
 	// Note that fp_sub_reduce does nothing for the case of mask==0, since the
 	// high bit will not be set in this case.
