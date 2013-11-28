@@ -754,46 +754,37 @@ static void ec_recode_scalar_comb(u64 k[4], u64 b[4]) {
 	const int d = 32; // ev
 	const int l = 256; // dw
 
-	// Set bit d
-	b[0] = (u64)1 << (d - 1);
-	b[1] = 0;
-	b[2] = 0;
-	b[3] = 0;
+	const u64 d_bit = (u64)1 << (d - 1);
+	const u64 low_mask = d_bit - 1;
 
-	// For each low bit,
-	for (int i = 0; i <= (d - 2); ++i) {
-		// b_i = 0 for -1, 1 for +1:
-		b[0] |= ((k[0] >> (i + 1)) & 1) << i;
-	}
+	// for bits 0..(d-1), 0 => -1, 1 => +1
+	b[0] = ((k[0] >> 1) & low_mask) | d_bit;
 
-	// c = k >> d
-	u64 c[4];
-	c[0] = (k[0] >> 32) | (k[1] << 32);
-	c[1] = (k[1] >> 32) | (k[2] << 32);
-	c[2] = (k[2] >> 32) | (k[3] << 32);
-	c[3] = k[3] >> 32;
+	b[0] |= k[0] & ~low_mask;
+	b[1] = k[1];
+	b[2] = k[2];
+	b[3] = k[3];
 
 	for (int i = d; i < l; ++i) {
-		u32 b_i = (u32)(c[0] & 1);
-		// b_i = 0 for 0, 1 for b_i mod d
-		b[i >> 6] |= (u64)b_i << (i & 0x3f);
+		u32 b_imd = ((b[0] >> (i & (d - 1))) & 1) ^ 1;
+		u32 b_i = (b[i >> 6] >> (i & 63)) & 1;
 
-		// c = (c >> 1)
-		c[0] = (c[0] >> 1) | (c[1] << 63);
-		c[1] = (c[1] >> 1) | (c[2] << 63);
-		c[2] = (c[2] >> 1) | (c[3] << 63);
-		c[3] = c[3] >> 1;
+		u64 t[4];
+		t[0] = 0;
+		t[1] = 0;
+		t[2] = 0;
+		t[3] = 0;
+		int j = i + 1;
+		t[j >> 6] |= (u64)(b_imd & b_i) << (j & 63);
 
-		// c -= (b_i >> 1)
-		u32 m = (-(s32)b_i & i & 0x1f) >> 1;
-		s128 diff = (s128)c[0] - m;
-		c[0] = (u64)diff;
-		diff = ((diff >> 64) + c[1]);
-		c[1] = (u64)diff;
-		diff = ((diff >> 64) + c[2]);
-		c[2] = (u64)diff;
-		diff = ((diff >> 64) + c[3]);
-		c[3] = (u64)diff;
+		u128 sum = (u128)b[0] + t[0];
+		b[0] = (u64)sum;
+		sum = ((u128)b[1] + t[1]) + (u64)(sum >> 64);
+		b[1] = (u64)sum;
+		sum = ((u128)b[2] + t[2]) + (u64)(sum >> 64);
+		b[2] = (u64)sum;
+		sum = ((u128)b[3] + t[3]) + (u64)(sum >> 64);
+		b[3] = (u64)sum;
 	}
 }
 
@@ -808,7 +799,7 @@ static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const
 	// K(w', v', e') = b_(d * w' + e * v' + e')
 	u32 jj = d * wp + e * vp + ep;
 
-	return (u32)(b[jj >> 6] >> (jj & 0x3f)) & 1;
+	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
 static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u128 mask, ecpt &r) {
