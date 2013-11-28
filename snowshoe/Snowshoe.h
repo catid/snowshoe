@@ -55,7 +55,7 @@ void snowshoe_secret_gen(char k[32]);
 bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
 
 /*
- * R = k*4*G
+ * R = k*G
  *
  * Multiply generator point by k
  *

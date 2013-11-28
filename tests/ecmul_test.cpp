@@ -376,8 +376,8 @@ bool ec_mul_gen_test() {
 		u32 t1 = Clock::cycles();
 		ec_mul_gen(k, true, R3);
 		u32 t2 = Clock::cycles();
-		cout << (t1 - t0) << " not-CT" << endl;
-		cout << (t2 - t1) << " CT" << endl;
+		cout << (t1 - t0) << " ec_mul_gen not-CT" << endl;
+		cout << (t2 - t1) << " ec_mul_gen CT" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -421,7 +421,10 @@ bool ec_mul_test() {
 		ec_mask_scalar(k);
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
+		u32 t0 = Clock::cycles();
 		ec_mul(k, EC_G_AFFINE, R2);
+		u32 t1 = Clock::cycles();
+		cout << (t1 - t0) << " ec_mul" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -457,7 +460,10 @@ bool ec_simul_test() {
 		ec_mask_scalar(k2);
 
 		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
+		u32 t0 = Clock::cycles();
 		ec_simul(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R2);
+		u32 t1 = Clock::cycles();
+		cout << (t1 - t0) << " ec_simul" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
