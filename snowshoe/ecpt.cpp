@@ -175,10 +175,86 @@ static CAT_INLINE void ec_set_mask(const ecpt &a, const u128 mask, ecpt &r) {
 
 // r ^= a & mask
 static CAT_INLINE void ec_xor_mask(const ecpt &a, const u128 mask, ecpt &r) {
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+
+	const u32 m = static_cast<const u32>( mask );
+
+	CAT_ASM_BEGIN
+		"testl %8, %8\n\t"
+		"cmovnzq %9, %0\n\t"
+		"cmovnzq %10, %1\n\t"
+		"cmovnzq %11, %2\n\t"
+		"cmovnzq %12, %3\n\t"
+		"cmovnzq %13, %4\n\t"
+		"cmovnzq %14, %5\n\t"
+		"cmovnzq %15, %6\n\t"
+		"cmovnzq %16, %7"
+		: "+r" (r.x.a.i[0]), "+r" (r.x.a.i[1]), "+r" (r.x.b.i[0]), "+r" (r.x.b.i[1]),
+		  "+r" (r.y.a.i[0]), "+r" (r.y.a.i[1]), "+r" (r.y.b.i[0]), "+r" (r.y.b.i[1])
+		: "r" (m),
+		  "m" (a.x.a.i[0]), "m" (a.x.a.i[1]), "m" (a.x.b.i[0]), "m" (a.x.b.i[1]),
+		  "m" (a.y.a.i[0]), "m" (a.y.a.i[1]), "m" (a.y.b.i[0]), "m" (a.y.b.i[1])
+		: "cc"
+	CAT_ASM_END
+
+	CAT_ASM_BEGIN
+		"testl %8, %8\n\t"
+		"cmovnzq %9, %0\n\t"
+		"cmovnzq %10, %1\n\t"
+		"cmovnzq %11, %2\n\t"
+		"cmovnzq %12, %3\n\t"
+		"cmovnzq %13, %4\n\t"
+		"cmovnzq %14, %5\n\t"
+		"cmovnzq %15, %6\n\t"
+		"cmovnzq %16, %7"
+		: "+r" (r.t.a.i[0]), "+r" (r.t.a.i[1]), "+r" (r.t.b.i[0]), "+r" (r.t.b.i[1]),
+		  "+r" (r.z.a.i[0]), "+r" (r.z.a.i[1]), "+r" (r.z.b.i[0]), "+r" (r.z.b.i[1])
+		: "r" (m),
+		  "m" (a.t.a.i[0]), "m" (a.t.a.i[1]), "m" (a.t.b.i[0]), "m" (a.t.b.i[1]),
+		  "m" (a.z.a.i[0]), "m" (a.z.a.i[1]), "m" (a.z.b.i[0]), "m" (a.z.b.i[1])
+		: "cc"
+	CAT_ASM_END
+
+#else
+
 	fe_xor_mask(a.x, mask, r.x);
 	fe_xor_mask(a.y, mask, r.y);
 	fe_xor_mask(a.t, mask, r.t);
 	fe_xor_mask(a.z, mask, r.z);
+
+#endif
+}
+
+// r ^= a & mask
+static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u128 mask, ecpt &r) {
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+
+	const u32 m = static_cast<const u32>( mask );
+
+	CAT_ASM_BEGIN
+		"testl %8, %8\n\t"
+		"cmovnzq %9, %0\n\t"
+		"cmovnzq %10, %1\n\t"
+		"cmovnzq %11, %2\n\t"
+		"cmovnzq %12, %3\n\t"
+		"cmovnzq %13, %4\n\t"
+		"cmovnzq %14, %5\n\t"
+		"cmovnzq %15, %6\n\t"
+		"cmovnzq %16, %7"
+		: "+r" (r.x.a.i[0]), "+r" (r.x.a.i[1]), "+r" (r.x.b.i[0]), "+r" (r.x.b.i[1]),
+		  "+r" (r.y.a.i[0]), "+r" (r.y.a.i[1]), "+r" (r.y.b.i[0]), "+r" (r.y.b.i[1])
+		: "r" (m),
+		  "m" (a.x.a.i[0]), "m" (a.x.a.i[1]), "m" (a.x.b.i[0]), "m" (a.x.b.i[1]),
+		  "m" (a.y.a.i[0]), "m" (a.y.a.i[1]), "m" (a.y.b.i[0]), "m" (a.y.b.i[1])
+		: "cc"
+	CAT_ASM_END
+
+#else
+
+	fe_xor_mask(a.x, mask, r.x);
+	fe_xor_mask(a.y, mask, r.y);
+
+#endif
 }
 
 /*

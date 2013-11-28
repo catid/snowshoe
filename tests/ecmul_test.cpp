@@ -3,6 +3,8 @@
 #include <cassert>
 using namespace std;
 
+#include "Clock.hpp"
+
 // Math library
 #include "../snowshoe/ecmul.cpp"
 
@@ -62,26 +64,20 @@ static bool ec_gen_tables_comb_test() {
 
 			// q = u * P
 			ufe t2b;
-			ecpt q;
+			ecpt q, s;
 
-			if (u > 0) {
-				ec_set(EC_G, q);
-				for (int ii = 1; ii < u; ++ii) {
-					ec_add(q, EC_G, q, true, true, true, t2b);
-				}
+			ec_set(EC_G, q);
 
-				// q = u * 2^d * P
-				for (int ii = 0; ii < d; ++ii) {
-					ec_dbl(q, q, false, t2b);
+			for (int ii = 0; ii < (w - 1); ++ii) {
+				if (u & (1 << ii)) {
+					ec_set(EC_G, s);
+					for (int jj = 0; jj < (d * (ii + 1)); ++jj) {
+						ec_add(s, s, s, false, true, true, t2b);
+					}
+					ec_add(q, s, q, false, true, true, t2b);
 				}
-			} else {
-				ec_identity(q);
 			}
 
-			// q = (1 + u * 2^d) * P
-			ec_add(q, EC_G, q, true, false, false, t2b);
-
-			// q = 2 ^ (e * v') * (1 + u * 2^d) * P
 			u32 ev = e * vp;
 			for (int ii = 0; ii < ev; ++ii) {
 				ec_dbl(q, q, false, t2b);
@@ -363,8 +359,8 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt_affine &P0, const u64 k2[4]
 
 bool ec_mul_gen_test() {
 	u64 k[4] = {0};
-	ecpt_affine R1, R2;
-	u8 a1[64], a2[64];
+	ecpt_affine R1, R2, R3;
+	u8 a1[64], a2[64], a3[64];
 
 	for (int jj = 0; jj < 10000; ++jj) {
 		for (int ii = 0; ii < 4; ++ii) {
@@ -374,16 +370,24 @@ bool ec_mul_gen_test() {
 		}
 		ec_mask_scalar(k);
 
-		cout << k[0] << endl;
-		cout << "TEST" << endl;
 		ec_mul_ref(k, EC_G_AFFINE, R1);
+		u32 t0 = Clock::cycles();
 		ec_mul_gen(k, false, R2);
+		u32 t1 = Clock::cycles();
+		ec_mul_gen(k, true, R3);
+		u32 t2 = Clock::cycles();
+		cout << (t1 - t0) << " not-CT" << endl;
+		cout << (t2 - t1) << " CT" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
+		ec_save_xy(R3, a3);
 
 		for (int ii = 0; ii < 64; ++ii) {
 			if (a1[ii] != a2[ii]) {
+				return false;
+			}
+			if (a1[ii] != a3[ii]) {
 				return false;
 			}
 		}
@@ -510,121 +514,10 @@ bool mul_mod_q_test() {
 
 //// Entrypoint
 
-static void ec_recode_scalar_comb_test(u32 k) {
-	const int t = 9;
-	const int w = 2;
-	const int v = 2;
-	const int e = 3; // t / wv
-	const int d = e*v; // ev
-	const int l = d*w; // dw
-
-	// Set bit d
-	u32 b = (u32)1 << (d - 1);
-
-	// for bits 0..(d-1), 0 => -1, 1 => +1
-	b |= (k >> 1) & ((1 << (d - 1)) - 1);
-
-	// c = k >> d
-	u32 c;
-	c = k >> d;
-
-	for (int i = d; i < l; ++i) {
-		s32 c0 = (u32)(c & 1);
-		u32 b_imd = (b >> (i % d)) & 1;
-
-		// b_i = 0 for 0, 1 for b_i mod d
-		b |= c0 << i;
-
-		// c = (c >> 1)
-		// c -= (b_i >> 1)
-		c -= b_imd ? c0 : -c0;
-		c >>= 1;
-	}
-
-	cout << "c = " << hex << c << endl;
-	cout << "b = " << hex << b << endl;
-}
-
-static CAT_INLINE u32 comb_bit(const u32 b, const int wp, const int vp, const int ep) {
-	const int t = 9;
-	const int w = 2;
-	const int v = 2;
-	const int e = 3; // t / wv
-	const int d = e*v; // ev
-	const int l = d*w; // dw
-
-	// K(w', v', e') = b_(d * w' + e * v' + e')
-	u32 jj = d * wp + e * vp + ep;
-
-	return (b >> jj) & 1;
-}
-
-void ec_table_select_comb(const u32 b, const int ii) {
-	const int t = 9;
-	const int w = 2;
-	const int v = 2;
-	const int e = 3; // t / wv
-	const int d = e*v; // ev
-	const int l = d*w; // dw
-
-	// DCK(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
-	// s(v', e') = K(0, v', e')
-
-	// Select table entry 
-	// p1 = s(0, ii) * tables[DCK(0, ii)][0]
-	// p2 = s(1, ii) * tables[DCK(1, ii)][1]
-
-	u32 d_0 = 0;
-	d_0 |= comb_bit(b, 2, 0, ii) << 1;
-	d_0 |= comb_bit(b, 1, 0, ii);
-	u32 s_0 = comb_bit(b, 0, 0, ii);
-
-	cout << ii << ", v=0 -> " << (s_0 ? "+" : "-") << d_0 << endl;
-
-	u32 d_1 = 0;
-	d_1 |= comb_bit(b, 2, 1, ii) << 1;
-	d_1 |= comb_bit(b, 1, 1, ii);
-	u32 s_1 = comb_bit(b, 0, 1, ii);
-
-	cout << ii << ", v=1 -> " << (s_1 ? "+" : "-") << d_1 << endl;
-}
-
-#if 0
-
-static void ec_gen_tables_comb2_test() {
-	const int t = 9;
-	const int w = 2;
-	const int v = 2;
-	const int e = 3; // t / wv
-	const int d = e*v; // ev
-	const int l = d*w; // dw
-
-	const int ul = 1 << (w - 1);
-	for (int u = 0; u < ul; ++u) {
-		for (int vp = 0; vp < v; ++vp) {
-			// P[u][v'] = 2^(ev') * (1 + u0*2^d + ... + u_(w-2)*2^((w-1)*d)) * P
-
-			u32 q = (1 + (u << d)) << (e * vp);
-
-			cout << "u=" << u << ", v'=" << vp << " -> " << q << endl;
-		}
-	}
-}
-
-#endif
-
 int main() {
 	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
 
 	srand(0);
-
-	//ec_gen_tables_comb2_test();
-
-	ec_table_select_comb(0xEA5, 0);
-	ec_table_select_comb(0xEA5, 1);
-	ec_table_select_comb(0xEA5, 2);
-
-	ec_recode_scalar_comb_test(395);
 
 	assert(ec_gen_tables_comb_test());
 
