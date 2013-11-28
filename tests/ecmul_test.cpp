@@ -384,10 +384,21 @@ bool ec_mul_gen_test() {
 		ec_save_xy(R3, a3);
 
 		for (int ii = 0; ii < 64; ++ii) {
-			if (a1[ii] != a2[ii]) {
+			if (a2[ii] != a3[ii]) {
 				return false;
 			}
-			if (a1[ii] != a3[ii]) {
+		}
+
+		ufe t2b;
+		ecpt p;
+		ec_expand(R2, p);
+		ec_dbl(p, p, false, t2b);
+		ec_dbl(p, p, false, t2b);
+		ec_affine(p, R2);
+		ec_save_xy(R2, a2);
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (a2[ii] != a1[ii]) {
 				return false;
 			}
 		}

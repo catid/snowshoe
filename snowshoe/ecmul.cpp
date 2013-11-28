@@ -789,15 +789,8 @@ static void ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 }
 
 static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
-	const int t = 252;
-	const int w = 8;
-	const int v = 2;
-	const int e = 16; // t / wv
-	const int d = 32; // ev
-	const int l = 256; // dw
-
 	// K(w', v', e') = b_(d * w' + e * v' + e')
-	u32 jj = d * wp + e * vp + ep;
+	u32 jj = (wp << 5) + (vp << 4) + ep;
 
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
@@ -912,10 +905,6 @@ void ec_mul_gen(const u64 k[4], const bool constant_time, ecpt_affine &R) {
 
 	// If recode_lsb == 1, X = -X
 	ec_cond_neg(recode_lsb, X);
-
-	// Multiply by 4 to avoid small subgroup attack
-	ec_dbl(X, X, false, t2b);
-	ec_dbl(X, X, false, t2b);
 
 	// Compute affine coordinates in R
 	ec_affine(X, R);
