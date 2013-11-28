@@ -515,7 +515,7 @@ static CAT_INLINE void ec_cond_neg(const s32 bit, ecpt &r) {
 	// Generate mask = -1 when bit == 1, else 0
 	const u128 mask = (s128)(-bit);
 
-	// Effectively negate when sign == 0
+	// Effectively negate when bit == 1
 	ec_neg_mask(mask, r);
 }
 

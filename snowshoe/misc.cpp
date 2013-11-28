@@ -1,6 +1,3 @@
-#include "Platform.hpp"
-using namespace cat;
-
 // Prime order of curve
 static const u64 EC_Q[4] = {
 	0xCE9B68E3B09E01A5ULL,
@@ -19,6 +16,18 @@ static bool less_q(const u64 k[4]) {
 
 	// If there was a borrow out, then it was less than q
 	return diff < 0;
+}
+
+// r = q - k
+static void neg_mod_q(const u64 k[4], u64 r[4]) {
+	s128 diff = (s128)EC_Q[0] - k[0];
+	r[0] = (u64)diff;
+	diff = ((diff >> 64) + EC_Q[1]) - k[1];
+	r[1] = (u64)diff;
+	diff = ((diff >> 64) + EC_Q[2]) - k[2];
+	r[2] = (u64)diff;
+	diff = ((diff >> 64) + EC_Q[3]) - k[3];
+	r[3] = (u64)diff;
 }
 
 // r = x * y + z (mod q), z optional

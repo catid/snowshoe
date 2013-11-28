@@ -104,7 +104,14 @@ bool ec_dh_fs_test() {
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
+
+	u32 t0 = Clock::cycles();
+
 	assert(snowshoe_mul_gen(sk_c, pp_c));
+
+	u32 t1 = Clock::cycles();
+
+	cout << (t1 - t0) << endl;
 
 	generate_k(h);
 

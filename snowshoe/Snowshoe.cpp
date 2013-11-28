@@ -42,7 +42,6 @@
 
 #include "EndianNeutral.cpp"
 #include "ecmul.cpp"
-#include "misc.cpp"
 
 #ifdef __cplusplus
 extern "C" {
