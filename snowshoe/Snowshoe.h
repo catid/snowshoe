@@ -65,7 +65,7 @@ bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
  * Returns false if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_mul_gen(const char k[32], char R[64]);
+bool snowshoe_mul_gen(const char k[32], const bool constant_time, char R[64]);
 
 /*
  * R = k*4*P

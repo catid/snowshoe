@@ -53,11 +53,12 @@ static bool ec_gen_tables_comb_test() {
 	const int d = 32; // ev
 	const int l = 256; // dw
 
+	ecpt_affine table0[128], table1[128];
+
 	const int ul = 1 << (w - 1);
 	for (int u = 0; u < ul; ++u) {
 		for (int vp = 0; vp < v; ++vp) {
 			// P[u][v'] = 2^(ev') * (1 + u0*2^d + ... + u_(w-2)*2^((w-1)*d)) * P
-			u64 k = ((u64)1 << (e * vp)) * ((u64)1 + (((u64)1 << d) * (u64)u));
 
 			// q = u * P
 			ufe t2b;
@@ -86,23 +87,41 @@ static bool ec_gen_tables_comb_test() {
 				ec_dbl(q, q, false, t2b);
 			}
 
-			ecpt_affine T;
-			ec_affine(q, T);
-
 			if (vp == 0) {
-				if (!ec_isequal_xy(T, GEN_TABLE_0[u])) {
-					cout << "failure at v' = 0, u = " << u << ":" << endl;
-					ec_print_xy(T);
-					return false;
-				}
+				ec_affine(q, table0[u]);
 			} else {
-				if (!ec_isequal_xy(T, GEN_TABLE_1[u])) {
-					cout << "failure at v' = 1, u = " << u << ":" << endl;
-					ec_print_xy(T);
-					return false;
-				}
+				ec_affine(q, table1[u]);
 			}
 		}
+	}
+
+#if 0
+
+	ecpt_affine *ptr = table0;
+	cout << "static const u64 PRECOMP_TABLE_0[] = {" << endl;
+	for (int ii = 0; ii < 128; ++ii) {
+		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
+		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
+		ptr++;
+	}
+	cout << "};" << endl;
+
+	ptr = table1;
+	cout << "static const u64 PRECOMP_TABLE_1[] = {" << endl;
+	for (int ii = 0; ii < 128; ++ii) {
+		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
+		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
+		ptr++;
+	}
+	cout << "};" << endl;
+
+#endif
+
+	if (0 != memcmp(table0, GEN_TABLE_0, sizeof(table0))) {
+		return false;
+	}
+	if (0 != memcmp(table1, GEN_TABLE_1, sizeof(table1))) {
+		return false;
 	}
 
 	return true;
@@ -356,7 +375,7 @@ bool ec_mul_gen_test() {
 		ec_mask_scalar(k);
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
-		ec_mul_gen(k, R2);
+		ec_mul_gen(k, false, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
