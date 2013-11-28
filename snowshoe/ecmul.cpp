@@ -745,7 +745,7 @@ static const u64 PRECOMP_TABLE_1[] = {
 static const ecpt_affine *GEN_TABLE_0 = (const ecpt_affine*)PRECOMP_TABLE_0;
 static const ecpt_affine *GEN_TABLE_1 = (const ecpt_affine*)PRECOMP_TABLE_1;
 
-static void ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
+static u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const int t = 252;
 	const int w = 8;
 	const int v = 2;
@@ -753,16 +753,28 @@ static void ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const int d = 32; // ev
 	const int l = 256; // dw
 
+	u32 lsb = ((u32)k[0] & 1) ^ 1;
+	u64 mask = (s64)0 - lsb;
+
+	u64 nk[4];
+	neg_mod_q(k, nk);
+
+	u64 a[4];
+	a[0] = (k[0] & ~mask) ^ (nk[0] & mask);
+	a[1] = (k[1] & ~mask) ^ (nk[1] & mask);
+	a[2] = (k[2] & ~mask) ^ (nk[2] & mask);
+	a[3] = (k[3] & ~mask) ^ (nk[3] & mask);
+
 	const u64 d_bit = (u64)1 << (d - 1);
 	const u64 low_mask = d_bit - 1;
 
 	// for bits 0..(d-1), 0 => -1, 1 => +1
-	b[0] = ((k[0] >> 1) & low_mask) | d_bit;
+	b[0] = ((a[0] >> 1) & low_mask) | d_bit;
 
-	b[0] |= k[0] & ~low_mask;
-	b[1] = k[1];
-	b[2] = k[2];
-	b[3] = k[3];
+	b[0] |= a[0] & ~low_mask;
+	b[1] = a[1];
+	b[2] = a[2];
+	b[3] = a[3];
 
 	for (int i = d; i < l; ++i) {
 		u32 b_imd = (u32)(b[0] >> (i & (d - 1)));
@@ -774,7 +786,7 @@ static void ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 		t[1] = 0;
 		t[2] = 0;
 		t[3] = 0;
-		int j = i + 1;
+		const int j = i + 1;
 		t[j >> 6] |= (u64)bit << (j & 63);
 
 		u128 sum = (u128)b[0] + t[0];
@@ -786,6 +798,8 @@ static void ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 		sum = ((u128)b[3] + t[3]) + (u64)(sum >> 64);
 		b[3] = (u64)sum;
 	}
+
+	return lsb;
 }
 
 static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
@@ -859,21 +873,6 @@ void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time
 	ec_cond_neg(s_1 ^ 1, p2);
 }
 
-static u32 cond_neg(const u64 k[4], u64 r[4]) {
-	u32 lsb = ((u32)k[0] & 1) ^ 1;
-	u64 mask = (s64)0 - lsb;
-
-	u64 nk[4];
-	neg_mod_q(k, nk);
-
-	r[0] = (k[0] & ~mask) ^ (nk[0] & mask);
-	r[1] = (k[1] & ~mask) ^ (nk[1] & mask);
-	r[2] = (k[2] & ~mask) ^ (nk[2] & mask);
-	r[3] = (k[3] & ~mask) ^ (nk[3] & mask);
-
-	return lsb;
-}
-
 void ec_mul_gen(const u64 k[4], const bool constant_time, ecpt_affine &R) {
 	const int t = 252;
 	const int w = 8;
@@ -883,20 +882,19 @@ void ec_mul_gen(const u64 k[4], const bool constant_time, ecpt_affine &R) {
 	const int l = 256; // dw
 
 	// Recode scalar
-	u64 a[4], b[4];
-	u32 recode_lsb = cond_neg(k, a);
-	ec_recode_scalar_comb(a, b);
+	u64 kp[4];
+	u32 recode_lsb = ec_recode_scalar_comb(k, kp);
 
 	// Initialize working point
 	ufe t2b;
 	ecpt X, S, T;
 
-	ec_table_select_comb(b, e - 1, constant_time, S, T);
+	ec_table_select_comb(kp, e - 1, constant_time, S, T);
 	fe_set_smallk(1, S.z);
 	ec_add(S, T, X, true, true, false, t2b);
 
 	for (int ii = e - 2; ii >= 0; --ii) {
-		ec_table_select_comb(b, ii, constant_time, S, T);
+		ec_table_select_comb(kp, ii, constant_time, S, T);
 
 		ec_dbl(X, X, false, t2b);
 		ec_add(X, S, X, true, false, false, t2b);
