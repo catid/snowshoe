@@ -629,10 +629,10 @@ static const u64 PRECOMP_TABLE_1[] = {
 	0xdce7e336a7b6ab0aULL, 0x21f1459fecb41606ULL, 0xba82fc68074afe3aULL, 0x3f5bc6a43102f42dULL,
 };
 
-ecpt_affine *GEN_TABLE_0 = (ecpt_affine*)PRECOMP_TABLE_0;
-ecpt_affine *GEN_TABLE_1 = (ecpt_affine*)PRECOMP_TABLE_1;
+static const ecpt_affine *GEN_TABLE_0 = (const ecpt_affine*)PRECOMP_TABLE_0;
+static const ecpt_affine *GEN_TABLE_1 = (const ecpt_affine*)PRECOMP_TABLE_1;
 
-void ec_recode_scalar_comb(u64 k[4], u64 b[4]) {
+static void ec_recode_scalar_comb(u64 k[4], u64 b[4]) {
 	const int t = 252;
 	const int w = 8;
 	const int v = 2;
@@ -683,7 +683,9 @@ void ec_recode_scalar_comb(u64 k[4], u64 b[4]) {
 	}
 }
 
-void ec_gen_tables_comb(ecpt_affine table1[128], ecpt_affine table2[128], const ecpt &p) {
+#if 0
+
+static void ec_gen_tables_comb(ecpt_affine table1[128], ecpt_affine table2[128], const ecpt &p) {
 	const int t = 252;
 	const int w = 8;
 	const int v = 2;
@@ -728,6 +730,8 @@ void ec_gen_tables_comb(ecpt_affine table1[128], ecpt_affine table2[128], const 
 		}
 	}
 }
+
+#endif
 
 static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
 	const int t = 252;
