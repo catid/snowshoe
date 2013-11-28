@@ -753,40 +753,34 @@ static u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const int d = 32; // ev
 	const int l = 256; // dw
 
+	// If k0 == 0, b = q - k (and return 1), else b = k (and return 0)
+
 	u32 lsb = ((u32)k[0] & 1) ^ 1;
 	u64 mask = (s64)0 - lsb;
 
 	u64 nk[4];
 	neg_mod_q(k, nk);
 
-	u64 a[4];
-	a[0] = (k[0] & ~mask) ^ (nk[0] & mask);
-	a[1] = (k[1] & ~mask) ^ (nk[1] & mask);
-	a[2] = (k[2] & ~mask) ^ (nk[2] & mask);
-	a[3] = (k[3] & ~mask) ^ (nk[3] & mask);
+	b[0] = (k[0] & ~mask) ^ (nk[0] & mask);
+	b[1] = (k[1] & ~mask) ^ (nk[1] & mask);
+	b[2] = (k[2] & ~mask) ^ (nk[2] & mask);
+	b[3] = (k[3] & ~mask) ^ (nk[3] & mask);
+
+	// Recode scalar:
 
 	const u64 d_bit = (u64)1 << (d - 1);
 	const u64 low_mask = d_bit - 1;
 
 	// for bits 0..(d-1), 0 => -1, 1 => +1
-	b[0] = ((a[0] >> 1) & low_mask) | d_bit;
-
-	b[0] |= a[0] & ~low_mask;
-	b[1] = a[1];
-	b[2] = a[2];
-	b[3] = a[3];
+	b[0] = (b[0] & ~low_mask) | ((b[0] >> 1) & low_mask) | d_bit;
 
 	for (int i = d; i < l; ++i) {
 		u32 b_imd = (u32)(b[0] >> (i & (d - 1)));
 		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
 		u32 bit = (b_imd ^ 1) & b_i & 1;
 
-		u64 t[4];
-		t[0] = 0;
-		t[1] = 0;
-		t[2] = 0;
-		t[3] = 0;
 		const int j = i + 1;
+		u64 t[4] = {0};
 		t[j >> 6] |= (u64)bit << (j & 63);
 
 		u128 sum = (u128)b[0] + t[0];
