@@ -5,7 +5,6 @@ using namespace std;
 
 // Math library
 #include "../snowshoe/ecmul.cpp"
-#include "../snowshoe/misc.cpp"
 
 static const ecpt_affine EC_G_AFFINE = {
 	EC_GX, EC_GY
@@ -15,166 +14,16 @@ static const ecpt_affine EC_EG_AFFINE = {
 	EC_EGX, EC_EGY
 };
 
-
-#if 0
-
-/*
- * Precomputed table generation for generator point
- */
-
-void ec_gen_table_128(const ecpt &a, const ecpt &b, ecpt TABLE[128]) {
-	for (u32 jj = 0; jj < 128; ++jj) {
-		u32 ii = jj;
-
-		s32 ak = 0;
-		if (ii & (1 << 4)) {
-			ak += 1;
-		} else {
-			ak -= 1;
-		}
-		if (ii & (1 << 5)) {
-			ak += 2;
-		} else {
-			ak -= 2;
-		}
-		if (ii & (1 << 6)) {
-			ak += 4;
-		} else {
-			ak -= 4;
-		}
-		if (ii & (1 << 7)) {
-			ak += 8;
-		} else {
-			ak -= 8;
-		}
-		s32 bk = 0;
-		if (ii & (1 << 0)) {
-			if (ii & (1 << 4)) {
-				bk += 1;
-			} else {
-				bk -= 1;
-			}
-		}
-		if (ii & (1 << 1)) {
-			if (ii & (1 << 5)) {
-				bk += 2;
-			} else {
-				bk -= 2;
-			}
-		}
-		if (ii & (1 << 2)) {
-			if (ii & (1 << 6)) {
-				bk += 4;
-			} else {
-				bk -= 4;
-			}
-		}
-		if (ii & (1 << 3)) {
-			if (ii & (1 << 7)) {
-				bk += 8;
-			} else {
-				bk -= 8;
-			}
-		}
-
-		ii |= 0x80;
-		ii ^= 0x70;
-
-		ak = 0;
-		if (ii & (1 << 4)) {
-			ak += 1;
-		} else {
-			ak -= 1;
-		}
-		if (ii & (1 << 5)) {
-			ak += 2;
-		} else {
-			ak -= 2;
-		}
-		if (ii & (1 << 6)) {
-			ak += 4;
-		} else {
-			ak -= 4;
-		}
-		if (ii & (1 << 7)) {
-			ak += 8;
-		} else {
-			ak -= 8;
-		}
-		bk = 0;
-		if (ii & (1 << 0)) {
-			if (ii & (1 << 4)) {
-				bk += 1;
-			} else {
-				bk -= 1;
-			}
-		}
-		if (ii & (1 << 1)) {
-			if (ii & (1 << 5)) {
-				bk += 2;
-			} else {
-				bk -= 2;
-			}
-		}
-		if (ii & (1 << 2)) {
-			if (ii & (1 << 6)) {
-				bk += 4;
-			} else {
-				bk -= 4;
-			}
-		}
-		if (ii & (1 << 3)) {
-			if (ii & (1 << 7)) {
-				bk += 8;
-			} else {
-				bk -= 8;
-			}
-		}
-
-		ecpt p;
-		ufe t2b;
-
-		ec_set(a, p);
-		for (int kk = 1; kk < ak; ++kk) {
-			ec_add(p, a, p, false, true, true, t2b);
-		}
-
-		ecpt p2;
-		ec_set(b, p2);
-		if (bk < 0) {
-			ec_neg(p2, p2);
-			bk = -bk;
-		}
-
-		for (int kk = 0; kk < bk; ++kk) {
-			ec_add(p, p2, p, false, true, true, t2b);
-		}
-
-		ecpt_affine q;
-		ec_affine(p, q);
-		ec_expand(q, p);
-
-		ec_set(p, TABLE[jj]);
+static CAT_INLINE bool ec_isequal_xy(const ecpt_affine &a, const ecpt_affine &b) {
+	if (!fe_isequal(a.x, b.x)) {
+		return false;
+	}
+	if (!fe_isequal(a.y, b.y)) {
+		return false;
 	}
 
-	int words = 128 * (4 * 4);
-	u64 *ptr = (u64*)&TABLE[0];
-	cout << "static const u64 PRECOMP_TABLE = {" << endl;
-	for (int ii = 0; ii < words; ii += 4) {
-		if (ii % 16 == 12) {
-			continue;
-		}
-		cout << hex << "\t0x" << ptr[ii] << "ULL, ";
-		cout << hex << "0x" << ptr[ii+1] << "ULL, ";
-		cout << hex << "0x" << ptr[ii+2] << "ULL, ";
-		cout << hex << "0x" << ptr[ii+3] << "ULL," << endl;
-	}
-	cout << "};" << endl;
+	return true;
 }
-
-#endif
-
-#if 0
 
 static void fe_print(const ufe &x) {
 	cout << "Real(H:L) = " << hex << x.a.i[1] << " : " << x.a.i[0] << endl;
@@ -185,11 +34,79 @@ static void ec_print(const ecpt &p) {
 	cout << "Point = " << endl;
 	cout << "X : = " << setw(16) << hex << p.x.a.i[1] << "," << setw(16) << p.x.a.i[0] << " + i * " << setw(16) << p.x.b.i[1] << "," << setw(16) << p.x.b.i[0] << endl;
 	cout << "Y : = " << setw(16) << hex << p.y.a.i[1] << "," << setw(16) << p.y.a.i[0] << " + i * " << setw(16) << p.y.b.i[1] << "," << setw(16) << p.y.b.i[0] << endl;
-	cout << "Z : = " << setw(16) << hex << p.z.a.i[1] << "," << setw(16) << p.z.a.i[0] << " + i * " << setw(16) << p.z.b.i[1] << "," << setw(16) << p.z.b.i[0] << endl;
 	cout << "T : = " << setw(16) << hex << p.t.a.i[1] << "," << setw(16) << p.t.a.i[0] << " + i * " << setw(16) << p.t.b.i[1] << "," << setw(16) << p.t.b.i[0] << endl;
+	cout << "Z : = " << setw(16) << hex << p.z.a.i[1] << "," << setw(16) << p.z.a.i[0] << " + i * " << setw(16) << p.z.b.i[1] << "," << setw(16) << p.z.b.i[0] << endl;
 }
 
-#endif
+static void ec_print_xy(const ecpt_affine &p) {
+	cout << "Point = " << endl;
+	cout << "X : = " << setw(16) << hex << p.x.a.i[1] << "," << setw(16) << p.x.a.i[0] << " + i * " << setw(16) << p.x.b.i[1] << "," << setw(16) << p.x.b.i[0] << endl;
+	cout << "Y : = " << setw(16) << hex << p.y.a.i[1] << "," << setw(16) << p.y.a.i[0] << " + i * " << setw(16) << p.y.b.i[1] << "," << setw(16) << p.y.b.i[0] << endl;
+}
+
+// Verify generator multiplication tables are correct
+static bool ec_gen_tables_comb_test() {
+	const int t = 252;
+	const int w = 8;
+	const int v = 2;
+	const int e = 16; // t / wv
+	const int d = 32; // ev
+	const int l = 256; // dw
+
+	const int ul = 1 << (w - 1);
+	for (int u = 0; u < ul; ++u) {
+		for (int vp = 0; vp < v; ++vp) {
+			// P[u][v'] = 2^(ev') * (1 + u0*2^d + ... + u_(w-2)*2^((w-1)*d)) * P
+			u64 k = ((u64)1 << (e * vp)) * ((u64)1 + (((u64)1 << d) * (u64)u));
+
+			// q = u * P
+			ufe t2b;
+			ecpt q;
+
+			if (u > 0) {
+				ec_set(EC_G, q);
+				for (int ii = 1; ii < u; ++ii) {
+					ec_add(q, EC_G, q, true, true, true, t2b);
+				}
+
+				// q = u * 2^d * P
+				for (int ii = 0; ii < d; ++ii) {
+					ec_dbl(q, q, false, t2b);
+				}
+			} else {
+				ec_identity(q);
+			}
+
+			// q = (1 + u * 2^d) * P
+			ec_add(q, EC_G, q, true, false, false, t2b);
+
+			// q = 2 ^ (e * v') * (1 + u * 2^d) * P
+			u32 ev = e * vp;
+			for (int ii = 0; ii < ev; ++ii) {
+				ec_dbl(q, q, false, t2b);
+			}
+
+			ecpt_affine T;
+			ec_affine(q, T);
+
+			if (vp == 0) {
+				if (!ec_isequal_xy(T, GEN_TABLE_0[u])) {
+					cout << "failure at v' = 0, u = " << u << ":" << endl;
+					ec_print_xy(T);
+					return false;
+				}
+			} else {
+				if (!ec_isequal_xy(T, GEN_TABLE_1[u])) {
+					cout << "failure at v' = 1, u = " << u << ":" << endl;
+					ec_print_xy(T);
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
 
 static bool ec_gen_table_2_test() {
 	ecpt a, b;
@@ -574,6 +491,8 @@ bool mul_mod_q_test() {
 
 int main() {
 	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
+
+	assert(ec_gen_tables_comb_test());
 
 	assert(mul_mod_q_test());
 

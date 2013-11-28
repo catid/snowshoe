@@ -683,56 +683,6 @@ static void ec_recode_scalar_comb(u64 k[4], u64 b[4]) {
 	}
 }
 
-#if 0
-
-static void ec_gen_tables_comb(ecpt_affine table1[128], ecpt_affine table2[128], const ecpt &p) {
-	const int t = 252;
-	const int w = 8;
-	const int v = 2;
-	const int e = 16; // t / wv
-	const int d = 32; // ev
-	const int l = 256; // dw
-
-	const int ul = 1 << (w - 1);
-	for (int u = 0; u < ul; ++u) {
-		for (int vp = 0; vp < v; ++vp) {
-			// P[u][v'] = 2^(ev') * (1 + u0*2^d + ... + u_(w-2)*2^((w-1)*d)) * P
-			u64 k = ((u64)1 << (e * vp)) * ((u64)1 + (((u64)1 << d) * (u64)u));
-			cout << k << endl;
-
-			// q = u * P
-			ufe t2b;
-			ecpt q;
-			ec_set(p, q);
-			for (int ii = 1; ii < u; ++ii) {
-				ec_add(q, p, q, true, true, true, t2b);
-			}
-
-			// q = u * 2^d * P
-			for (int ii = 0; ii < d; ++ii) {
-				ec_dbl(q, q, false, t2b);
-			}
-
-			// q = (1 + u * 2^d) * P
-			ec_add(q, p, q, true, false, false, t2b);
-
-			// q = 2 ^ (e * v') * (1 + u * 2^d) * P
-			u32 ev = e * vp;
-			for (int ii = 0; ii < ev; ++ii) {
-				ec_dbl(q, q, false, t2b);
-			}
-
-			if (vp == 0) {
-				ec_affine(q, table1[u]);
-			} else {
-				ec_affine(q, table2[u]);
-			}
-		}
-	}
-}
-
-#endif
-
 static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
 	const int t = 252;
 	const int w = 8;
