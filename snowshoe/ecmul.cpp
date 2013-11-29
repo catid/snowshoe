@@ -639,7 +639,7 @@ void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 		ec_add(X, T, X, true, false, false, t2b);
 	}
 
-	// NOTE: Do condition addition here rather than after the ec_cond_neg
+	// NOTE: Do conditional addition here rather than after the ec_cond_neg
 	// (this is an error in the paper)
 	// If carry bit is set, add 2^(w*d)
 	ec_cond_add((kp[3] >> 60) & 1, X, *GEN_FIX, X, true, false, t2b);
