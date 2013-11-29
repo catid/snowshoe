@@ -221,8 +221,40 @@ void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	ec_affine(X, R);
 }
 
+
+//// Constant-time Generator Base Point Multiplication
+
 /*
  * Multiplication by generator base point
+ *
+ * Using modified LSB-Set Comb Method from [1].
+ *
+ * The algorithm is tuned with ECADD = 1.64 * ECDBL in cycles.
+ *
+ * t = 252 bits for input scalars
+ * w = window size in bits
+ * v = number of tables
+ * e = roundup(t / wv)
+ * d = e * v
+ * l = d * w
+ *
+ * The parameters w,v are tunable.  The number of table entries:
+ *	= v * 2^(w - 1)
+ *
+ * Number of ECADDs and ECDBLs = e - 1, d - 1, respectively.
+ *
+ * Constant-time table lookups are expensive and proportional to
+ * the number of overall entries.  After some experimentation,
+ * 256 is too many table entries.  Halving it to 128 entries is
+ * a good trade-off.
+ *
+ * Optimizing for operation counts, choosing values of v,w that
+ * yield tables of 128 entries:
+ *
+ * v,w -> e,d   -> effective ECDBLs
+ * 1,8 -> 32,32 -> 81.84
+ * 2,7 -> 18,36 -> 74.4 <- best option
+ * 4,6 -> 11,44 -> 80.52
  */
 
 static const u64 PRECOMP_TABLE_0[] = {
@@ -490,7 +522,7 @@ static const u64 PRECOMP_TABLE_2[] = {
 0x3dee5bb295508114ULL, 0x12ae82ddc97f6fcfULL, 0x60f5c1e2f5beb566ULL, 0x3f99172a63932f0cULL,
 0xe33eff8dbdb66890ULL, 0x139291ca41bde4bbULL, 0x34c0b221c953415bULL, 0x5a934ebf6b24fb58ULL,
 0xf197f1de2d1467b1ULL, 0x3aa3c12734d1e9efULL, 0xf08498d52a27ceb5ULL, 0x3b5fe12d9ced696aULL,
-0x1ULL, 0x0ULL, 0x0ULL, 0x0ULL,
+0x1ULL, 0x0ULL, 0x0ULL, 0x0ULL
 };
 
 static const ecpt_affine *GEN_TABLE_0 = (const ecpt_affine *)PRECOMP_TABLE_0;
