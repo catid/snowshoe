@@ -533,7 +533,7 @@ static u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
-	const int e = 252 / (w * v); // t / wv
+	const int e = t / (w * v); // t / wv
 	const int d = e * v; // ev
 	const int l = d * w; // dw
 
@@ -588,13 +588,6 @@ static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const
 }
 
 void ec_table_select_comb(const u64 b[4], const int ii, ecpt &p1, ecpt &p2) {
-	const int t = 252;
-	const int w = 7;
-	const int v = 2;
-	const int e = 252 / (w * v); // t / wv
-	const int d = e * v; // ev
-	const int l = d * w; // dw
-
 	// DCK(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -647,9 +640,7 @@ void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
-	const int e = 252 / (w * v); // t / wv
-	const int d = e * v; // ev
-	const int l = d * w; // dw
+	const int e = t / (w * v); // t / wv
 
 	// Recode scalar
 	u64 kp[4];

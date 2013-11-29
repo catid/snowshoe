@@ -51,9 +51,8 @@ static bool ec_gen_tables_comb_test() {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
-	const int e = 252 / (w * v); // t / wv
+	const int e = t / (w * v); // t / wv
 	const int d = e * v; // ev
-	const int l = d * w; // dw
 
 	ecpt_affine table0[64], table1[64];
 
