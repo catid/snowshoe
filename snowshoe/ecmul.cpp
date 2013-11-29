@@ -555,7 +555,7 @@ static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
-void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time, ecpt &p1, ecpt &p2) {
+void ec_table_select_comb(const u64 b[4], const int ii, ecpt &p1, ecpt &p2) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
@@ -579,19 +579,15 @@ void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time
 	d_0 |= comb_bit(b, 1, 0, ii);
 	u32 s_0 = comb_bit(b, 0, 0, ii);
 
-	if (constant_time) {
-		ec_zero(p1);
-		for (int ii = 0; ii < 64; ++ii) {
-			// Generate a mask that is -1 if ii == index, else 0
-			const u128 mask = ec_gen_mask(ii, d_0);
+	ec_zero(p1);
+	for (int ii = 0; ii < 64; ++ii) {
+		// Generate a mask that is -1 if ii == index, else 0
+		const u128 mask = ec_gen_mask(ii, d_0);
 
-			// Add in the masked table entry
-			ec_xor_mask_affine(GEN_TABLE_0[ii], mask, p1);
-		}
-		fe_mul(p1.x, p1.y, p1.t);
-	} else {
-		ec_expand(GEN_TABLE_0[d_0], p1);
+		// Add in the masked table entry
+		ec_xor_mask_affine(GEN_TABLE_0[ii], mask, p1);
 	}
+	fe_mul(p1.x, p1.y, p1.t);
 	ec_cond_neg(s_0 ^ 1, p1);
 
 	u32 d_1;
@@ -603,23 +599,20 @@ void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time
 	d_1 |= comb_bit(b, 1, 1, ii);
 	u32 s_1 = comb_bit(b, 0, 1, ii);
 
-	if (constant_time) {
-		ec_zero(p2);
-		for (int ii = 0; ii < 64; ++ii) {
-			// Generate a mask that is -1 if ii == index, else 0
-			const u128 mask = ec_gen_mask(ii, d_1);
+	ec_zero(p2);
+	for (int ii = 0; ii < 64; ++ii) {
+		// Generate a mask that is -1 if ii == index, else 0
+		const u128 mask = ec_gen_mask(ii, d_1);
 
-			// Add in the masked table entry
-			ec_xor_mask_affine(GEN_TABLE_1[ii], mask, p2);
-		}
-		fe_mul(p2.x, p2.y, p2.t);
-	} else {
-		ec_expand(GEN_TABLE_1[d_1], p2);
+		// Add in the masked table entry
+		ec_xor_mask_affine(GEN_TABLE_1[ii], mask, p2);
 	}
+	fe_mul(p2.x, p2.y, p2.t);
 	ec_cond_neg(s_1 ^ 1, p2);
 }
 
-void ec_mul_gen(const u64 k[4], const bool constant_time, ecpt_affine &R) {
+// TODO: Comment this method
+void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
@@ -635,12 +628,12 @@ void ec_mul_gen(const u64 k[4], const bool constant_time, ecpt_affine &R) {
 	ufe t2b;
 	ecpt X, S, T;
 
-	ec_table_select_comb(kp, e - 1, constant_time, S, T);
+	ec_table_select_comb(kp, e - 1, S, T);
 	fe_set_smallk(1, S.z);
 	ec_add(S, T, X, true, true, false, t2b);
 
 	for (int ii = e - 2; ii >= 0; --ii) {
-		ec_table_select_comb(kp, ii, constant_time, S, T);
+		ec_table_select_comb(kp, ii, S, T);
 
 		ec_dbl(X, X, false, t2b);
 		ec_add(X, S, X, true, false, false, t2b);

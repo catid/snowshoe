@@ -121,7 +121,7 @@ bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
 	return true;
 }
 
-bool snowshoe_mul_gen(const char k_raw[32], const bool constant_time, char R[64]) {
+bool snowshoe_mul_gen(const char k_raw[32], char R[64]) {
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
@@ -132,7 +132,7 @@ bool snowshoe_mul_gen(const char k_raw[32], const bool constant_time, char R[64]
 
 	// Run the math routine
 	ecpt_affine r;
-	ec_mul_gen(k, constant_time, r);
+	ec_mul_gen(k, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);

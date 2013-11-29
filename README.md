@@ -24,7 +24,6 @@ other math functions required to implement MQV-style protocols.
 On my Macbook Air (Core i5 Sandy Bridge):
 
 + Key generation/signing: `53,000 cycles`
-+ Key generation/signing (without SPA protection): `~37,000 cycles`
 + Variable-base multiplication: `109,000 cycles`
 + Variable double-base simultaneous multiplication: `163,000 cycles`
 

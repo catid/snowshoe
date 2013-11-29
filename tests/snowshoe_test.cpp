@@ -55,9 +55,9 @@ bool ec_dh_test() {
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
 
-	assert(snowshoe_mul_gen(sk_c, true, pp_c));
+	assert(snowshoe_mul_gen(sk_c, pp_c));
 
-	assert(snowshoe_mul_gen(sk_s, false, pp_s));
+	assert(snowshoe_mul_gen(sk_s, pp_s));
 
 	assert(snowshoe_mul(sk_c, pp_s, sp_c));
 
@@ -94,11 +94,11 @@ bool ec_dh_fs_test() {
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	assert(snowshoe_mul_gen(sk_s, false, pp_s));
+	assert(snowshoe_mul_gen(sk_s, pp_s));
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	assert(snowshoe_mul_gen(sk_e, true, pp_e));
+	assert(snowshoe_mul_gen(sk_e, pp_e));
 
 	// Online: Client setup
 
@@ -107,7 +107,7 @@ bool ec_dh_fs_test() {
 
 	u32 t0 = Clock::cycles();
 
-	assert(snowshoe_mul_gen(sk_c, true, pp_c));
+	assert(snowshoe_mul_gen(sk_c, pp_c));
 
 	u32 t1 = Clock::cycles();
 

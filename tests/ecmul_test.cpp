@@ -377,8 +377,8 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt_affine &P0, const u64 k2[4]
 
 bool ec_mul_gen_test() {
 	u64 k[4] = {0};
-	ecpt_affine R1, R2, R3;
-	u8 a1[64], a2[64], a3[64];
+	ecpt_affine R1, R2;
+	u8 a1[64], a2[64];
 
 	for (int jj = 0; jj < 10000; ++jj) {
 		for (int ii = 0; ii < 4; ++ii) {
@@ -390,22 +390,11 @@ bool ec_mul_gen_test() {
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
 		u32 t0 = Clock::cycles();
-		ec_mul_gen(k, false, R2);
+		ec_mul_gen(k, R2);
 		u32 t1 = Clock::cycles();
-		ec_mul_gen(k, true, R3);
-		u32 t2 = Clock::cycles();
-		cout << (t1 - t0) << " ec_mul_gen not-CT" << endl;
-		cout << (t2 - t1) << " ec_mul_gen CT" << endl;
+		cout << (t1 - t0) << " ec_mul_gen" << endl;
 
 		ec_save_xy(R1, a1);
-		ec_save_xy(R2, a2);
-		ec_save_xy(R3, a3);
-
-		for (int ii = 0; ii < 64; ++ii) {
-			if (a2[ii] != a3[ii]) {
-				return false;
-			}
-		}
 
 		ufe t2b;
 		ecpt p;
@@ -416,7 +405,7 @@ bool ec_mul_gen_test() {
 		ec_save_xy(R2, a2);
 
 		for (int ii = 0; ii < 64; ++ii) {
-			if (a2[ii] != a1[ii]) {
+			if (a1[ii] != a2[ii]) {
 				return false;
 			}
 		}
