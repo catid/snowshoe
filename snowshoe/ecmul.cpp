@@ -353,7 +353,7 @@ static const u64 PRECOMP_TABLE_0[] = {
 0x75b300f8eebaec75ULL, 0x28ea828c8680d217ULL, 0xec015bcfd5baa936ULL, 0x3c1e96f916201885ULL,
 0xebe0cf4dbd6c4569ULL, 0x2d1040a866de1b72ULL, 0x8e3c4d6adfbeaa9cULL, 0xdd5a2702ccb8474ULL,
 0xae327cc24e1283ffULL, 0x5279f3e3b4640a06ULL, 0x2ba26dc97f8f5a5fULL, 0x7dde8425c91b480bULL,
-0x157b4fc963038e16ULL, 0x42906db00ec2ae4dULL, 0x18c9d8660e5d4b94ULL, 0x4e908f918f5a45e2ULL,
+0x157b4fc963038e16ULL, 0x42906db00ec2ae4dULL, 0x18c9d8660e5d4b94ULL, 0x4e908f918f5a45e2ULL
 };
 static const u64 PRECOMP_TABLE_1[] = {
 0xfad2788226688f06ULL, 0x1924dedc82fbf455ULL, 0xd329997d1b3aa551ULL, 0x497c5aae63352a0cULL,
@@ -483,7 +483,7 @@ static const u64 PRECOMP_TABLE_1[] = {
 0xecb8f9a8ec2b4e6fULL, 0x641f5e021f62e062ULL, 0x187bdcc5ed8a511eULL, 0x4a72b988c3b115e9ULL,
 0x7e7d929656b8565dULL, 0x5d4c584c14482380ULL, 0xc13beff4bec5fcfdULL, 0x59403408a00d5dd3ULL,
 0xc0e49387acb57b76ULL, 0x342b427eb0794eULL, 0x5a910c174fc1d627ULL, 0x7ae8f446eb7c4586ULL,
-0xc9c85b1b23dcb561ULL, 0x12bd7c53ee30fd82ULL, 0x63e79f0ff7ebbc78ULL, 0x54773d67650bd0a0ULL,
+0xc9c85b1b23dcb561ULL, 0x12bd7c53ee30fd82ULL, 0x63e79f0ff7ebbc78ULL, 0x54773d67650bd0a0ULL
 };
 
 static const u64 PRECOMP_TABLE_2[] = {
@@ -524,7 +524,7 @@ static u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const u64 low_mask = d_bit - 1;
 
 	// for bits 0..(d-1), 0 => -1, 1 => +1
-	b[0] = (b[0] & ~low_mask) | ((b[0] >> 1) & low_mask) | d_bit;
+	b[0] = (b[0] & ~low_mask) | d_bit | ((b[0] >> 1) & low_mask);
 
 	for (int i = d; i < l; ++i) {
 		u32 b_imd = (u32)(b[0] >> (i % d));
@@ -611,7 +611,6 @@ void ec_table_select_comb(const u64 b[4], const int ii, ecpt &p1, ecpt &p2) {
 	ec_cond_neg(s_1 ^ 1, p2);
 }
 
-// TODO: Comment this method
 void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 	const int t = 252;
 	const int w = 7;
@@ -640,13 +639,13 @@ void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 		ec_add(X, T, X, true, false, false, t2b);
 	}
 
+	// NOTE: Do condition addition here rather than after the ec_cond_neg
+	// (this is an error in the paper)
+	// If carry bit is set, add 2^(w*d)
+	ec_cond_add((kp[3] >> 60) & 1, X, *GEN_FIX, X, true, false, t2b);
+
 	// If recode_lsb == 1, X = -X
 	ec_cond_neg(recode_lsb, X);
-
-	// TODO: Why does this fail?
-
-	// If carry bit is set, add 2^(w*d)
-	ec_cond_add((kp[4] >> 60) & 1, X, *GEN_FIX, X, true, false, t2b);
 
 	// Compute affine coordinates in R
 	ec_affine(X, R);
