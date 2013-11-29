@@ -49,13 +49,13 @@ static void ec_print_xy(const ecpt_affine &p) {
 // Verify generator multiplication tables are correct
 static bool ec_gen_tables_comb_test() {
 	const int t = 252;
-	const int w = 8;
+	const int w = 7;
 	const int v = 2;
-	const int e = 16; // t / wv
-	const int d = 32; // ev
-	const int l = 256; // dw
+	const int e = 252 / (w * v); // t / wv
+	const int d = e * v; // ev
+	const int l = d * w; // dw
 
-	ecpt_affine table0[128], table1[128];
+	ecpt_affine table0[64], table1[64];
 
 	const int ul = 1 << (w - 1);
 	for (int u = 0; u < ul; ++u) {
@@ -67,6 +67,24 @@ static bool ec_gen_tables_comb_test() {
 			ecpt q, s;
 
 			ec_set(EC_G, q);
+
+#if 0
+			ec_set(EC_G, s);
+			for (int jj = 0; jj < (d * w); ++jj) {
+				ec_dbl(s, s, false, t2b);
+			}
+			ecpt_affine TEST;
+			ec_affine(s, TEST);
+			ec_expand(TEST, s);
+
+			cout << "static const u64 PRECOMP_TABLE_2[] = {" << endl;
+			cout << "0x" << hex << s.x.a.i[0] << "ULL, 0x" << s.x.a.i[1] << "ULL, 0x" << s.x.b.i[0] << "ULL, 0x" << s.x.b.i[1] << "ULL," << endl;
+			cout << "0x" << hex << s.y.a.i[0] << "ULL, 0x" << s.y.a.i[1] << "ULL, 0x" << s.y.b.i[0] << "ULL, 0x" << s.y.b.i[1] << "ULL," << endl;
+			cout << "0x" << hex << s.t.a.i[0] << "ULL, 0x" << s.t.a.i[1] << "ULL, 0x" << s.t.b.i[0] << "ULL, 0x" << s.t.b.i[1] << "ULL," << endl;
+			cout << "0x" << hex << s.z.a.i[0] << "ULL, 0x" << s.z.a.i[1] << "ULL, 0x" << s.z.b.i[0] << "ULL, 0x" << s.z.b.i[1] << "ULL," << endl;
+			cout << "};" << endl;
+
+#endif
 
 			for (int ii = 0; ii < (w - 1); ++ii) {
 				if (u & (1 << ii)) {
@@ -95,7 +113,7 @@ static bool ec_gen_tables_comb_test() {
 
 	ecpt_affine *ptr = table0;
 	cout << "static const u64 PRECOMP_TABLE_0[] = {" << endl;
-	for (int ii = 0; ii < 128; ++ii) {
+	for (int ii = 0; ii < 64; ++ii) {
 		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
 		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
 		ptr++;
@@ -104,7 +122,7 @@ static bool ec_gen_tables_comb_test() {
 
 	ptr = table1;
 	cout << "static const u64 PRECOMP_TABLE_1[] = {" << endl;
-	for (int ii = 0; ii < 128; ++ii) {
+	for (int ii = 0; ii < 64; ++ii) {
 		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
 		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
 		ptr++;
