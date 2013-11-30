@@ -279,6 +279,11 @@ This was easy.  The only real option is Fp^2.  Larger exponents provide
 diminishing returns in terms of real security, and math over Fp^2 is the same
 as grade-school complex math (a + b*i).
 
+Multiplication over Fp^2 takes about 66 cycles on a Sandy Bridge processor,
+whereas multiplication on well-chosen Fp of the same size takes 55 cycles. [17]
+This performance loss is more than compensated for by faster field inversions
+and allowing for efficient endomorphisms.
+
 
 ## Choosing Endomorphism Dimensions
 
@@ -689,3 +694,5 @@ Provides short bases for scalar decomposition for curves with efficient endomorp
 ##### [16] ["Faster Compact Diffie-Hellman: Endomorphisms on the x-line" (Costello Hisil Smith 2013)](http://eprint.iacr.org/2013/692.pdf)
 Demonstrates several new techniques including Q-curve endomorphisms
 
+##### [17] ["Fast and compact elliptic-curve cryptography" (Hamburg 2012)](http://eprint.iacr.org/2012/309.pdf)
+Explores SAB-set comb multiplication and special prime moduli
