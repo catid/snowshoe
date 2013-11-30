@@ -5,7 +5,7 @@ curve point multiplication:
 
 + Fixed-base (key generation)
 + Variable-base (EC-DH)
-+ Simultaneous (signatures, EC-DH + FS)
++ Simultaneous (signatures, MQV)
 
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
@@ -23,7 +23,7 @@ other math functions required to implement MQV-style protocols.
 
 On my Macbook Air (Core i5 Sandy Bridge):
 
-+ Key generation/signing: `59,000 cycles`
++ Fixed-base multiplication: `59,000 cycles`
 + Variable-base multiplication: `109,000 cycles`
 + Variable double-base simultaneous multiplication: `163,000 cycles`
 
@@ -168,7 +168,7 @@ monfp127e2 ( http://eprint.iacr.org/2013/692.pdf ) is:
 
 kumfp127g ( http://eprint.iacr.org/2012/670.pdf ) is:
 
-+ Faster
++ Roughly same speed
 - Cannot be used for signatures
 - Cannot be used for efficient signature-based EC-DH that provides Perfect Forward Secrecy
 - Extremely complex (lots of moving parts and opportunities for bugs)
@@ -233,7 +233,7 @@ while also enabling new high-speed implementations of protocols like EC-FHMQV.
 
 #### Performance features:
 
-+ Most efficient field arithmetic: Fp^2 with p = 2^127-1 [3]
++ Most efficient extension field arithmetic: Fp^2 with p = 2^127-1 [3]
 + Most efficient point group laws: Extended Twisted Edwards [3]
 + Efficient 2-dimensional GLS endomorphism [12]
 + Most efficient constant-time scalar multiplication: Windowed GLV-SAC [1]
