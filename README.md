@@ -5,11 +5,13 @@ elliptic curve point multiplication:
 
 + Fixed-base (Public key generation, Signature generation) "mul_gen"
 + Variable-base (Diffie-Hellman key agreement) "mul"
-+ Variable single-base Simultaneous (Signature verification) "simul_gen"
 + Variable double-base Simultaneous (MQV key agreement) "simul"
 
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
+
+Additionally to speed up signature verification a variable single-base
+simultaneous function "simul_gen" is provided that is not constant-time.
 
 It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
@@ -22,7 +24,7 @@ On my Macbook Air (Core i5 Sandy Bridge), rounded up:
 
 + mul_gen: `59,000 cycles`
 + mul: `109,000 cycles`
-+ simul_gen: `130,000 cycles`
++ simul_gen: `~124,000 cycles` (not constant-time)
 + simul: `163,000 cycles`
 
 
@@ -218,7 +220,7 @@ This library on Sandy Bridge i5:
 
 + mul_gen: `59kcy`
 + mul: `109kcy`
-+ simul_gen: `130kcy`
++ simul_gen: `~124,000 cycles` (not constant-time)
 + simul: `163kcy`
 
 Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ):

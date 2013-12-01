@@ -168,7 +168,7 @@ bool ec_dh_fs_test() {
 
 bool ec_dsa_test() {
 	char a[32], h_hi_m[64], h_r_a_m[64], r[32], t[32], s[32], u[32];
-	char pp_A[64], pp_R[64]
+	char pp_A[64], pp_R[64], pp_Rtest[64];
 
 	// Fake hashes to avoid implementing Skein-512 and Skein-256 just for testing
 	generate_k(a);

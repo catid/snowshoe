@@ -140,6 +140,57 @@ static bool ec_gen_tables_comb_test() {
 	return true;
 }
 
+static bool ec_gen_tables3_comb_test() {
+	const int t = 252;
+	const int w = 8;
+	const int e = 32; // t / wv
+	const int d = 32; // e*1
+
+	ecpt_affine table[128];
+
+	const int ul = 1 << (w - 1);
+	for (int u = 0; u < ul; ++u) {
+		// P[u][v'] = 2^(ev') * (1 + u0*2^d + ... + u_(w-2)*2^((w-1)*d)) * P
+
+		// q = u * P
+		ufe t2b;
+		ecpt q, s;
+
+		ec_set(EC_G, q);
+
+		for (int ii = 0; ii < (w - 1); ++ii) {
+			if (u & (1 << ii)) {
+				ec_set(EC_G, s);
+				for (int jj = 0; jj < (d * (ii + 1)); ++jj) {
+					ec_add(s, s, s, false, true, true, t2b);
+				}
+				ec_add(q, s, q, false, true, true, t2b);
+			}
+		}
+
+		ec_affine(q, table[u]);
+	}
+
+#if 0
+
+	ecpt_affine *ptr = table;
+	cout << "static const u64 PRECOMP_TABLE_3[] = {" << endl;
+	for (int ii = 0; ii < 128; ++ii) {
+		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
+		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
+		ptr++;
+	}
+	cout << "};" << endl;
+
+#endif
+
+	if (0 != memcmp(table, SIMUL_GEN_TABLE, sizeof(table))) {
+		return false;
+	}
+
+	return true;
+}
+
 static bool ec_gen_table_2_test() {
 	ecpt a, b;
 
@@ -273,7 +324,7 @@ static bool ec_table_select_2_test_try(ecpt *table, u32 a, u32 b, int expected) 
 		ec_set(table[expected], c);
 	}
 
-	ec_table_select_2(table, a1, b1, 0, r);
+	ec_table_select_2(table, a1, b1, 0, true, r);
 	if (!ec_isequal(r, c)) {
 		cout << a << ", " << b << endl;
 		return false;
@@ -391,7 +442,7 @@ bool ec_mul_gen_test() {
 		u32 t0 = Clock::cycles();
 		ec_mul_gen(k, R2);
 		u32 t1 = Clock::cycles();
-		cout << (t1 - t0) << " ec_mul_gen" << endl;
+		cout << dec << (t1 - t0) << " ec_mul_gen" << endl;
 
 		ec_save_xy(R1, a1);
 
@@ -430,7 +481,7 @@ bool ec_mul_test() {
 		u32 t0 = Clock::cycles();
 		ec_mul(k, EC_G_AFFINE, R2);
 		u32 t1 = Clock::cycles();
-		cout << (t1 - t0) << " ec_mul" << endl;
+		cout << dec << (t1 - t0) << " ec_mul" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -469,7 +520,7 @@ bool ec_simul_test() {
 		u32 t0 = Clock::cycles();
 		ec_simul(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R2);
 		u32 t1 = Clock::cycles();
-		cout << (t1 - t0) << " ec_simul" << endl;
+		cout << dec << (t1 - t0) << " ec_simul" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -484,7 +535,7 @@ bool ec_simul_test() {
 	return true;
 }
 
-bool ec_simul_g_test() {
+bool ec_simul_gen_test() {
 	u64 k1[4] = {0};
 	u64 k2[4] = {0};
 	ecpt_affine R1, R2;
@@ -506,9 +557,9 @@ bool ec_simul_g_test() {
 
 		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
 		u32 t0 = Clock::cycles();
-		ec_simul_g(k1, k2, EC_EG_AFFINE, R2);
+		ec_simul_gen(k1, k2, EC_EG_AFFINE, R2);
 		u32 t1 = Clock::cycles();
-		cout << (t1 - t0) << " ec_simul_g" << endl;
+		cout << dec << (t1 - t0) << " ec_simul_gen" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -605,11 +656,15 @@ int main() {
 
 	srand(0);
 
+	// Verify tables have not been tampered with
+	assert(ec_gen_tables3_comb_test());
 	assert(ec_gen_tables_comb_test());
 
 	assert(mod_q_test());
 
 	assert(mul_mod_q_test());
+
+	assert(ec_simul_gen_test());
 
 	assert(ec_mul_gen_test());
 
@@ -632,8 +687,6 @@ int main() {
 	assert(ec_mul_test());
 
 	assert(ec_simul_test());
-
-	assert(ec_simul_g_test());
 
 	cout << "All tests passed successfully." << endl;
 
