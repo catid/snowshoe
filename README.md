@@ -45,8 +45,7 @@ the code, since that enables full optimization and speeds up your compilation.
 To build the project you only need to compile `snowshoe/Snowshoe.cpp`, which includes
 all of the other source files.  Or link to a prebuilt static library.
 
-To use the project you only need to include `snowshoe/Snowshoe.h`, which declares the
-C exports from the source files.
+To use the project you only need to include [snowshoe/Snowshoe.h](https://github.com/catid/snowshoe/blob/master/snowshoe/Snowshoe.h), which declares the C exports from the source files.
 
 
 #### Example Usage: EC-DH
