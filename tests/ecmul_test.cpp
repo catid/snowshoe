@@ -484,6 +484,69 @@ bool ec_simul_test() {
 	return true;
 }
 
+bool ec_simul_g_test() {
+	u64 k1[4] = {0};
+	u64 k2[4] = {0};
+	ecpt_affine R1, R2;
+	u8 a1[64], a2[64];
+
+	for (int jj = 0; jj < 10000; ++jj) {
+		for (int ii = 0; ii < 4; ++ii) {
+			for (int jj = 0; jj < 30; ++jj) {
+				k1[ii] ^= (k1[ii] << 3) | (rand() >> 2);
+			}
+		}
+		for (int ii = 0; ii < 4; ++ii) {
+			for (int jj = 0; jj < 30; ++jj) {
+				k2[ii] ^= (k2[ii] << 3) | (rand() >> 2);
+			}
+		}
+		ec_mask_scalar(k1);
+		ec_mask_scalar(k2);
+
+		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
+		u32 t0 = Clock::cycles();
+		ec_simul_g(k1, k2, EC_EG_AFFINE, R2);
+		u32 t1 = Clock::cycles();
+		cout << (t1 - t0) << " ec_simul_g" << endl;
+
+		ec_save_xy(R1, a1);
+		ec_save_xy(R2, a2);
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (a1[ii] != a2[ii]) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+bool mod_q_test() {
+	u64 x[8], r[4];
+
+	x[0] = 0xffffffffffffffffULL;
+	x[1] = 0xffffffffffffffffULL;
+	x[2] = 0xffffffffffffffffULL;
+	x[3] = 0xffffffffffffffffULL;
+	x[4] = 0xffffffffffffffffULL;
+	x[5] = 0xffffffffffffffffULL;
+	x[6] = 0xffffffffffffffffULL;
+	x[7] = 0xffffffffffffffffULL;
+
+	mod_q(x, r);
+
+	if (r[0] != 0x72A7E6A3F7A11C27ULL ||
+		r[1] != 0xA52B0BE10884939EULL ||
+		r[2] != 0x95EB7B0E1A988566ULL ||
+		r[3] != 0x093F8B602171C88EULL) {
+		return false;
+	}
+
+	return true;
+}
+
 bool mul_mod_q_test() {
 	u64 x[4], y[4], z[4], r[4];
 
@@ -544,6 +607,8 @@ int main() {
 
 	assert(ec_gen_tables_comb_test());
 
+	assert(mod_q_test());
+
 	assert(mul_mod_q_test());
 
 	assert(ec_mul_gen_test());
@@ -567,6 +632,8 @@ int main() {
 	assert(ec_mul_test());
 
 	assert(ec_simul_test());
+
+	assert(ec_simul_g_test());
 
 	cout << "All tests passed successfully." << endl;
 

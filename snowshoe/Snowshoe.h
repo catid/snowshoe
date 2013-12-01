@@ -42,17 +42,14 @@ void snowshoe_secret_gen(char k[32]);
 /*
  * r = (x * y + z) (mod q)
  *
- * Only one of the inputs (x) may exceed q.
  * You may pass NULL in place of z to skip the addition.
- *
- * Preconditions:
- *	0 < x
- *	0 < y,z < q
- *
- * Returns false if one of the input parameters is invalid.
- * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
+void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
+
+/*
+ * r = x (mod q)
+ */
+void snowshoe_mod_q(const char x[64], char r[32]);
 
 /*
  * R = k*G
@@ -68,6 +65,16 @@ bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
 bool snowshoe_mul_gen(const char k[32], char R[64]);
 
 /*
+ * R = -P
+ *
+ * Negate the given input point and store it in R
+ *
+ * Returns false if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
+ */
+bool snowshoe_neg(const char P[64], char R[64]);
+
+/*
  * R = k*4*P
  *
  * Multiply variable point by k
@@ -79,6 +86,19 @@ bool snowshoe_mul_gen(const char k[32], char R[64]);
  * It is important to check the return value to avoid active attacks.
  */
 bool snowshoe_mul(const char k[32], char P[64], char R[64]);
+
+/*
+ * R = a*4*G + b*4*Q
+ *
+ * Preconditions:
+ * 	0 < a,b < q (prime order of curve)
+ *
+ * Simultaneously multiply two points (one being the generator point) and return the sum
+ *
+ * Returns false if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
+ */
+bool snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]);
 
 /*
  * R = a*4*P + b*4*Q

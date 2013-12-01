@@ -96,27 +96,52 @@ static bool invalid_key(const u64 k[4]) {
 	return false;
 }
 
-bool snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
+void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
 	u64 x1[4], y1[4], z1[4];
 	ec_load_k(x, x1);
 	ec_load_k(y, y1);
 	if (z) {
 		ec_load_k(z, z1);
-
-		// Validate key
-		if (invalid_key(z1)) {
-			return false;
-		}
-	}
-
-	// Validate keys
-	if (is_zero(x1) || invalid_key(y1)) {
-		return false;
 	}
 
 	mul_mod_q(x1, y1, z ? z1 : 0, x1);
 
 	ec_save_k(x1, r);
+}
+
+void snowshoe_mod_q(const char x[64], char r[32]) {
+	u64 x1[8];
+	const u64 *k_raw = reinterpret_cast<const u64 *>( x );
+
+	x1[0] = getLE(k_raw[0]);
+	x1[1] = getLE(k_raw[1]);
+	x1[2] = getLE(k_raw[2]);
+	x1[3] = getLE(k_raw[3]);
+	x1[4] = getLE(k_raw[4]);
+	x1[5] = getLE(k_raw[5]);
+	x1[6] = getLE(k_raw[6]);
+	x1[7] = getLE(k_raw[7]);
+
+	mod_q(x1, x1);
+
+	ec_save_k(x1, r);
+}
+
+bool snowshoe_neg(const char P[64], char R[64]) {
+	// Load point
+	ecpt_affine p1;
+	ec_load_xy((const u8*)P, p1);
+
+	// Validate point
+	if (!ec_valid(p1.x, p1.y)) {
+		return false;
+	}
+
+	// Run the math routine
+	ec_neg_affine(p1, p1);
+
+	// Save result endian-neutral
+	ec_save_xy(p1, (u8*)R);
 
 	return true;
 }
@@ -167,7 +192,7 @@ bool snowshoe_mul(const char k_raw[32], char P[64], char R[64]) {
 	return true;
 }
 
-bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
+bool snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]) {
 	u64 k1[4], k2[4];
 	ec_load_k(a, k1);
 	ec_load_k(b, k2);
@@ -178,6 +203,34 @@ bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const 
 	}
 
 	// Load point
+	ecpt_affine p2, r;
+	ec_load_xy((const u8*)Q, p2);
+
+	// Validate point
+	if (!ec_valid(p2.x, p2.y)) {
+		return false;
+	}
+
+	// Run the math routine
+	ec_simul_gen(k1, k2, p2, r);
+
+	// Save result endian-neutral
+	ec_save_xy(r, (u8*)R);
+
+	return true;
+}
+
+bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
+	u64 k1[4], k2[4];
+	ec_load_k(a, k1);
+	ec_load_k(b, k2);
+
+	// Validate keys
+	if (invalid_key(k1) || invalid_key(k2)) {
+		return false;
+	}
+
+	// Load points
 	ecpt_affine p1, p2, r;
 	ec_load_xy((const u8*)P, p1);
 	ec_load_xy((const u8*)Q, p2);

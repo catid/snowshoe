@@ -104,34 +104,114 @@ bool ec_dh_fs_test() {
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-
-	u32 t0 = Clock::cycles();
-
 	assert(snowshoe_mul_gen(sk_c, pp_c));
-
-	u32 t1 = Clock::cycles();
-
-	cout << (t1 - t0) << endl;
-
 	generate_k(h);
 
 	// Online: Server handles client request
 
+	u32 t0 = Clock::cycles();
+
 	// d = h * sk_e + sk_s (mod q)
-	assert(snowshoe_mul_mod_q(h, sk_e, sk_s, d));
+	snowshoe_mul_mod_q(h, sk_e, sk_s, d);
 	assert(snowshoe_mul(d, pp_c, sp_s));
+
+	u32 t1 = Clock::cycles();
+
+	cout << (t1 - t0) << " server mqv processing" << endl;
 
 	// Online: Client handles server response
 
+	t0 = Clock::cycles();
+
 	// a = h * sk_c (mod q)
-	assert(snowshoe_mul_mod_q(h, sk_c, 0, a));
+	snowshoe_mul_mod_q(h, sk_c, 0, a);
 	assert(snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
+
+	t1 = Clock::cycles();
+
+	cout << (t1 - t0) << " client mqv processing" << endl;
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (sp_c[ii] != sp_s[ii]) {
 			return false;
 		}
 	}
+
+	return true;
+}
+
+/*
+ * EdDSA from http://ed25519.cr.yp.to/ed25519-20110926.pdf
+ * Summarized pretty well here: http://blog.mozilla.org/warner/2011/11/29/ed25519-keys/
+ *
+ * Note that the "key massaging" would be different for my group order.
+ * Instead of Ed25519 key masking, use snowshoe_secret_gen.
+ *
+ * Key generation:
+ * 	Generate a random number k < 2^256
+ * 	hi,lo = H(k)
+ * 	a = snowshoe_secret_gen(lo)
+ * 	A = a*G
+ *
+ * Sign message M:
+ * 	r = H(hi,M) (mod q)
+ * 	t = H(R,A,M) (mod q)
+ * 	R = r*G
+ * 	s = r + t*a (mod q)
+ * 	Produce: R, s
+ *
+ * Verify:
+ * 	u = H(R,A,M) (mod q)
+ * 	nA = -A
+ *	R =?= s*G + u*nA
+ */
+
+bool ec_dsa_test() {
+	char a[32], h_hi_m[64], h_r_a_m[64], r[32], t[32], s[32], u[32];
+	char pp_A[64], pp_R[64]
+
+	// Fake hashes to avoid implementing Skein-512 and Skein-256 just for testing
+	generate_k(a);
+	generate_k(h_hi_m);
+	generate_k(h_hi_m+32);
+	generate_k(h_r_a_m);
+	generate_k(h_r_a_m+32);
+
+	// Offline precomputation:
+
+	snowshoe_secret_gen(a);
+	assert(snowshoe_mul_gen(a, pp_A));
+
+	// Sign:
+
+	u32 t0 = Clock::cycles();
+
+	snowshoe_mod_q(h_hi_m, r);
+	snowshoe_mod_q(h_r_a_m, t);
+	assert(snowshoe_mul_gen(r, pp_R));
+	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
+
+	u32 t1 = Clock::cycles();
+
+	cout << (t1 - t0) << " signing" << endl;
+
+	// Verify:
+
+	t0 = Clock::cycles();
+
+	snowshoe_mod_q(h_r_a_m, u);
+	assert(snowshoe_neg(pp_A, pp_A));
+	assert(snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
+
+	for (int ii = 0; ii < 64; ++ii) {
+		if (pp_Rtest[ii] != pp_R[ii]) {
+			return false;
+		}
+	}
+
+	t1 = Clock::cycles();
+
+	cout << (t1 - t0) << " verification" << endl;
 
 	return true;
 }
@@ -145,11 +225,15 @@ int main() {
 	srand(0);
 
 	for (int ii = 0; ii < 10000; ++ii) {
+		assert(ec_dh_test());
+	}
+
+	for (int ii = 0; ii < 10000; ++ii) {
 		assert(ec_dh_fs_test());
 	}
 
 	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dh_test());
+		assert(ec_dsa_test());
 	}
 
 	cout << "All tests passed successfully." << endl;

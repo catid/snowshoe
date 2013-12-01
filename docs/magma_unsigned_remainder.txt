@@ -1,8 +1,8 @@
 d := 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA6261414C0DC87D3CE9B68E3B09E01A5;
 
 l := 252; // d < 2^l
-n := Random(d) * Random(2^256);
-N := 256 + 252;
+n := Random(2^512);
+N := 512;
 
 quot := n div d;
 rem := n mod d;
@@ -10,7 +10,7 @@ rem := n mod d;
 mp := 2^(N+l) div d - 2^N + 1;
 
 print mp;
-print 20320438794797923088800193309000281241044727321160239353067774495651706225708:Hex;
+print mp:Hex;
 
 // Live computation starts here:
 

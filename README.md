@@ -1,11 +1,12 @@
 # Snowshoe 1.0
 
-This project aims to provide a simple C API for three types of elliptic
-curve point multiplication:
+This project aims to provide a simple C API for four types of optimized
+elliptic curve point multiplication:
 
-+ Fixed-base (key generation)
-+ Variable-base (EC-DH)
-+ Simultaneous (signatures, MQV)
++ Fixed-base (Public key generation, Signature generation) "mul_gen"
++ Variable-base (Diffie-Hellman key agreement) "mul"
++ Variable single-base Simultaneous (Signature verification) "simul_gen"
++ Variable double-base Simultaneous (MQV key agreement) "simul"
 
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
@@ -14,18 +15,15 @@ It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
 which should be considered wherever you would use e.g. Curve25519/Ed25519.
 
-The constant-time simultaneous multiplication is the only fast implementation
-available in the public domain at this time.  And this library also provides
-other math functions required to implement MQV-style protocols.
-
 
 ## Benchmarks
 
-On my Macbook Air (Core i5 Sandy Bridge):
+On my Macbook Air (Core i5 Sandy Bridge), rounded up:
 
-+ Fixed-base multiplication: `59,000 cycles`
-+ Variable-base multiplication: `109,000 cycles`
-+ Variable double-base simultaneous multiplication: `163,000 cycles`
++ mul_gen: `59,000 cycles`
++ mul: `109,000 cycles`
++ simul_gen: `130,000 cycles`
++ simul: `163,000 cycles`
 
 
 #### Usage
@@ -42,7 +40,7 @@ C exports from the source files.
 
 #### Example Usage: EC-DH
 
-[Elliptic Curve Diffie-Hellman](http://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman)
+[Elliptic Curve Diffie-Hellman](http://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman) is the baseline for key agreement over the Internet.  Implementing it with this library is straight-forward:
 
 Allocate memory for the keys:
 
@@ -91,7 +89,7 @@ Server and client both arrive at `sp_c == sp_s`, which is the secret key for the
 The assertions used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return false, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
 
 
-#### Example Usage: EC-FHMQV
+#### Example Usage: MQV
 
 Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV):
 
@@ -135,6 +133,74 @@ Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV
 Similar to the EC-DH example, assert() is used in place of appropriate error handling.  `generate_k` should be replaced by a CSPRNG.  And `h` should be the output of a hash function.
 
 
+#### Example Usage: EdDSA
+
+Here is a sketch of how to implement [EdDSA](http://ed25519.cr.yp.to/ed25519-20110926.pdf):
+
+Note that the "key massaging" would be different for my group order.
+Instead of Ed25519 key masking, use `snowshoe_secret_gen`.
+
+Key generation:
+
++ Generate a random number k < 2^256
++ hi,lo = H(k)
++ a = snowshoe_secret_gen(lo)
++ A = a*G
+
+Sign message M:
+
++ r = H(hi,M) (mod q)
++ t = H(R,A,M) (mod q)
++ R = r*G
++ s = r + t*a (mod q)
++ Produce: R, s
+
+Verify:
+
++ u = H(R,A,M) (mod q)
++ nA = -A
++ R =?= s*G + u*nA
+
+~~~
+	char a[32], h_hi_m[64], h_r_a_m[64], r[32], t[32], s[32], u[32];
+	char pp_A[64], pp_R[64]
+
+	// Fake hashes to avoid implementing Skein-512 and Skein-256 just for testing
+	generate_k(a);
+	generate_k(h_hi_m);
+	generate_k(h_hi_m+32);
+	generate_k(h_r_a_m);
+	generate_k(h_r_a_m+32);
+
+	// Offline precomputation:
+
+	snowshoe_secret_gen(a);
+	assert(snowshoe_mul_gen(a, pp_A));
+
+	// Sign:
+
+	snowshoe_mod_q(h_hi_m, r);
+	snowshoe_mod_q(h_r_a_m, t);
+	assert(snowshoe_mul_gen(r, pp_R));
+	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
+
+	// Verify:
+
+	snowshoe_mod_q(h_r_a_m, u);
+	assert(snowshoe_neg(pp_A, pp_A));
+	assert(snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
+
+	// This comparison does not need to be constant-time
+	for (int ii = 0; ii < 64; ++ii) {
+		if (pp_Rtest[ii] != pp_R[ii]) {
+			return false;
+		}
+	}
+~~~
+
+Note that this library provides a number of helpful math functions for doing math modulo q.
+
+
 #### Building: Mac
 
 To build the static library, install command-line Xcode tools and simply run the make script:
@@ -146,50 +212,67 @@ make release
 This produces `libsnowshoe.a` with optimizations.
 
 
-#### Survey of other open-source constant-time ECC implementations:
+#### Comparison with other fast ECC implementations at ~128 bit security:
 
-Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ) is:
+This library on Sandy Bridge i5:
 
-- Slower
-- Cannot be used for signatures
-- Cannot be used for efficient signature-based EC-DH that provides Perfect Forward Secrecy
-+ Simpler, more robust, and more conservative
++ mul_gen: `59kcy`
++ mul: `109kcy`
++ simul_gen: `130kcy`
++ simul: `163kcy`
 
-Ed25519 ( http://ed25519.cr.yp.to/ed25519-20110926.pdf ) is:
+Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ):
 
-- Slower
-+ More conservative
+- ecmul_gen : (much slower) `171kcy`
+- ecmul : (much slower) `162kcy`
+- ecsimul_gen : (not implemented)
+- ecsimul : (not implemented)
+- Availability : Equivalently free, open-source, and portable
 
-monfp127e2 ( http://eprint.iacr.org/2013/692.pdf ) is:
+Ed25519 ( http://ed25519.cr.yp.to/ed25519-20110926.pdf ):
 
-- Slower
-- Cannot be used for efficient signature-based EC-DH that provides Perfect Forward Secrecy
-- Available code is not portable (assembly only) nor truely built for the public domain
+- ecmul_gen : (slower) `67kcy`
+- ecmul : (not implemented)
+- ecsimul_gen : (much slower) `207kcy`
+- ecsimul : (not implemented)
+- Availability : Equivalently free, open-source, and portable
 
-kumfp127g ( http://eprint.iacr.org/2012/670.pdf ) is:
+monfp127e2 ( http://eprint.iacr.org/2013/692.pdf ):
 
-+ Roughly same speed
-- Cannot be used for signatures
-- Cannot be used for efficient signature-based EC-DH that provides Perfect Forward Secrecy
-- Extremely complex (lots of moving parts and opportunities for bugs)
-- Available code is not portable (assembly only) nor truely built for the public domain
+- ecmul_gen : (not implemented)
+- ecmul : (not implemented)
+- ecsimul_gen : (slower) `>145kcy` (Ivy Bridge, usually faster than Sandy Bridge)
+- ecsimul : (not implemented)
+- Availability : Free, open-source, and but not portable (assembly only)
 
-gls254 ( http://cacr.uwaterloo.ca/techreports/2013/cacr2013-14.pdf ) is:
+kumfp127g ( http://eprint.iacr.org/2012/670.pdf ):
 
-- Slower on commodity mobile devices without special math opcodes
-- Threatened by polynomial-time DLP algorithms over binary fields (may be insecure)
-- Cannot be used for signatures
-- Cannot be used for efficient signature-based EC-DH that provides Perfect Forward Secrecy
-- Not portable (uses assembly instructions specific to Intel x86-64)
+- ecmul_gen : (much slower) `108kcy`
+- ecmul : (equivalent) `110kcy`
+- ecsimul_gen : (not implemented)
+- ecsimul : (not implemented)
+- Availability : Free, open-source, and but not portable (assembly only)
+- This code is also extremely complex and looks tricky to audit.
 
-Code is unavailable for any other constant-time options.
+gls254 ( http://cacr.uwaterloo.ca/techreports/2013/cacr2013-14.pdf ):
 
-What is disturbing from these survey results is that we really only have one good option
-right now for ECC: Curve25519/Ed25519.  I am personally astounded that in the last 7 years
-no one has been able to write an ECC library for the public domain to rival these, despite
-having all of the necessary tools at hand.  Snowshoe will fill this gap in the security
-landscape, with a single solution that improves on the speed of Curve25519 and Ed25519
-while also enabling new high-speed implementations of protocols like EC-FHMQV.
+- Threatened by polynomial-time DLP algorithms over binary fields (likely insecure)
+
+Hamburg's implementation ( http://mikehamburg.com/papers/fff/fff.pdf ):
+
+- ecmul_gen : (equivalent) `60kcy`
+- ecmul : (much slower) `153kcy`
+- ecsimul_gen : (slower) `<169kcy` (includes signature ops)
+- ecsimul : (not implemented)
+- Availability : Not available online?
+
+Longa's implementation ( http://eprint.iacr.org/2013/158 ):
+
+- ecmul_gen : (faster) `48kcy`
+- ecmul : (faster) `96kcy`
+- ecsimul_gen : (faster) `116kcy`
+- ecsimul : (much faster) `116kcy`
+- Availability : Not available online?
 
 
 ## Details

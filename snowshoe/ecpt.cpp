@@ -141,6 +141,13 @@ static CAT_INLINE void ec_neg(const ecpt &a, ecpt &r) {
 	fe_set(a.z, r.z);
 }
 
+// r = -a
+static CAT_INLINE void ec_neg_affine(const ecpt_affine &a, ecpt_affine &r) {
+	// -(X, Y) = (-X, Y)
+	fe_neg(a.x, r.x);
+	fe_set(a.y, r.y);
+}
+
 // r = (mask==-1 ? r : -r)
 static CAT_INLINE void ec_neg_mask(const u128 mask, ecpt &r) {
 	fe_neg_mask(mask, r.x);
