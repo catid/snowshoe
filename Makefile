@@ -94,8 +94,8 @@ Clock.o : libcat/Clock.cpp
 
 # Library objects
 
-snowshoe.o : snowshoe/Snowshoe.cpp
-	$(CCPP) $(CFLAGS) -c snowshoe/Snowshoe.cpp
+snowshoe.o : snowshoe/snowshoe.cpp
+	$(CCPP) $(CFLAGS) -c snowshoe/snowshoe.cpp
 
 
 # Executable objects
