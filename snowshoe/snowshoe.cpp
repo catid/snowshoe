@@ -40,9 +40,8 @@
  * functions that are not constant-time are commented with warnings.
  */
 
-#include "EndianNeutral.cpp"
-#include "ecmul.cpp"
-#include "Snowshoe.h"
+#include "ecmul.inc"
+#include "snowshoe.h"
 
 #ifdef __cplusplus
 extern "C" {

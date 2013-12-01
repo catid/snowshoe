@@ -4,24 +4,25 @@ Snowshoe is essentially one large C file, but it has been broken out into pieces
 
 ~~~
 .
-├── Snowshoe.cpp
-├── Snowshoe.hpp
-├── ecmul.cpp
-├── ecpt.cpp
-├── endo.cpp
-├── fe.cpp
-└── fp.cpp
+├── snowshoe.cpp
+├── snowshoe.hpp
+├── ecmul.inc
+├── misc.inc
+├── ecpt.inc
+├── endo.inc
+├── fe.inc
+└── fp.inc
 ~~~
 
 Each file includes the previous one:
 
-+ `fp.cpp` : Fp finite field arithmetic
-+ `fe.cpp` : Fp^2 optimal extension field, includes `fp.cpp`
-+ `endo.cpp` : Endomorphism implementation, includes `fe.cpp`
-+ `ecpt.cpp` : Elliptic curve point operations, includes `endo.cpp`
-+ `ecmul.cpp` : Elliptic curve scalar multiplication, includes `ecpt.cpp`
-+ `Snowshoe.cpp` : Defines library interface
-+ `Snowshoe.hpp` : Declares library interface
++ `fp.inc` : Fp finite field arithmetic
++ `fe.inc` : Fp^2 optimal extension field, includes `fp.inc`
++ `endo.inc` : Endomorphism implementation, includes `fe.inc`
++ `ecpt.inc` : Elliptic curve point operations, includes `endo.inc`
++ `ecmul.inc` : Elliptic curve scalar multiplication, includes `ecpt.inc` and `misc.inc`
++ `snowshoe.cpp` : Defines library interface
++ `snowshoe.h` : Declares library interface
 
-This way the unit testers can include e.g. `fp.cpp` and use a minimal subset of the code to test those routines.
+This way the unit testers can include e.g. `fp.inc` and use a minimal subset of the code to test those routines.
 

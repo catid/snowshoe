@@ -1,5 +1,5 @@
 // Based on Fp finite field
-#include "fp.cpp"
+#include "fp.inc"
 #include "fe.hpp"
 
 /*

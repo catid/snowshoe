@@ -1,7 +1,6 @@
 # Snowshoe 1.0
 
-This project aims to provide a simple C API for various types of optimized
-elliptic curve point multiplication:
+[This project](http://github.com/catid/snowshoe) aims to provide a simple C API for various types of optimized elliptic curve point multiplication:
 
 + Fixed-base (Public key generation, Signature generation) "mul_gen"
 + Variable-base (Diffie-Hellman key agreement) "mul"

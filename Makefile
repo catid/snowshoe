@@ -18,7 +18,7 @@ LIBS =
 
 # Object files
 
-shared_test_o = Clock.o
+shared_test_o = Clock.o EndianNeutral.o
 
 snowshoe_o = snowshoe.o
 
@@ -90,6 +90,9 @@ snowshoetest : $(snowshoe_test_o) library
 
 Clock.o : libcat/Clock.cpp
 	$(CCPP) $(CFLAGS) -c libcat/Clock.cpp
+
+EndianNeutral.o : libcat/EndianNeutral.cpp
+	$(CCPP) $(CFLAGS) -c libcat/EndianNeutral.cpp
 
 
 # Library objects

@@ -1,5 +1,5 @@
 // Optimal extension field Fp^2
-#include "fe.cpp"
+#include "fe.inc"
 
 /*
  * GLS Endomorphism [12]

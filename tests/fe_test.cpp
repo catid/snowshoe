@@ -3,7 +3,7 @@
 using namespace std;
 
 // Math library
-#include "../snowshoe/fe.cpp"
+#include "../snowshoe/fe.inc"
 
 static const ufe C1 = {
 	{{1, 0}}, // a (real part)

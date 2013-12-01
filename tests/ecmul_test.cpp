@@ -6,7 +6,7 @@ using namespace std;
 #include "Clock.hpp"
 
 // Math library
-#include "../snowshoe/ecmul.cpp"
+#include "../snowshoe/ecmul.inc"
 
 static const ecpt_affine EC_G_AFFINE = {
 	EC_GX, EC_GY

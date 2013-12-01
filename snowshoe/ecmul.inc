@@ -1,10 +1,6 @@
 // Elliptic curve point operations
-#include "ecpt.cpp"
-#include "misc.cpp"
-
-#include <iostream>
-#include <iomanip>
-using namespace std;
+#include "ecpt.inc"
+#include "misc.inc"
 
 /*
  * Mask a random number to produce a compatible scalar for multiplication

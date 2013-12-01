@@ -1,5 +1,5 @@
 // Endomorphism
-#include "endo.cpp"
+#include "endo.inc"
 #include "ecpt.hpp"
 
 /*

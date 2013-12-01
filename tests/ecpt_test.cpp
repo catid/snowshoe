@@ -4,7 +4,7 @@
 using namespace std;
 
 // Math library
-#include "../snowshoe/ecpt.cpp"
+#include "../snowshoe/ecpt.inc"
 
 static const u64 PRIME_ORDER[4] = {
 	0xCE9B68E3B09E01A5ULL,

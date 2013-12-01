@@ -3,7 +3,7 @@
 using namespace std;
 
 // Math library
-#include "../snowshoe/fp.cpp"
+#include "../snowshoe/fp.inc"
 
 
 //// Test Driver

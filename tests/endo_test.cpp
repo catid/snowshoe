@@ -3,7 +3,7 @@
 using namespace std;
 
 // Math library
-#include "../snowshoe/endo.cpp"
+#include "../snowshoe/endo.inc"
 
 // static void gls_decompose(const u64 k[4], s32 &k1sign, u64 k1[2], s32 &k2sign, u64 k2[2])
 
