@@ -1,6 +1,6 @@
 # Snowshoe 1.0
 
-This project aims to provide a simple C API for four types of optimized
+This project aims to provide a simple C API for various types of optimized
 elliptic curve point multiplication:
 
 + Fixed-base (Public key generation, Signature generation) "mul_gen"
@@ -26,6 +26,15 @@ On my Macbook Air (Core i5 Sandy Bridge), rounded up:
 + mul: `109,000 cycles`
 + simul_gen: `~124,000 cycles` (not constant-time)
 + simul: `163,000 cycles`
+
+Simulating a few protocols:
+
++ Key generation in `59kcy`
++ EC-DH key agreement in `109kcy` for server and client
++ MQV server processing in `111kcy`
++ MQV client processing in `164kcy`
++ EdDSA signing in `60kcy`
++ EdDSA verification in `~125kcy` (not constant time)
 
 
 #### Usage
@@ -220,7 +229,7 @@ This library on Sandy Bridge i5:
 
 + mul_gen: `59kcy`
 + mul: `109kcy`
-+ simul_gen: `~124,000 cycles` (not constant-time)
++ simul_gen: `~124kcy` (not constant-time)
 + simul: `163kcy`
 
 Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ):
@@ -263,7 +272,7 @@ gls254 ( http://cacr.uwaterloo.ca/techreports/2013/cacr2013-14.pdf ):
 Hamburg's implementation ( http://mikehamburg.com/papers/fff/fff.pdf ):
 
 - ecmul_gen : (equivalent) `60kcy`
-- ecmul : (much slower) `153kcy`
+- ecmul : (slower) `153kcy`
 - ecsimul_gen : (slower) `<169kcy` (includes signature ops)
 - ecsimul : (not implemented)
 - Availability : Not available online?

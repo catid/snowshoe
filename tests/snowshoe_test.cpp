@@ -59,9 +59,21 @@ bool ec_dh_test() {
 
 	assert(snowshoe_mul_gen(sk_s, pp_s));
 
+	u32 t0 = Clock::cycles();
+
 	assert(snowshoe_mul(sk_c, pp_s, sp_c));
 
+	u32 t1 = Clock::cycles();
+
+	cout << (t1 - t0) << " client dh processing" << endl;
+
+	t0 = Clock::cycles();
+
 	assert(snowshoe_mul(sk_s, pp_c, sp_s));
+
+	t1 = Clock::cycles();
+
+	cout << (t1 - t0) << " server dh processing" << endl;
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (sp_c[ii] != sp_s[ii]) {

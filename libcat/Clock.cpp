@@ -225,6 +225,8 @@ u32 Clock::cycles()
 {
     u32 x[2];
 
+	CAT_FENCE_COMPILER;
+
 #if defined(CAT_COMPILER_MSVC)
 	x[0] = (u32)__rdtsc();
 
@@ -272,6 +274,8 @@ u32 Clock::cycles()
 # endif
 
 #endif
+
+	CAT_FENCE_COMPILER;
 
     return x[0];
 }
