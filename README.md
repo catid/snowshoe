@@ -23,18 +23,18 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 On my Macbook Air (Core i5 Sandy Bridge), rounded up:
 
-+ mul_gen: `59,000 cycles`
-+ mul: `109,000 cycles`
++ mul_gen: `62,000 cycles`
++ mul: `108,000 cycles`
 + simul_gen: `~124,000 cycles` (not constant-time)
-+ simul: `163,000 cycles`
++ simul: `162,000 cycles`
 
 Simulating a few protocols:
 
-+ Key generation in `59kcy`
++ Key generation in `62kcy`
 + EC-DH key agreement in `109kcy` for server and client
-+ MQV server processing in `111kcy`
++ MQV server processing in `110kcy`
 + MQV client processing in `164kcy`
-+ EdDSA signing in `60kcy`
++ EdDSA signing in `64kcy`
 + EdDSA verification in `~125kcy` (not constant time)
 
 
@@ -227,10 +227,10 @@ This produces `libsnowshoe.a` with optimizations.
 
 This library on Sandy Bridge i5:
 
-+ mul_gen: `59kcy`
-+ mul: `109kcy`
++ mul_gen: `62kcy`
++ mul: `108kcy`
 + simul_gen: `~124kcy` (not constant-time)
-+ simul: `163kcy`
++ simul: `162kcy`
 
 Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ):
 
@@ -271,7 +271,7 @@ gls254 ( http://cacr.uwaterloo.ca/techreports/2013/cacr2013-14.pdf ):
 
 Hamburg's implementation ( http://mikehamburg.com/papers/fff/fff.pdf ):
 
-- ecmul_gen : (equivalent) `60kcy`
+- ecmul_gen : (faster) `60kcy`
 - ecmul : (slower) `153kcy`
 - ecsimul_gen : (slower) `<169kcy` (includes signature ops)
 - ecsimul : (not implemented)

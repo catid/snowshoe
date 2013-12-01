@@ -658,8 +658,6 @@ int main() {
 
 	assert(mul_mod_q_test());
 
-	assert(ec_simul_gen_test());
-
 	assert(ec_mul_gen_test());
 
 	assert(ec_gen_table_2_test());
@@ -679,6 +677,8 @@ int main() {
 	assert(ec_table_select_2_test());
 
 	assert(ec_mul_test());
+
+	assert(ec_simul_gen_test());
 
 	assert(ec_simul_test());
 
