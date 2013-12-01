@@ -236,6 +236,8 @@ int main() {
 
 	srand(0);
 
+	assert(snowshoe_init());
+
 	for (int ii = 0; ii < 10000; ++ii) {
 		assert(ec_dh_test());
 	}

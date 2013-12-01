@@ -36,6 +36,17 @@ extern "C" {
 #define SNOWSHOE_VERSION 1
 
 /*
+ * Verify binary compatibility with the Snowshoe API on startup.
+ *
+ * Example:
+ * 	assert(snowshoe_init());
+ *
+ * It returns true if the linked library matches the expected version.
+ */
+bool _snowshoe_init(int expected_version);
+#define snowshoe_init() _snowshoe_init(SNOWSHOE_VERSION)
+
+/*
  * Mask a provided 256-bit random number so that it is less than q
  * and can be used as a secret key.
  */
@@ -52,6 +63,13 @@ void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
  * r = x (mod q)
  */
 void snowshoe_mod_q(const char x[64], char r[32]);
+
+/*
+ * R = -P
+ *
+ * Negate the given input point and store it in R
+ */
+void snowshoe_neg(const char P[64], char R[64]);
 
 /*
  * R = k*[4]*G
@@ -71,13 +89,6 @@ void snowshoe_mod_q(const char x[64], char r[32]);
 bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, char R[64]);
 
 /*
- * R = -P
- *
- * Negate the given input point and store it in R
- */
-void snowshoe_neg(const char P[64], char R[64]);
-
-/*
  * R = k*4*P
  *
  * Multiply variable point by k
@@ -92,6 +103,9 @@ bool snowshoe_mul(const char k[32], char P[64], char R[64]);
 
 /*
  * R = a*4*G + b*4*Q
+ *
+ * WARNING: Not constant-time.  The input parameters a,b should be public knowledge.
+ * This is used mainly for signature verification where the inputs are all public.
  *
  * Preconditions:
  * 	0 < a,b < q (prime order of curve)

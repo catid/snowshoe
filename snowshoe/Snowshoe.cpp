@@ -42,10 +42,15 @@
 
 #include "EndianNeutral.cpp"
 #include "ecmul.cpp"
+#include "Snowshoe.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool _snowshoe_init(int expected_version) {
+	return expected_version == SNOWSHOE_VERSION;
+}
 
 static CAT_INLINE void ec_load_k(const char k_chars[32], u64 k[4]) {
 	const u64 *k_raw = reinterpret_cast<const u64 *>( k_chars );
