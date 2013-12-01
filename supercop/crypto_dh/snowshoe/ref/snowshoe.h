@@ -99,7 +99,7 @@ bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, char R[64]);
  * Returns false if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_mul(const char k[32], char P[64], char R[64]);
+bool snowshoe_mul(const char k[32], const char P[64], char R[64]);
 
 /*
  * R = a*4*G + b*4*Q

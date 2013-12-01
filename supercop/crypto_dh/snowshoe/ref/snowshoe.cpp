@@ -162,7 +162,7 @@ bool snowshoe_mul_gen(const char k_raw[32], const bool mul_cofactor, char R[64])
 	return true;
 }
 
-bool snowshoe_mul(const char k_raw[32], char P[64], char R[64]) {
+bool snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
