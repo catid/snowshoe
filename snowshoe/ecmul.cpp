@@ -641,7 +641,7 @@ void ec_table_select_comb(const u64 b[4], const int ii, ecpt &p1, ecpt &p2) {
 	ec_cond_neg(s_1 ^ 1, p2);
 }
 
-void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
+void ec_mul_gen(const u64 k[4], bool mul_cofactor, ecpt_affine &R) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
@@ -674,6 +674,14 @@ void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 
 	// If recode_lsb == 1, X = -X
 	ec_cond_neg(recode_lsb, X);
+
+	// If multiplication by cofactor is desired,
+	if (mul_cofactor) {
+		// Note that this does not improve security.  It is anticipated only
+		// to be useful for signing.
+		ec_dbl(X, X, false, t2b);
+		ec_dbl(X, X, false, t2b);
+	}
 
 	// Compute affine coordinates in R
 	ec_affine(X, R);

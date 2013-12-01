@@ -440,18 +440,12 @@ bool ec_mul_gen_test() {
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
 		u32 t0 = Clock::cycles();
-		ec_mul_gen(k, R2);
+		ec_mul_gen(k, false, R2);
 		u32 t1 = Clock::cycles();
 		cout << dec << (t1 - t0) << " ec_mul_gen" << endl;
+		ec_mul_gen(k, true, R2);
 
 		ec_save_xy(R1, a1);
-
-		ufe t2b;
-		ecpt p;
-		ec_expand(R2, p);
-		ec_dbl(p, p, false, t2b);
-		ec_dbl(p, p, false, t2b);
-		ec_affine(p, R2);
 		ec_save_xy(R2, a2);
 
 		for (int ii = 0; ii < 64; ++ii) {

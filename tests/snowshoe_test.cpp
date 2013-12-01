@@ -55,9 +55,9 @@ bool ec_dh_test() {
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
 
-	assert(snowshoe_mul_gen(sk_c, pp_c));
+	assert(snowshoe_mul_gen(sk_c, false, pp_c));
 
-	assert(snowshoe_mul_gen(sk_s, pp_s));
+	assert(snowshoe_mul_gen(sk_s, false, pp_s));
 
 	u32 t0 = Clock::cycles();
 
@@ -106,17 +106,17 @@ bool ec_dh_fs_test() {
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	assert(snowshoe_mul_gen(sk_s, pp_s));
+	assert(snowshoe_mul_gen(sk_s, false, pp_s));
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	assert(snowshoe_mul_gen(sk_e, pp_e));
+	assert(snowshoe_mul_gen(sk_e, false, pp_e));
 
 	// Online: Client setup
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	assert(snowshoe_mul_gen(sk_c, pp_c));
+	assert(snowshoe_mul_gen(sk_c, false, pp_c));
 	generate_k(h);
 
 	// Online: Server handles client request
@@ -168,7 +168,7 @@ bool ec_dh_fs_test() {
  * Sign message M:
  * 	r = H(hi,M) (mod q)
  * 	t = H(R,A,M) (mod q)
- * 	R = r*G
+ * 	R = r*4*G
  * 	s = r + t*a (mod q)
  * 	Produce: R, s
  *
@@ -192,7 +192,7 @@ bool ec_dsa_test() {
 	// Offline precomputation:
 
 	snowshoe_secret_gen(a);
-	assert(snowshoe_mul_gen(a, pp_A));
+	assert(snowshoe_mul_gen(a, false, pp_A));
 
 	// Sign:
 
@@ -200,7 +200,7 @@ bool ec_dsa_test() {
 
 	snowshoe_mod_q(h_hi_m, r);
 	snowshoe_mod_q(h_r_a_m, t);
-	assert(snowshoe_mul_gen(r, pp_R));
+	assert(snowshoe_mul_gen(r, true, pp_R));
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
 
 	u32 t1 = Clock::cycles();

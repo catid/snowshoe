@@ -52,9 +52,13 @@ void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
 void snowshoe_mod_q(const char x[64], char r[32]);
 
 /*
- * R = k*G
+ * R = k*[4]*G
  *
  * Multiply generator point by k
+ *
+ * You can also multiply by the cofactor of 4 optionally.
+ * For signing this is a good idea to make the client verification
+ * work out.  But for most other applications it is unnecessary.
  *
  * Preconditions:
  *	0 < k < q (prime order of curve)
@@ -62,7 +66,7 @@ void snowshoe_mod_q(const char x[64], char r[32]);
  * Returns false if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_mul_gen(const char k[32], char R[64]);
+bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, char R[64]);
 
 /*
  * R = -P
