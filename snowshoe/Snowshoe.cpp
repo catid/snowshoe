@@ -127,23 +127,16 @@ void snowshoe_mod_q(const char x[64], char r[32]) {
 	ec_save_k(x1, r);
 }
 
-bool snowshoe_neg(const char P[64], char R[64]) {
+void snowshoe_neg(const char P[64], char R[64]) {
 	// Load point
 	ecpt_affine p1;
 	ec_load_xy((const u8*)P, p1);
-
-	// Validate point
-	if (!ec_valid(p1.x, p1.y)) {
-		return false;
-	}
 
 	// Run the math routine
 	ec_neg_affine(p1, p1);
 
 	// Save result endian-neutral
 	ec_save_xy(p1, (u8*)R);
-
-	return true;
 }
 
 bool snowshoe_mul_gen(const char k_raw[32], const bool mul_cofactor, char R[64]) {

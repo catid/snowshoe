@@ -212,7 +212,7 @@ bool ec_dsa_test() {
 	t0 = Clock::cycles();
 
 	snowshoe_mod_q(h_r_a_m, u);
-	assert(snowshoe_neg(pp_A, pp_A));
+	snowshoe_neg(pp_A, pp_A);
 	assert(snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
 
 	for (int ii = 0; ii < 64; ++ii) {

@@ -33,6 +33,8 @@
 extern "C" {
 #endif
 
+#define SNOWSHOE_VERSION 1
+
 /*
  * Mask a provided 256-bit random number so that it is less than q
  * and can be used as a secret key.
@@ -72,11 +74,8 @@ bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, char R[64]);
  * R = -P
  *
  * Negate the given input point and store it in R
- *
- * Returns false if one of the input parameters is invalid.
- * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_neg(const char P[64], char R[64]);
+void snowshoe_neg(const char P[64], char R[64]);
 
 /*
  * R = k*4*P
