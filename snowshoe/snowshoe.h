@@ -76,9 +76,13 @@ void snowshoe_neg(const char P[64], char R[64]);
  *
  * Multiply generator point by k
  *
- * You can also multiply by the cofactor of 4 optionally.
+ * To protect against SPA attack, set constant_time == true (recommended).
+ * It runs roughly twice as fast in unprotected mode.
+ *
+ * You can multiply by the cofactor of 4 optionally.
  * For signing this is a good idea to make the client verification
  * work out.  But for most other applications it is unnecessary.
+ * Recommend setting mul_cofactor == false.
  *
  * Preconditions:
  *	0 < k < q (prime order of curve)
@@ -86,7 +90,7 @@ void snowshoe_neg(const char P[64], char R[64]);
  * Returns false if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, char R[64]);
+bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, bool constant_time, char R[64]);
 
 /*
  * R = k*4*P

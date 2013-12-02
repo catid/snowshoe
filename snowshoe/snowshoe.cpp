@@ -143,7 +143,7 @@ void snowshoe_neg(const char P[64], char R[64]) {
 	ec_save_xy(p1, (u8*)R);
 }
 
-bool snowshoe_mul_gen(const char k_raw[32], const bool mul_cofactor, char R[64]) {
+bool snowshoe_mul_gen(const char k_raw[32], const bool mul_cofactor, const bool constant_time, char R[64]) {
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
@@ -154,7 +154,7 @@ bool snowshoe_mul_gen(const char k_raw[32], const bool mul_cofactor, char R[64])
 
 	// Run the math routine
 	ecpt_affine r;
-	ec_mul_gen(k, mul_cofactor, r);
+	ec_mul_gen(k, mul_cofactor, constant_time, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);

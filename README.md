@@ -2,15 +2,16 @@
 
 [This project](http://github.com/catid/snowshoe) aims to provide a simple C API for various types of optimized elliptic curve point multiplication:
 
-+ Fixed-base (Public key generation, Signature generation) "mul_gen"
-+ Variable-base (Diffie-Hellman key agreement) "mul"
-+ Variable double-base Simultaneous (MQV key agreement) "simul"
++ Fixed-base (Public key generation, Signature generation) `mul_gen`
++ Variable-base (Diffie-Hellman key agreement) `mul`
++ Variable double-base Simultaneous (MQV key agreement) `simul`
 
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
 
 Additionally to speed up signature verification a variable single-base
-simultaneous function "simul_gen" is provided that is not constant-time.
+simultaneous function `simul_gen` is provided that is not constant-time.
+And a similarly SPA unprotected `mul_gen` is provided for offline signing.
 
 It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
@@ -21,21 +22,40 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ## Benchmarks
 
-On my Macbook Air (Core i5 Sandy Bridge), rounded up:
+On my Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge), rounded up:
 
-+ mul_gen: `62,000 cycles`
++ mul_gen: `62,000 cycles` (SPA protected) or `~36,000 cycles` (SPA unprotected)
 + mul: `108,000 cycles`
 + simul_gen: `~124,000 cycles` (not constant-time)
 + simul: `162,000 cycles`
 
 Simulating a few protocols:
 
-+ Key generation in `62kcy`
++ Key generation in `62kcy` (SPA protected) or `~36kcy` (SPA unprotected)
 + EC-DH key agreement in `109kcy` for server and client
-+ MQV server processing in `110kcy`
++ MQV server processing in `110kcy` (= 68 usec: 14,000 connections/sec)
 + MQV client processing in `164kcy`
-+ EdDSA signing in `64kcy`
++ EdDSA signing in `64kcy` (SPA protected) or `~38kcy` (SPA unprotected)
 + EdDSA verification in `~125kcy` (not constant time)
+
+
+On my iMac (2.7 GHz Core i5-2500S Sandy Bridge), rounded up:
+
++ Curve25519 mul: `194,000 cycles` for reference
+
++ mul_gen: `73,000 cycles` (SPA protected) or `~44,000 cycles` (SPA unprotected)
++ mul: `129,000 cycles`
++ simul_gen: `~147,000 cycles` (not constant-time)
++ simul: `193,000 cycles`
+
+Simulating a few protocols:
+
++ Key generation in `73kcy` (SPA protected) or `~44kcy` (SPA unprotected)
++ EC-DH key agreement in `129kcy` for server and client
++ MQV server processing in `130kcy` (= 48 usec: 20,000 connections/sec)
++ MQV client processing in `195kcy`
++ EdDSA signing in `75kcy` (SPA protected) or `~47kcy` (SPA unprotected)
++ EdDSA verification in `~149kcy` (not constant time)
 
 
 #### Usage
@@ -224,6 +244,12 @@ This produces `libsnowshoe.a` with optimizations.
 
 
 #### Comparison with other fast ECC implementations at ~128 bit security:
+
+Most other software with fast `mul_gen` is cheating a little.  The table
+lookups are often not protected against SPA attack.  Snowshoe's `mul_gen` can
+run in `30kcy` with two 128-entry tables or `36kcy` with two 64-entry tables
+if the table lookups are similarly unprotected.  Since offline key generation
+is not a common task, 
 
 This library on Sandy Bridge i5:
 

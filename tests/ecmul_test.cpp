@@ -141,9 +141,9 @@ static bool ec_gen_tables_comb_test() {
 }
 
 static bool ec_gen_tables3_comb_test() {
-	const int t = 252;
+	//const int t = 252;
 	const int w = 8;
-	const int e = 32; // t / wv
+	//const int e = 32; // t / wv
 	const int d = 32; // e*1
 
 	ecpt_affine table[128];
@@ -440,10 +440,14 @@ bool ec_mul_gen_test() {
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
 		u32 t0 = Clock::cycles();
-		ec_mul_gen(k, false, R2);
+		ec_mul_gen(k, false, false, R2);
 		u32 t1 = Clock::cycles();
-		cout << dec << (t1 - t0) << " ec_mul_gen" << endl;
-		ec_mul_gen(k, true, R2);
+		cout << dec << (t1 - t0) << " ec_mul_gen (SPA unprotected)" << endl;
+		t0 = Clock::cycles();
+		ec_mul_gen(k, false, true, R2);
+		t1 = Clock::cycles();
+		cout << dec << (t1 - t0) << " ec_mul_gen (SPA protected)" << endl;
+		ec_mul_gen(k, true, true, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);

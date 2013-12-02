@@ -3,30 +3,12 @@
 #include "misc.inc"
 
 /*
- * Mask a random number to produce a compatible scalar for multiplication
- */
-
-void ec_mask_scalar(u64 k[4]) {
-	// Prime order of the curve = q, word-mapped:
-	// 0x0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA6261414C0DC87D3CE9B68E3B09E01A5
-	//   (      3       )(       2      )(       1      )(       0      )
-
-	// Clear high 5 bits
-	// Clears one extra bit to simplify key generation
-	k[3] &= 0x07FFFFFFFFFFFFFFULL;
-
-	// Largest value after filtering:
-	// 0x07FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-	//   (      3       )(       2      )(       1      )(       0      )
-}
-
-/*
  * GLV-SAC Scalar Recoding Algorithm for m=2 [1]
  *
  * Returns low bit of 'a'.
  */
 
-static u32 ec_recode_scalars_2(ufp &a, ufp &b, const int len) {
+static CAT_INLINE u32 ec_recode_scalars_2(ufp &a, ufp &b, const int len) {
 	u32 lsb = ((u32)a.i[0] & 1) ^ 1;
 	a.w -= lsb;
 	a.w >>= 1;
@@ -49,7 +31,7 @@ static u32 ec_recode_scalars_2(ufp &a, ufp &b, const int len) {
  * Returns low bit of 'a'.
  */
 
-static u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d, const int len) {
+static CAT_INLINE u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d, const int len) {
 	u32 lsb = ((u32)a.i[0] & 1) ^ 1;
 	a.w -= lsb;
 	a.w >>= 1;
@@ -102,7 +84,7 @@ static u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d, const int len) {
  * and they make the code easier to analyze.
  */
 
-static void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
+static CAT_INLINE void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
 	ecpt bn;
 	ec_neg(b, bn);
 
@@ -530,7 +512,7 @@ static const ecpt_affine *GEN_TABLE_0 = (const ecpt_affine *)PRECOMP_TABLE_0;
 static const ecpt_affine *GEN_TABLE_1 = (const ecpt_affine *)PRECOMP_TABLE_1;
 static const ecpt *GEN_FIX = (const ecpt *)PRECOMP_TABLE_2;
 
-static u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
+static CAT_INLINE u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
@@ -588,7 +570,7 @@ static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
-void ec_table_select_comb(const u64 b[4], const int ii, ecpt &p1, ecpt &p2) {
+static CAT_INLINE void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time, ecpt &p1, ecpt &p2) {
 	// DCK(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -605,16 +587,23 @@ void ec_table_select_comb(const u64 b[4], const int ii, ecpt &p1, ecpt &p2) {
 	d_0 |= comb_bit(b, 1, 0, ii);
 	u32 s_0 = comb_bit(b, 0, 0, ii);
 
-	ec_zero(p1);
-	for (int ii = 0; ii < 64; ++ii) {
-		// Generate a mask that is -1 if ii == index, else 0
-		const u128 mask = ec_gen_mask(ii, d_0);
+	if (constant_time) {
+		ec_zero(p1);
+		for (int jj = 0; jj < 64; ++jj) {
+			// Generate a mask that is -1 if jj == index, else 0
+			const u128 mask = ec_gen_mask(jj, d_0);
 
-		// Add in the masked table entry
-		ec_xor_mask_affine(GEN_TABLE_0[ii], mask, p1);
+			// Add in the masked table entry
+			ec_xor_mask_affine(GEN_TABLE_0[jj], mask, p1);
+		}
+		fe_mul(p1.x, p1.y, p1.t);
+		ec_cond_neg(s_0 ^ 1, p1);
+	} else {
+		ec_expand(GEN_TABLE_0[d_0], p1);
+		if (s_0 == 0) {
+			ec_neg(p1, p1);
+		}
 	}
-	fe_mul(p1.x, p1.y, p1.t);
-	ec_cond_neg(s_0 ^ 1, p1);
 
 	u32 d_1;
 	d_1 = comb_bit(b, 6, 1, ii) << 5;
@@ -625,19 +614,26 @@ void ec_table_select_comb(const u64 b[4], const int ii, ecpt &p1, ecpt &p2) {
 	d_1 |= comb_bit(b, 1, 1, ii);
 	u32 s_1 = comb_bit(b, 0, 1, ii);
 
-	ec_zero(p2);
-	for (int ii = 0; ii < 64; ++ii) {
-		// Generate a mask that is -1 if ii == index, else 0
-		const u128 mask = ec_gen_mask(ii, d_1);
+	if (constant_time) {
+		ec_zero(p2);
+		for (int jj = 0; jj < 64; ++jj) {
+			// Generate a mask that is -1 if jj == index, else 0
+			const u128 mask = ec_gen_mask(jj, d_1);
 
-		// Add in the masked table entry
-		ec_xor_mask_affine(GEN_TABLE_1[ii], mask, p2);
+			// Add in the masked table entry
+			ec_xor_mask_affine(GEN_TABLE_1[jj], mask, p2);
+		}
+		fe_mul(p2.x, p2.y, p2.t);
+		ec_cond_neg(s_1 ^ 1, p2);
+	} else {
+		ec_expand(GEN_TABLE_1[d_1], p2);
+		if (s_1 == 0) {
+			ec_neg(p2, p2);
+		}
 	}
-	fe_mul(p2.x, p2.y, p2.t);
-	ec_cond_neg(s_1 ^ 1, p2);
 }
 
-void ec_mul_gen(const u64 k[4], bool mul_cofactor, ecpt_affine &R) {
+void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool constant_time, ecpt_affine &R) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
@@ -651,12 +647,12 @@ void ec_mul_gen(const u64 k[4], bool mul_cofactor, ecpt_affine &R) {
 	ufe t2b;
 	ecpt X, S, T;
 
-	ec_table_select_comb(kp, e - 1, S, T);
+	ec_table_select_comb(kp, e - 1, constant_time, S, T);
 	fe_set_smallk(1, S.z);
 	ec_add(S, T, X, true, true, false, t2b);
 
 	for (int ii = e - 2; ii >= 0; --ii) {
-		ec_table_select_comb(kp, ii, S, T);
+		ec_table_select_comb(kp, ii, constant_time, S, T);
 
 		ec_dbl(X, X, false, t2b);
 		ec_add(X, S, X, true, false, false, t2b);
