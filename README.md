@@ -362,6 +362,18 @@ double the speed in that case, the option is available in Snowshoe.
 
 ## Choosing a Finite Field
 
+## Choosing an Optimal Extension Field
+
+This was easy.  The only real option is Fp^2.  Larger exponents provide
+diminishing returns in terms of real security, and math over Fp^2 is the same
+as grade-school complex math (a + b*i).
+
+Multiplication over Fp^2 takes about 66 cycles on a Sandy Bridge processor,
+whereas multiplication on well-chosen Fp of the same size takes 55 cycles. [17]
+This performance loss is more than compensated for by faster field inversions
+and allowing for efficient endomorphisms.
+
+
 #### Why p = 2^127-1?
 
 I care mainly about server performance, with 64-bit Linux VPS in mind, and
@@ -392,18 +404,6 @@ Good for ARM systems, but extension fields are not ideal:
 Requires a 4-GLV decomposition to use properly, and I think 2 dimensional
 decomposition is complicated enough for now.  Also it would take a huge
 security hit to use.  Maybe not a huge deal.
-
-
-## Choosing an Optimal Extension Field
-
-This was easy.  The only real option is Fp^2.  Larger exponents provide
-diminishing returns in terms of real security, and math over Fp^2 is the same
-as grade-school complex math (a + b*i).
-
-Multiplication over Fp^2 takes about 66 cycles on a Sandy Bridge processor,
-whereas multiplication on well-chosen Fp of the same size takes 55 cycles. [17]
-This performance loss is more than compensated for by faster field inversions
-and allowing for efficient endomorphisms.
 
 
 ## Choosing Endomorphism Dimensions
@@ -470,8 +470,7 @@ done in [3].
 
 The possibility of using a change of variables and specially chosen Q-curve
 parameters to use the efficient dedicated addition formula from [5] for a = -1
-with a correction post-step (LaineyCurves.md) was also explored.
-
+with a correction post-step (LaineyCurves.md) was also explored.  However,
 introducing additional complexity and dangerous incomplete addition laws to
 save one multiplication per addition seems like a desperate choice to me for
 little practical gain, especially since the number of additions is already
@@ -567,8 +566,8 @@ r = #E(Fp^2) = 28948022309329048855892746252171976962839764946219840790663900086
 Factorization(r) = h * q (cofactor times large prime q)
 h = 4
 q = 7237005577332262213973186563042994240709941236554960197665975021634500559269
-t = TraceOfFrobenius(E) = 137448853269361755737121308008511961454
-Verified: r = (p - 1) ^ 2 + Tr(E(Fp))^2
+t = Tr(E(Fp)) = 14241963124919847500
+Verified: r = (p - 1) ^ 2 + t^2
 Verified: r * P = [0, 1] = point-at-infinity
 ~~~
 
@@ -578,7 +577,6 @@ A' = 74770288137151926641346873498907920755*i + 33812952767805664868511289460037
 B' = 105685070695019342075176919984401662667*i + 99525886244248837335664845733467848745
 r' = #E'(Fp^2) = 28948022309329048855892746252171976963114662652758564302138142702555026159984
 (factorization omitted, but it is composite)
-t' = TraceOfFrobenius(E') = -137448853269361755737121308008511961454
 Verified: r' = (p + 1) ^ 2 - Tr(E'(Fp))^2
 ~~~
 

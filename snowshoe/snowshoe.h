@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define SNOWSHOE_VERSION 1
+#define SNOWSHOE_VERSION 2
 
 /*
  * Verify binary compatibility with the Snowshoe API on startup.
