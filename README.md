@@ -245,12 +245,6 @@ This produces `libsnowshoe.a` with optimizations.
 
 #### Comparison with other fast ECC implementations at ~128 bit security:
 
-Most other software with fast `mul_gen` is cheating a little.  The table
-lookups are often not protected against SPA attack.  Snowshoe's `mul_gen` can
-run in `30kcy` with two 128-entry tables or `36kcy` with two 64-entry tables
-if the table lookups are similarly unprotected.  Since offline key generation
-is not a common task, 
-
 This library on Sandy Bridge i5:
 
 + mul_gen: `62kcy`
@@ -310,6 +304,13 @@ Longa's implementation ( http://eprint.iacr.org/2013/158 ):
 - ecsimul_gen : (faster) `116kcy`
 - ecsimul : (much faster) `116kcy`
 - Availability : Not available online?
+
+Most other software with fast `mul_gen` is cheating a little.  The table
+lookups are often not protected against SPA attack.  Snowshoe's `mul_gen` can
+run in `30kcy` with two 128-entry tables or `36kcy` with two 64-entry tables
+(the current implementation) if the table lookups are similarly unprotected.
+Since it is trivial to allow an SPA unprotected mode and seems to almost
+double the speed in that case, the option is available in Snowshoe.
 
 
 ## Details
