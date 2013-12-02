@@ -58,14 +58,14 @@ bool ec_dh_test() {
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
 
-	assert(snowshoe_mul_gen(sk_c, false, true, pp_c));
+	assert(0 == snowshoe_mul_gen(sk_c, false, true, pp_c));
 
-	assert(snowshoe_mul_gen(sk_s, false, true, pp_s));
+	assert(0 == snowshoe_mul_gen(sk_s, false, true, pp_s));
 
 	double s0 = m_clock.usec();
 	u32 t0 = Clock::cycles();
 
-	assert(snowshoe_mul(sk_c, pp_s, sp_c));
+	assert(0 == snowshoe_mul(sk_c, pp_s, sp_c));
 
 	u32 t1 = Clock::cycles();
 	double s1 = m_clock.usec();
@@ -75,7 +75,7 @@ bool ec_dh_test() {
 	s0 = m_clock.usec();
 	t0 = Clock::cycles();
 
-	assert(snowshoe_mul(sk_s, pp_c, sp_s));
+	assert(0 == snowshoe_mul(sk_s, pp_c, sp_s));
 
 	t1 = Clock::cycles();
 	s1 = m_clock.usec();
@@ -113,17 +113,17 @@ bool ec_dh_fs_test() {
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	assert(snowshoe_mul_gen(sk_s, false, false, pp_s));
+	assert(0 == snowshoe_mul_gen(sk_s, false, false, pp_s));
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	assert(snowshoe_mul_gen(sk_e, false, false, pp_e));
+	assert(0 == snowshoe_mul_gen(sk_e, false, false, pp_e));
 
 	// Online: Client setup
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	assert(snowshoe_mul_gen(sk_c, false, true, pp_c));
+	assert(0 == snowshoe_mul_gen(sk_c, false, true, pp_c));
 	generate_k(h);
 
 	// Online: Server handles client request
@@ -133,7 +133,7 @@ bool ec_dh_fs_test() {
 
 	// d = sk_e + h * sk_s (mod q)
 	snowshoe_mul_mod_q(h, sk_s, sk_e, d);
-	assert(snowshoe_mul(d, pp_c, sp_s));
+	assert(0 == snowshoe_mul(d, pp_c, sp_s));
 
 	u32 t1 = Clock::cycles();
 	double s1 = m_clock.usec();
@@ -147,7 +147,7 @@ bool ec_dh_fs_test() {
 
 	// a = h * sk_c (mod q)
 	snowshoe_mul_mod_q(h, sk_c, 0, a);
-	assert(snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c));
+	assert(0 == snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c));
 
 	t1 = Clock::cycles();
 	s1 = m_clock.usec();
@@ -203,7 +203,7 @@ bool ec_dsa_test() {
 	// Offline precomputation:
 
 	snowshoe_secret_gen(a);
-	assert(snowshoe_mul_gen(a, false, false, pp_A));
+	assert(0 == snowshoe_mul_gen(a, false, false, pp_A));
 
 	// Sign:
 
@@ -212,7 +212,7 @@ bool ec_dsa_test() {
 
 	snowshoe_mod_q(h_hi_m, r);
 	snowshoe_mod_q(h_r_a_m, t);
-	assert(snowshoe_mul_gen(r, true, true, pp_R));
+	assert(0 == snowshoe_mul_gen(r, true, true, pp_R));
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
 
 	u32 t1 = Clock::cycles();
@@ -227,7 +227,7 @@ bool ec_dsa_test() {
 
 	snowshoe_mod_q(h_r_a_m, u);
 	snowshoe_neg(pp_A, pp_A);
-	assert(snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
+	assert(0 == snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (pp_Rtest[ii] != pp_R[ii]) {
@@ -253,7 +253,8 @@ int main() {
 
 	srand(0);
 
-	assert(snowshoe_init());
+	// Example of verifying API level on startup
+	assert(0 == snowshoe_init());
 
 	for (int ii = 0; ii < 1000; ++ii) {
 		assert(ec_dsa_test());

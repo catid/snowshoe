@@ -33,17 +33,18 @@
 extern "C" {
 #endif
 
-#define SNOWSHOE_VERSION 2
+#define SNOWSHOE_VERSION 3
 
 /*
  * Verify binary compatibility with the Snowshoe API on startup.
  *
  * Example:
- * 	assert(snowshoe_init());
+ * 	assert(0 == snowshoe_init());
  *
- * It returns true if the linked library matches the expected version.
+ * Returns 0 on success.
+ * Returns non-zero if the API level does not match.
  */
-bool _snowshoe_init(int expected_version);
+int _snowshoe_init(int expected_version);
 #define snowshoe_init() _snowshoe_init(SNOWSHOE_VERSION)
 
 /*
@@ -87,10 +88,11 @@ void snowshoe_neg(const char P[64], char R[64]);
  * Preconditions:
  *	0 < k < q (prime order of curve)
  *
- * Returns false if one of the input parameters is invalid.
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, bool constant_time, char R[64]);
+int snowshoe_mul_gen(const char k[32], bool mul_cofactor, bool constant_time, char R[64]);
 
 /*
  * R = k*4*P
@@ -100,10 +102,11 @@ bool snowshoe_mul_gen(const char k[32], bool mul_cofactor, bool constant_time, c
  * Preconditions:
  * 	0 < k < q (prime order of curve)
  *
- * Returns false if one of the input parameters is invalid.
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_mul(const char k[32], const char P[64], char R[64]);
+int snowshoe_mul(const char k[32], const char P[64], char R[64]);
 
 /*
  * R = a*4*G + b*4*Q
@@ -116,10 +119,11 @@ bool snowshoe_mul(const char k[32], const char P[64], char R[64]);
  *
  * Simultaneously multiply two points (one being the generator point) and return the sum
  *
- * Returns false if one of the input parameters is invalid.
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]);
+int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]);
 
 /*
  * R = a*4*P + b*4*Q
@@ -129,10 +133,11 @@ bool snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], ch
  *
  * Simultaneously multiply two points and return the sum
  *
- * Returns false if one of the input parameters is invalid.
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
+int snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
 
 #ifdef __cplusplus
 }

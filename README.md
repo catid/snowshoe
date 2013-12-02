@@ -73,6 +73,12 @@ To use the project you only need to include [snowshoe/snowshoe.h](https://github
 
 [Elliptic Curve Diffie-Hellman](http://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman) is the baseline for key agreement over the Internet.  Implementing it with this library is straight-forward:
 
+Verify binary API compatibility on startup:
+
+~~~
+	assert(0 == snowshoe_init());
+~~~
+
 Allocate memory for the keys:
 
 ~~~
@@ -86,7 +92,7 @@ Now generate the server public/private key pair:
 ~~~
 	char pp_s[64];
 	snowshoe_secret_gen(sk_s);
-	assert(snowshoe_mul_gen(sk_s, pp_s));
+	assert(0 == snowshoe_mul_gen(sk_s, pp_s));
 ~~~
 
 `snowshoe_secret_gen` will mask off some bits of the random input string to make it suitable for use as a private key.
@@ -98,21 +104,21 @@ Generate client public/private key pair:
 ~~~
 	char pp_c[64];
 	snowshoe_secret_gen(sk_c);
-	assert(snowshoe_mul_gen(sk_c, pp_c));
+	assert(0 == snowshoe_mul_gen(sk_c, pp_c));
 ~~~
 
 Client side: Multiply client secret key by server public point
 
 ~~~
 	char sp_c[64];
-	assert(snowshoe_mul(sk_c, pp_s, sp_c));
+	assert(0 == snowshoe_mul(sk_c, pp_s, sp_c));
 ~~~
 
 Server side: Multiply server secret key by client public point
 
 ~~~
 	char sp_s[64];
-	assert(snowshoe_mul(sk_s, pp_c, sp_s));
+	assert(0 == snowshoe_mul(sk_s, pp_c, sp_s));
 ~~~
 
 Server and client both arrive at `sp_c == sp_s`, which is the secret key for the session.
@@ -134,31 +140,31 @@ Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	assert(snowshoe_mul_gen(sk_s, pp_s));
+	assert(0 == snowshoe_mul_gen(sk_s, pp_s));
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	assert(snowshoe_mul_gen(sk_e, pp_e));
+	assert(0 == snowshoe_mul_gen(sk_e, pp_e));
 
 	// Online: Client setup
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	assert(snowshoe_mul_gen(sk_c, pp_c));
+	assert(0 == snowshoe_mul_gen(sk_c, pp_c));
 
 	generate_k(h);
 
 	// Online: Server handles client request
 
 	// d = h * sk_e + sk_s (mod q)
-	assert(snowshoe_mul_mod_q(h, sk_e, sk_s, d));
-	assert(snowshoe_mul(d, pp_c, sp_s));
+	snowshoe_mul_mod_q(h, sk_e, sk_s, d);
+	assert(0 == snowshoe_mul(d, pp_c, sp_s));
 
 	// Online: Client handles server response
 
 	// a = h * sk_c (mod q)
-	assert(snowshoe_mul_mod_q(h, sk_c, 0, a));
-	assert(snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
+	snowshoe_mul_mod_q(h, sk_c, 0, a);
+	assert(0 == snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
 ~~~
 
 Similar to the EC-DH example, assert() is used in place of appropriate error handling.  `generate_k` should be replaced by a CSPRNG.  And `h` should be the output of a hash function.
@@ -206,20 +212,20 @@ Verify:
 	// Offline precomputation:
 
 	snowshoe_secret_gen(a);
-	assert(snowshoe_mul_gen(a, pp_A));
+	assert(0 == snowshoe_mul_gen(a, pp_A));
 
 	// Sign:
 
 	snowshoe_mod_q(h_hi_m, r);
 	snowshoe_mod_q(h_r_a_m, t);
-	assert(snowshoe_mul_gen(r, pp_R));
+	assert(0 == snowshoe_mul_gen(r, pp_R));
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
 
 	// Verify:
 
 	snowshoe_mod_q(h_r_a_m, u);
-	assert(snowshoe_neg(pp_A, pp_A));
-	assert(snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
+	snowshoe_neg(pp_A, pp_A);
+	assert(0 == snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
 
 	// This comparison does not need to be constant-time
 	for (int ii = 0; ii < 64; ++ii) {
