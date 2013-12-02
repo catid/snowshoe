@@ -9,6 +9,9 @@ using namespace cat;
 // Math library
 #include "../snowshoe/Snowshoe.h"
 
+static Clock m_clock;
+
+
 //// Test Driver
 
 static void generate_k(char kb[32]) {
@@ -59,21 +62,25 @@ bool ec_dh_test() {
 
 	assert(snowshoe_mul_gen(sk_s, false, true, pp_s));
 
+	double s0 = m_clock.usec();
 	u32 t0 = Clock::cycles();
 
 	assert(snowshoe_mul(sk_c, pp_s, sp_c));
 
 	u32 t1 = Clock::cycles();
+	double s1 = m_clock.usec();
 
-	cout << (t1 - t0) << " client dh processing" << endl;
+	cout << "EC-DH client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
+	s0 = m_clock.usec();
 	t0 = Clock::cycles();
 
 	assert(snowshoe_mul(sk_s, pp_c, sp_s));
 
 	t1 = Clock::cycles();
+	s1 = m_clock.usec();
 
-	cout << (t1 - t0) << " server dh processing" << endl;
+	cout << "EC-DH server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (sp_c[ii] != sp_s[ii]) {
@@ -121,27 +128,31 @@ bool ec_dh_fs_test() {
 
 	// Online: Server handles client request
 
+	double s0 = m_clock.usec();
 	u32 t0 = Clock::cycles();
 
-	// d = h * sk_e + sk_s (mod q)
-	snowshoe_mul_mod_q(h, sk_e, sk_s, d);
+	// d = sk_e + h * sk_s (mod q)
+	snowshoe_mul_mod_q(h, sk_s, sk_e, d);
 	assert(snowshoe_mul(d, pp_c, sp_s));
 
 	u32 t1 = Clock::cycles();
+	double s1 = m_clock.usec();
 
-	cout << (t1 - t0) << " server mqv processing" << endl;
+	cout << "EC-FHMQV server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	// Online: Client handles server response
 
+	s0 = m_clock.usec();
 	t0 = Clock::cycles();
 
 	// a = h * sk_c (mod q)
 	snowshoe_mul_mod_q(h, sk_c, 0, a);
-	assert(snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
+	assert(snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c));
 
 	t1 = Clock::cycles();
+	s1 = m_clock.usec();
 
-	cout << (t1 - t0) << " client mqv processing" << endl;
+	cout << "EC-FHMQV client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (sp_c[ii] != sp_s[ii]) {
@@ -196,6 +207,7 @@ bool ec_dsa_test() {
 
 	// Sign:
 
+	double s0 = m_clock.usec();
 	u32 t0 = Clock::cycles();
 
 	snowshoe_mod_q(h_hi_m, r);
@@ -204,11 +216,13 @@ bool ec_dsa_test() {
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
 
 	u32 t1 = Clock::cycles();
+	double s1 = m_clock.usec();
 
-	cout << (t1 - t0) << " signing" << endl;
+	cout << "ECSign server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	// Verify:
 
+	s0 = m_clock.usec();
 	t0 = Clock::cycles();
 
 	snowshoe_mod_q(h_r_a_m, u);
@@ -222,8 +236,9 @@ bool ec_dsa_test() {
 	}
 
 	t1 = Clock::cycles();
+	s1 = m_clock.usec();
 
-	cout << (t1 - t0) << " verification" << endl;
+	cout << "Verify client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	return true;
 }
@@ -234,23 +249,27 @@ bool ec_dsa_test() {
 int main() {
 	cout << "Snowshoe Unit Tester" << endl;
 
+	m_clock.OnInitialize();
+
 	srand(0);
 
 	assert(snowshoe_init());
 
-	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dh_test());
-	}
-
-	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dh_fs_test());
-	}
-
-	for (int ii = 0; ii < 10000; ++ii) {
+	for (int ii = 0; ii < 1000; ++ii) {
 		assert(ec_dsa_test());
 	}
 
+	for (int ii = 0; ii < 1000; ++ii) {
+		assert(ec_dh_fs_test());
+	}
+
+	for (int ii = 0; ii < 1000; ++ii) {
+		assert(ec_dh_test());
+	}
+
 	cout << "All tests passed successfully." << endl;
+
+	m_clock.OnFinalize();
 
 	return 0;
 }
