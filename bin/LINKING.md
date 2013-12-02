@@ -12,3 +12,4 @@ Link to `libsnowshoe.lib`.  An example MSVC2010 project is provided.
 #### Mac x86-64
 
 Link to `libsnowshoe.a`.  The `tests` folder contains compatible tests.
+
