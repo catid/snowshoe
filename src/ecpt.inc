@@ -293,14 +293,14 @@ static void ec_dbl(const ecpt &p, ecpt &r, const bool z_one, ufe &t2b) {
  * (X3, Y3, T3, Z3) = (X1, Y1, T1, Z1) + (X2, Y2, T2, Z2)
  *
  * If in_precomp_t1 is true:
- *	The t2b parameter will be ignored.  The a.t field is assumed to be T1.
+ *	The t2b parameter will be ignored.  The p1.t field is assumed to be T1.
  * Else:
- *	The t2b parameter will be multiplied by a.t to recover T1.
+ *	The t2b parameter will be multiplied by p1.t to recover T1.
  *
  * If out_precomp_t1 is true:
  *	The t2b parameter is undefined.  The r.t field contains T1.
  * Else:
- *	This function generates a.t and t2b as partial products.
+ *	This function generates r.t and t2b as partial products.
  */
 
 // r = a + b
@@ -434,10 +434,9 @@ static void ec_affine(const ecpt &a, ecpt_affine &r) {
  * the point is in a cofactor subgroup rather than our q torsion group
  * of the base point.  Since these points can be introduced at any time
  * during the computation, checking for them would add unnecessary
- * complexity.  Instead, it is the responsibility of the library user to
- * ensure that all scalars used in point multiplication have the low 2
- * bits clear.  If done, an attacker who injects invalid points of this
- * type cannot gain any information about the rest of the scalar bits.
+ * complexity.  Instead, the ecmul functions double the output points
+ * twice, preventing an attacker who injects invalid points of this
+ * type from gaining any information about the rest of the scalar bits.
 */
 
 // Verify that the affine point (x, y) exists on the given curve
