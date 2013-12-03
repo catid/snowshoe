@@ -37,6 +37,12 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 + EC-DH client: 104,848 cycles 61 usec
 + EC-DH server: 104,917 cycles 61 usec
 
+##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
+
+TODO: Re-run these!
+
++ Curve25519 mul: `194,000 cycles` for reference
+
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
 + ECSign server: 100,752 cycles 37.7253 usec
@@ -45,15 +51,6 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 + EC-FHMQV client: 307,194 cycles 115.486 usec
 + EC-DH client: 208,474 cycles 78.5303 usec
 + EC-DH server: 207,633 cycles 78.1453 usec
-
-
-
-
-On my iMac (2.7 GHz Core i5-2500S Sandy Bridge), rounded up:
-
-TODO: Re-run these!
-
-+ Curve25519 mul: `194,000 cycles` for reference
 
 
 #### Usage
