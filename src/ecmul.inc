@@ -1069,14 +1069,14 @@ static void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const in
  * Multiplies the result of aG + bP by 4 and stores it in R
  */
 
-// R = a*4*G + b*4*Q
+// R = a*4*G + b*4*P
 static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp b1, b2;
 	s32 b1sign, b2sign;
 	gls_decompose(b, b1sign, b1, b2sign, b2);
 
-	// Q1 = endomorphism of Q0
+	// Q0 = endomorphism of P0
 	ecpt_affine Q0;
 	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
 
