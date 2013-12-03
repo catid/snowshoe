@@ -63,10 +63,10 @@ Simulating a few protocols:
 You can either compile-in the software or link to it.  I recommend statically linking
 the code, since that enables full optimization and speeds up your compilation.
 
-To build the project you only need to compile `snowshoe/snowshoe.cpp`, which includes
-all of the other source files.  Or link to a prebuilt static library.
+To build the project you only need to compile `src/snowshoe.cpp`, which includes
+all of the other source files.  Or link to a prebuilt static library under `bin/`
 
-To use the project you only need to include [snowshoe/snowshoe.h](https://github.com/catid/snowshoe/blob/master/snowshoe/snowshoe.h), which declares the C exports from the source files.
+To use the project you only need to include [include/snowshoe.h](https://github.com/catid/snowshoe/blob/master/include/snowshoe.h), which declares the C exports from the source files.
 
 
 #### Example Usage: EC-DH

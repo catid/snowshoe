@@ -7,7 +7,7 @@ using namespace std;
 using namespace cat;
 
 // Math library
-#include "../snowshoe/Snowshoe.h"
+#include "snowshoe.h"
 
 static Clock m_clock;
 

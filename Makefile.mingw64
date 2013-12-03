@@ -8,12 +8,9 @@ OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
 #CC = clang
 #OPTFLAGS = -O4
 DBGFLAGS = -g -O0 -DDEBUG
-CFLAGS = -Wall -fstrict-aliasing -I ./libcat
+CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include
 LIBNAME = libsnowshoe.a
 LIBS =
-
-
-# Multi-threaded version avoids large latency spikes in encoder/decoder processing
 
 
 # Object files
@@ -97,8 +94,8 @@ EndianNeutral.o : libcat/EndianNeutral.cpp
 
 # Library objects
 
-snowshoe.o : snowshoe/snowshoe.cpp
-	$(CCPP) $(CFLAGS) -c snowshoe/snowshoe.cpp
+snowshoe.o : src/snowshoe.cpp
+	$(CCPP) $(CFLAGS) -c src/snowshoe.cpp
 
 
 # Executable objects
