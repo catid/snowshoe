@@ -1,8 +1,8 @@
 #include "api.h"
 
 #include "randombytes.h"
-#include "crypto_hash_sha512.h"
 
+#include "blake2.h"
 #include "snowshoe.h"
 
 // This is supposed to be an implementation of EdDSA using Snowshoe
@@ -19,7 +19,7 @@ int crypto_sign_snowshoe_ref_keypair(
 
 	// A = lo * G
 	snowshoe_secret_gen((char*)sk);
-	if (!snowshoe_mul_gen((char*)sk, false, (char*)pk)) {
+	if (0 != snowshoe_mul_gen((char*)sk, false, (char*)pk)) {
 		return -1;
 	}
 
@@ -47,11 +47,11 @@ int crypto_sign_snowshoe_ref(
 	}
 
 	// r = H(hi, M) (mod q)
-	crypto_hash_sha512(extsk, sm + 64, mlen + 32);
+	blake2b(extsk, sm + 64, 0, 64, mlen + 32, 0);
 	snowshoe_mod_q((char*)extsk, r);
 
 	// ger = r * 4 * G
-	if (!snowshoe_mul_gen(r, true, ger)) {
+	if (0 != snowshoe_mul_gen(r, true, ger)) {
 		return -1;
 	}
 
@@ -66,7 +66,7 @@ int crypto_sign_snowshoe_ref(
 	}
 
 	// s = H(R, Ax, M) (mod q)
-	crypto_hash_sha512(extsk, sm, mlen + 96);
+	blake2b(extsk, sm, 0, 64, mlen + 96, 0);
 	snowshoe_mod_q((char*)extsk, s);
 
 	// s = r + s*lo (mod q)
@@ -117,14 +117,14 @@ int crypto_sign_snowshoe_ref_open(
 	}
 
 	// u = H(R, Ax, M) (mod q)
-	crypto_hash_sha512(extsk, m, smlen);
+	blake2b(extsk, m, 0, 64, smlen, 0);
 	snowshoe_mod_q((char*)extsk, u);
 
 	// pkn = -pk
 	snowshoe_neg((char*)pk, pkn);
 
 	// rtest = s * 4 * G + u * 4 * A
-	if (!snowshoe_simul_gen((char*)(m + 64), u, pkn, rtest)) {
+	if (0 != snowshoe_simul_gen((char*)(m + 64), u, pkn, rtest)) {
 		return -1;
 	}
 

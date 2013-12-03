@@ -9,7 +9,7 @@
 	* Redistributions in binary form must reproduce the above copyright notice,
 	  this list of conditions and the following disclaimer in the documentation
 	  and/or other materials provided with the distribution.
-	* Neither the name of Tabby nor the names of its contributors may be
+	* Neither the name of Snowshoe nor the names of its contributors may be
 	  used to endorse or promote products derived from this software without
 	  specific prior written permission.
 
@@ -43,14 +43,6 @@
 #include "ecmul.inc"
 #include "snowshoe.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-bool _snowshoe_init(int expected_version) {
-	return expected_version == SNOWSHOE_VERSION;
-}
-
 static CAT_INLINE void ec_load_k(const char k_chars[32], u64 k[4]) {
 	const u64 *k_raw = reinterpret_cast<const u64 *>( k_chars );
 
@@ -67,15 +59,6 @@ static CAT_INLINE void ec_save_k(const u64 k[4], char k_chars[32]) {
 	k_raw[1] = getLE(k[1]);
 	k_raw[2] = getLE(k[2]);
 	k_raw[3] = getLE(k[3]);
-}
-
-void snowshoe_secret_gen(char k_chars[32]) {
-	u64 kq[4];
-	ec_load_k(k_chars, kq);
-
-	ec_mask_scalar(kq);
-
-	ec_save_k(kq, k_chars);
 }
 
 // Check if k == 0 in constant-time
@@ -98,6 +81,23 @@ static bool invalid_key(const u64 k[4]) {
 	}
 
 	return false;
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int _snowshoe_init(int expected_version) {
+	return (expected_version == SNOWSHOE_VERSION) ? 0 : -1;
+}
+
+void snowshoe_secret_gen(char k_chars[32]) {
+	u64 kq[4];
+	ec_load_k(k_chars, kq);
+
+	ec_mask_scalar(kq);
+
+	ec_save_k(kq, k_chars);
 }
 
 void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
@@ -143,32 +143,32 @@ void snowshoe_neg(const char P[64], char R[64]) {
 	ec_save_xy(p1, (u8*)R);
 }
 
-bool snowshoe_mul_gen(const char k_raw[32], const bool mul_cofactor, char R[64]) {
+int snowshoe_mul_gen(const char k_raw[32], const bool mul_cofactor, const bool constant_time, char R[64]) {
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
 	// Validate key
 	if (invalid_key(k)) {
-		return false;
+		return -1;
 	}
 
 	// Run the math routine
 	ecpt_affine r;
-	ec_mul_gen(k, mul_cofactor, r);
+	ec_mul_gen(k, mul_cofactor, constant_time, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
 
-	return true;
+	return 0;
 }
 
-bool snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
+int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
 	// Validate key
 	if (invalid_key(k)) {
-		return false;
+		return -1;
 	}
 
 	// Load point
@@ -177,7 +177,7 @@ bool snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 
 	// Validate point
 	if (!ec_valid(p1.x, p1.y)) {
-		return false;
+		return -1;
 	}
 
 	// Run the math routine
@@ -186,17 +186,17 @@ bool snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
 
-	return true;
+	return 0;
 }
 
-bool snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]) {
+int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]) {
 	u64 k1[4], k2[4];
 	ec_load_k(a, k1);
 	ec_load_k(b, k2);
 
 	// Validate keys
 	if (invalid_key(k1) || invalid_key(k2)) {
-		return false;
+		return -1;
 	}
 
 	// Load point
@@ -205,7 +205,7 @@ bool snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], ch
 
 	// Validate point
 	if (!ec_valid(p2.x, p2.y)) {
-		return false;
+		return -1;
 	}
 
 	// Run the math routine
@@ -214,17 +214,17 @@ bool snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], ch
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
 
-	return true;
+	return 0;
 }
 
-bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
+int snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
 	u64 k1[4], k2[4];
 	ec_load_k(a, k1);
 	ec_load_k(b, k2);
 
 	// Validate keys
 	if (invalid_key(k1) || invalid_key(k2)) {
-		return false;
+		return -1;
 	}
 
 	// Load points
@@ -234,7 +234,7 @@ bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const 
 
 	// Validate points
 	if (!ec_valid(p1.x, p1.y) || !ec_valid(p2.x, p2.y)) {
-		return false;
+		return -1;
 	}
 
 	// Run the math routine
@@ -243,7 +243,7 @@ bool snowshoe_simul(const char a[32], const char P[64], const char b[32], const 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
 
-	return true;
+	return 0;
 }
 
 #ifdef __cplusplus

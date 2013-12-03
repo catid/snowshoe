@@ -2,15 +2,16 @@
 
 [This project](http://github.com/catid/snowshoe) aims to provide a simple C API for various types of optimized elliptic curve point multiplication:
 
-+ Fixed-base (Public key generation, Signature generation) "mul_gen"
-+ Variable-base (Diffie-Hellman key agreement) "mul"
-+ Variable double-base Simultaneous (MQV key agreement) "simul"
++ Fixed-base (Public key generation, Signature generation) `mul_gen`
++ Variable-base (Diffie-Hellman key agreement) `mul`
++ Variable double-base Simultaneous (MQV key agreement) `simul`
 
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
 
 Additionally to speed up signature verification a variable single-base
-simultaneous function "simul_gen" is provided that is not constant-time.
+simultaneous function `simul_gen` is provided that is not constant-time.
+And a similarly SPA unprotected `mul_gen` is provided for offline signing.
 
 It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
@@ -21,21 +22,40 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ## Benchmarks
 
-On my Macbook Air (Core i5 Sandy Bridge), rounded up:
+On my Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge), rounded up:
 
-+ mul_gen: `62,000 cycles`
++ mul_gen: `62,000 cycles` (SPA protected) or `~36,000 cycles` (SPA unprotected)
 + mul: `108,000 cycles`
 + simul_gen: `~124,000 cycles` (not constant-time)
 + simul: `162,000 cycles`
 
 Simulating a few protocols:
 
-+ Key generation in `62kcy`
++ Key generation in `62kcy` (SPA protected) or `~36kcy` (SPA unprotected)
 + EC-DH key agreement in `109kcy` for server and client
-+ MQV server processing in `110kcy`
++ MQV server processing in `110kcy` (= 68 usec: 14,000 connections/sec)
 + MQV client processing in `164kcy`
-+ EdDSA signing in `64kcy`
++ EdDSA signing in `64kcy` (SPA protected) or `~38kcy` (SPA unprotected)
 + EdDSA verification in `~125kcy` (not constant time)
+
+
+On my iMac (2.7 GHz Core i5-2500S Sandy Bridge), rounded up:
+
++ Curve25519 mul: `194,000 cycles` for reference
+
++ mul_gen: `73,000 cycles` (SPA protected) or `~44,000 cycles` (SPA unprotected)
++ mul: `129,000 cycles`
++ simul_gen: `~147,000 cycles` (not constant-time)
++ simul: `193,000 cycles`
+
+Simulating a few protocols:
+
++ Key generation in `73kcy` (SPA protected) or `~44kcy` (SPA unprotected)
++ EC-DH key agreement in `129kcy` for server and client
++ MQV server processing in `130kcy` (= 48 usec: 20,000 connections/sec)
++ MQV client processing in `195kcy`
++ EdDSA signing in `75kcy` (SPA protected) or `~47kcy` (SPA unprotected)
++ EdDSA verification in `~149kcy` (not constant time)
 
 
 #### Usage
@@ -53,6 +73,12 @@ To use the project you only need to include [snowshoe/snowshoe.h](https://github
 
 [Elliptic Curve Diffie-Hellman](http://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman) is the baseline for key agreement over the Internet.  Implementing it with this library is straight-forward:
 
+Verify binary API compatibility on startup:
+
+~~~
+	assert(0 == snowshoe_init());
+~~~
+
 Allocate memory for the keys:
 
 ~~~
@@ -66,7 +92,7 @@ Now generate the server public/private key pair:
 ~~~
 	char pp_s[64];
 	snowshoe_secret_gen(sk_s);
-	assert(snowshoe_mul_gen(sk_s, pp_s));
+	assert(0 == snowshoe_mul_gen(sk_s, pp_s));
 ~~~
 
 `snowshoe_secret_gen` will mask off some bits of the random input string to make it suitable for use as a private key.
@@ -78,21 +104,21 @@ Generate client public/private key pair:
 ~~~
 	char pp_c[64];
 	snowshoe_secret_gen(sk_c);
-	assert(snowshoe_mul_gen(sk_c, pp_c));
+	assert(0 == snowshoe_mul_gen(sk_c, pp_c));
 ~~~
 
 Client side: Multiply client secret key by server public point
 
 ~~~
 	char sp_c[64];
-	assert(snowshoe_mul(sk_c, pp_s, sp_c));
+	assert(0 == snowshoe_mul(sk_c, pp_s, sp_c));
 ~~~
 
 Server side: Multiply server secret key by client public point
 
 ~~~
 	char sp_s[64];
-	assert(snowshoe_mul(sk_s, pp_c, sp_s));
+	assert(0 == snowshoe_mul(sk_s, pp_c, sp_s));
 ~~~
 
 Server and client both arrive at `sp_c == sp_s`, which is the secret key for the session.
@@ -114,31 +140,31 @@ Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	assert(snowshoe_mul_gen(sk_s, pp_s));
+	assert(0 == snowshoe_mul_gen(sk_s, pp_s));
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	assert(snowshoe_mul_gen(sk_e, pp_e));
+	assert(0 == snowshoe_mul_gen(sk_e, pp_e));
 
 	// Online: Client setup
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	assert(snowshoe_mul_gen(sk_c, pp_c));
+	assert(0 == snowshoe_mul_gen(sk_c, pp_c));
 
 	generate_k(h);
 
 	// Online: Server handles client request
 
 	// d = h * sk_e + sk_s (mod q)
-	assert(snowshoe_mul_mod_q(h, sk_e, sk_s, d));
-	assert(snowshoe_mul(d, pp_c, sp_s));
+	snowshoe_mul_mod_q(h, sk_e, sk_s, d);
+	assert(0 == snowshoe_mul(d, pp_c, sp_s));
 
 	// Online: Client handles server response
 
 	// a = h * sk_c (mod q)
-	assert(snowshoe_mul_mod_q(h, sk_c, 0, a));
-	assert(snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
+	snowshoe_mul_mod_q(h, sk_c, 0, a);
+	assert(0 == snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
 ~~~
 
 Similar to the EC-DH example, assert() is used in place of appropriate error handling.  `generate_k` should be replaced by a CSPRNG.  And `h` should be the output of a hash function.
@@ -186,20 +212,20 @@ Verify:
 	// Offline precomputation:
 
 	snowshoe_secret_gen(a);
-	assert(snowshoe_mul_gen(a, pp_A));
+	assert(0 == snowshoe_mul_gen(a, pp_A));
 
 	// Sign:
 
 	snowshoe_mod_q(h_hi_m, r);
 	snowshoe_mod_q(h_r_a_m, t);
-	assert(snowshoe_mul_gen(r, pp_R));
+	assert(0 == snowshoe_mul_gen(r, pp_R));
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
 
 	// Verify:
 
 	snowshoe_mod_q(h_r_a_m, u);
-	assert(snowshoe_neg(pp_A, pp_A));
-	assert(snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
+	snowshoe_neg(pp_A, pp_A);
+	assert(0 == snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
 
 	// This comparison does not need to be constant-time
 	for (int ii = 0; ii < 64; ++ii) {
@@ -285,6 +311,13 @@ Longa's implementation ( http://eprint.iacr.org/2013/158 ):
 - ecsimul : (much faster) `116kcy`
 - Availability : Not available online?
 
+Most other software with fast `mul_gen` is cheating a little.  The table
+lookups are often not protected against SPA attack.  Snowshoe's `mul_gen` can
+run in `30kcy` with two 128-entry tables or `36kcy` with two 64-entry tables
+(the current implementation) if the table lookups are similarly unprotected.
+Since it is trivial to allow an SPA unprotected mode and seems to almost
+double the speed in that case, the option is available in Snowshoe.
+
 
 ## Details
 
@@ -335,6 +368,18 @@ Longa's implementation ( http://eprint.iacr.org/2013/158 ):
 
 ## Choosing a Finite Field
 
+## Choosing an Optimal Extension Field
+
+This was easy.  The only real option is Fp^2.  Larger exponents provide
+diminishing returns in terms of real security, and math over Fp^2 is the same
+as grade-school complex math (a + b*i).
+
+Multiplication over Fp^2 takes about 66 cycles on a Sandy Bridge processor,
+whereas multiplication on well-chosen Fp of the same size takes 55 cycles. [17]
+This performance loss is more than compensated for by faster field inversions
+and allowing for efficient endomorphisms.
+
+
 #### Why p = 2^127-1?
 
 I care mainly about server performance, with 64-bit Linux VPS in mind, and
@@ -365,18 +410,6 @@ Good for ARM systems, but extension fields are not ideal:
 Requires a 4-GLV decomposition to use properly, and I think 2 dimensional
 decomposition is complicated enough for now.  Also it would take a huge
 security hit to use.  Maybe not a huge deal.
-
-
-## Choosing an Optimal Extension Field
-
-This was easy.  The only real option is Fp^2.  Larger exponents provide
-diminishing returns in terms of real security, and math over Fp^2 is the same
-as grade-school complex math (a + b*i).
-
-Multiplication over Fp^2 takes about 66 cycles on a Sandy Bridge processor,
-whereas multiplication on well-chosen Fp of the same size takes 55 cycles. [17]
-This performance loss is more than compensated for by faster field inversions
-and allowing for efficient endomorphisms.
 
 
 ## Choosing Endomorphism Dimensions
@@ -443,8 +476,7 @@ done in [3].
 
 The possibility of using a change of variables and specially chosen Q-curve
 parameters to use the efficient dedicated addition formula from [5] for a = -1
-with a correction post-step (LaineyCurves.md) was also explored.
-
+with a correction post-step (LaineyCurves.md) was also explored.  However,
 introducing additional complexity and dangerous incomplete addition laws to
 save one multiplication per addition seems like a desperate choice to me for
 little practical gain, especially since the number of additions is already
@@ -540,8 +572,8 @@ r = #E(Fp^2) = 28948022309329048855892746252171976962839764946219840790663900086
 Factorization(r) = h * q (cofactor times large prime q)
 h = 4
 q = 7237005577332262213973186563042994240709941236554960197665975021634500559269
-t = TraceOfFrobenius(E) = 137448853269361755737121308008511961454
-Verified: r = (p - 1) ^ 2 + Tr(E(Fp))^2
+t = Tr(E(Fp)) = 14241963124919847500
+Verified: r = (p - 1) ^ 2 + t^2
 Verified: r * P = [0, 1] = point-at-infinity
 ~~~
 
@@ -551,7 +583,6 @@ A' = 74770288137151926641346873498907920755*i + 33812952767805664868511289460037
 B' = 105685070695019342075176919984401662667*i + 99525886244248837335664845733467848745
 r' = #E'(Fp^2) = 28948022309329048855892746252171976963114662652758564302138142702555026159984
 (factorization omitted, but it is composite)
-t' = TraceOfFrobenius(E') = -137448853269361755737121308008511961454
 Verified: r' = (p + 1) ^ 2 - Tr(E'(Fp))^2
 ~~~
 

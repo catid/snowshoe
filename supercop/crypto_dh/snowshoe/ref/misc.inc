@@ -6,8 +6,26 @@ static const u64 EC_Q[4] = {
 	0x0FFFFFFFFFFFFFFFULL
 };
 
+/*
+ * Mask a random number to produce a compatible scalar for multiplication
+ */
+
+static CAT_INLINE void ec_mask_scalar(u64 k[4]) {
+	// Prime order of the curve = q, word-mapped:
+	// 0x0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA6261414C0DC87D3CE9B68E3B09E01A5
+	//   (      3       )(       2      )(       1      )(       0      )
+
+	// Clear high 5 bits
+	// Clears one extra bit to simplify key generation
+	k[3] &= 0x07FFFFFFFFFFFFFFULL;
+
+	// Largest value after filtering:
+	// 0x07FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+	//   (      3       )(       2      )(       1      )(       0      )
+}
+
 // Returns true if k is less than q
-static bool less_q(const u64 k[4]) {
+static CAT_INLINE bool less_q(const u64 k[4]) {
 	// p -= t
 	s128 diff = (s128)k[0] - EC_Q[0];
 	diff = ((diff >> 64) + k[1]) - EC_Q[1];
@@ -19,7 +37,7 @@ static bool less_q(const u64 k[4]) {
 }
 
 // r = q - k
-static void neg_mod_q(const u64 k[4], u64 r[4]) {
+static CAT_INLINE void neg_mod_q(const u64 k[4], u64 r[4]) {
 	s128 diff = (s128)EC_Q[0] - k[0];
 	r[0] = (u64)diff;
 	diff = ((diff >> 64) + EC_Q[1]) - k[1];
