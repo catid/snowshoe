@@ -41,8 +41,8 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 + ec_mul_gen: 42,129 cycles 15 usec (without SPA protection)
 + ec_mul_gen: 70,626 cycles 26 usec (with SPA protection)
-+ ec_mul: 123,903 cycles 46 usec (with SPA protection)
-+ ec_simul_gen: 125,712 cycles 46 usec (without SPA protection)
++ ec_mul: 123,480 cycles 45 usec (with SPA protection)
++ ec_simul_gen: 125,316 cycles 46 usec (without SPA protection)
 + ec_simul: 184,830 cycles 68 usec (with SPA protection)
 
 + ECSign server: 72,750 cycles 27 usec

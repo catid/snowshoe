@@ -160,17 +160,18 @@ static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	s32 asign, bsign;
 	gls_decompose(k, asign, a, bsign, b);
 
-	// Q = endomorphism of P
-	ecpt_affine Qa;
-	gls_morph(P0.x, P0.y, Qa.x, Qa.y);
-	ecpt Q;
-	ec_expand(Qa, Q);
-	ec_cond_neg(bsign, Q);
+	// Qa = endomorphism of P0
+	ecpt_affine Q0;
+	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
+
+	// Expand P, Q to extended coordinates
+	ecpt P, Q;
+	ec_expand(P0, P);
+	ec_expand(Q0, Q);
 
 	// Set base point signs
-	ecpt P;
-	ec_expand(P0, P);
 	ec_cond_neg(asign, P);
+	ec_cond_neg(bsign, Q);
 
 	// Precompute multiplication table
 	ecpt table[8];
@@ -1065,31 +1066,32 @@ static void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const in
  * Preconditions:
  * 	0 < a,b < q
  *
- * Multiplies the result of aG + bQ by 4 and stores it in R
+ * Multiplies the result of aG + bP by 4 and stores it in R
  */
 
 // R = a*4*G + b*4*Q
-static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
+static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp b1, b2;
 	s32 b1sign, b2sign;
 	gls_decompose(b, b1sign, b1, b2sign, b2);
 
-	// Q2 = endomorphism of Q
-	ecpt_affine Qa;
-	gls_morph(Q.x, Q.y, Qa.x, Qa.y);
-	ecpt Q2;
-	ec_expand(Qa, Q2);
-	ec_cond_neg(b2sign, Q2);
+	// Q1 = endomorphism of Q0
+	ecpt_affine Q0;
+	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
+
+	// Expand base points to extended coordinates
+	ecpt P1, Q1;
+	ec_expand(P0, P1);
+	ec_expand(Q0, Q1);
 
 	// Set base point signs
-	ecpt Q1;
-	ec_expand(Q, Q1);
-	ec_cond_neg(b1sign, Q1);
+	ec_cond_neg(b1sign, P1);
+	ec_cond_neg(b2sign, Q1);
 
 	// Precompute multiplication table
 	ecpt qtable[8];
-	ec_gen_table_2(Q1, Q2, qtable);
+	ec_gen_table_2(P1, Q1, qtable);
 
 	// Recode subscalars
 	u64 a1[4];
@@ -1127,9 +1129,9 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &Q, e
 		ec_add(X, T, X, false, false, false, t2b);
 	}
 
-	// If bit == 1, X <- X + Q1 (inverted logic from [1])
+	// If bit == 1, X <- X + P1 (inverted logic from [1])
 	if (recode_bit != 0) {
-		ec_add(X, Q1, X, true, false, false, t2b);
+		ec_add(X, P1, X, true, false, false, t2b);
 	}
 
 	// Multiply by 4 to avoid small subgroup attack
