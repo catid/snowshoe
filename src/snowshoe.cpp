@@ -29,16 +29,16 @@
 /*
  * All of the fp_*, fe_*, gls_*, and ec_* math functions:
  * + are branchless and will run in constant time.
- * + expect the input to have a clear high bit.
+ * + optimized algorithms for Fp numbers with high bit = zero.
  * + work regardless of input aliasing (&a == &b == &r is okay).
- * + are inline to allow for full compiler optimization.
- * + attempt to use as few registers as possible.
- * + attempt to take advantage of CPU pipelining.
- * + attempt to make the most of the CPU cache with selective inlining.
+ * + are all in the same large C file for better compiler optimization.
+ * + attempt to lower register pressure by using fewer variables.
+ * + attempt to take advantage of instruction-level parallelism (ILP).
+ * + attempt to make the most of the I-cache with tuned inlining.
  *
  * The input-validation functions are not constant time, but that is not
- * going to leak any important information about long-term secrets.  Any
- * functions that are not constant-time are commented with warnings.
+ * going to leak any information about secrets values.  Any functions
+ * that are not constant-time are commented with warnings.
  */
 
 #include "ecmul.inc"
