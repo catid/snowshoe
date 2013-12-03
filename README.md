@@ -60,6 +60,8 @@ Simulating a few protocols:
 
 #### Usage
 
+This git repo uses submodules so be sure to run `git submodule update --init` to download all the code.
+
 You can either compile-in the software or link to it.  I recommend statically linking
 the code, since that enables full optimization and speeds up your compilation.
 
