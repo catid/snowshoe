@@ -471,7 +471,7 @@ static CAT_INLINE void fp_sqr(const ufp &a, ufp &r) {
 }
 
 // r = 1/a
-static CAT_INLINE void fp_inv(const ufp &a, ufp &r) {
+static void fp_inv(const ufp &a, ufp &r) {
 	// Uses 126S 12M
 
 	/*

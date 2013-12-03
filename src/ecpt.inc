@@ -217,7 +217,7 @@ static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u128 mask,
  */
 
 // r = 2p
-static CAT_INLINE void ec_dbl(const ecpt &p, ecpt &r, const bool z_one, ufe &t2b) {
+static void ec_dbl(const ecpt &p, ecpt &r, const bool z_one, ufe &t2b) {
 	// Uses 4S 3M 7A 1U when calc_t=false, z_one=false
 	// z_one=true: -1S -1A
 
@@ -304,7 +304,7 @@ static CAT_INLINE void ec_dbl(const ecpt &p, ecpt &r, const bool z_one, ufe &t2b
  */
 
 // r = a + b
-static CAT_INLINE void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, const bool in_precomp_t1, const bool out_precomp_t1, ufe &t2b) {
+static void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, const bool in_precomp_t1, const bool out_precomp_t1, ufe &t2b) {
 	// Uses: 9M 7A 1D 2U with all flags false
 	// z2_one=true: -1M + 1A
 	// in_precomp_t1=true: -1M
@@ -394,7 +394,7 @@ static CAT_INLINE void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const boo
 }
 
 // Compute affine coordinates for (X, Y) from (X : Y : Z)
-static CAT_INLINE void ec_affine(const ecpt &a, ecpt_affine &r) {
+static void ec_affine(const ecpt &a, ecpt_affine &r) {
 	// B = 1 / in.Z
 	ufe b;
 	fe_inv(a.z, b);
@@ -441,7 +441,7 @@ static CAT_INLINE void ec_affine(const ecpt &a, ecpt_affine &r) {
 */
 
 // Verify that the affine point (x, y) exists on the given curve
-bool ec_valid(const ufe &x, const ufe &y) {
+static bool ec_valid(const ufe &x, const ufe &y) {
 	// If the platform is not little-endian,
 	if (!IsLittleEndian()) {
 		// We cannot work on this platform

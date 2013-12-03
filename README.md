@@ -22,40 +22,35 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ## Benchmarks
 
-On my Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge), rounded up:
+On my Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge):
 
-+ mul_gen: `62,000 cycles` (SPA protected) or `~36,000 cycles` (SPA unprotected)
-+ mul: `108,000 cycles`
-+ simul_gen: `~124,000 cycles` (not constant-time)
-+ simul: `162,000 cycles`
++ ec_mul_gen: 36,023 cycles 21 usec (without SPA protection)
++ ec_mul_gen: 59,610 cycles 35 usec (with SPA protection)
++ ec_mul: 104,314 cycles 61 usec (with SPA protection)
++ ec_simul_gen: 119,710 cycles 70 usec (without SPA protection)
++ ec_simul: 162,796 cycles 96 usec (with SPA protection)
 
-Simulating a few protocols:
+Simulating EdDSA (leaving out hashes and other operations):
 
-+ Key generation in `62kcy` (SPA protected) or `~36kcy` (SPA unprotected)
-+ EC-DH key agreement in `109kcy` for server and client
-+ MQV server processing in `110kcy` (= 68 usec: 14,000 connections/sec)
-+ MQV client processing in `164kcy`
-+ EdDSA signing in `64kcy` (SPA protected) or `~38kcy` (SPA unprotected)
-+ EdDSA verification in `~125kcy` (not constant time)
++ ECSign server: 61,264 cycles 36 usec
++ Verify client: 119,667 cycles 70 usec
+
+Simulating EC-FHMQV (leaving out hashes and other operations):
+
++ EC-FHMQV server: 106,354 cycles 62 usec (16,000 connections/sec)
++ EC-FHMQV client: 158,782 cycles 94 usec
+
+Simulating EC-DH:
+
++ EC-DH client: 104,848 cycles 61 usec
++ EC-DH server: 104,917 cycles 61 usec
 
 
 On my iMac (2.7 GHz Core i5-2500S Sandy Bridge), rounded up:
 
+TODO: Re-run these!
+
 + Curve25519 mul: `194,000 cycles` for reference
-
-+ mul_gen: `73,000 cycles` (SPA protected) or `~44,000 cycles` (SPA unprotected)
-+ mul: `129,000 cycles`
-+ simul_gen: `~147,000 cycles` (not constant-time)
-+ simul: `193,000 cycles`
-
-Simulating a few protocols:
-
-+ Key generation in `73kcy` (SPA protected) or `~44kcy` (SPA unprotected)
-+ EC-DH key agreement in `129kcy` for server and client
-+ MQV server processing in `130kcy` (= 48 usec: 20,000 connections/sec)
-+ MQV client processing in `195kcy`
-+ EdDSA signing in `75kcy` (SPA protected) or `~47kcy` (SPA unprotected)
-+ EdDSA verification in `~149kcy` (not constant time)
 
 
 #### Usage
@@ -253,13 +248,6 @@ This produces `libsnowshoe.a` with optimizations.
 
 #### Comparison with other fast ECC implementations at ~128 bit security:
 
-This library on Sandy Bridge i5:
-
-+ mul_gen: `62kcy`
-+ mul: `108kcy`
-+ simul_gen: `~124kcy` (not constant-time)
-+ simul: `162kcy`
-
 Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ):
 
 - ecmul_gen : (much slower) `171kcy`
@@ -299,9 +287,9 @@ gls254 ( http://cacr.uwaterloo.ca/techreports/2013/cacr2013-14.pdf ):
 
 Hamburg's implementation ( http://mikehamburg.com/papers/fff/fff.pdf ):
 
-- ecmul_gen : (faster) `60kcy`
-- ecmul : (slower) `153kcy`
-- ecsimul_gen : (slower) `<169kcy` (includes signature ops)
+- ecmul_gen : (equivalent) `60kcy`
+- ecmul : (much slower) `153kcy`
+- ecsimul_gen : (much slower) `<169kcy` (includes signature ops)
 - ecsimul : (not implemented)
 - Availability : Not available online?
 
@@ -310,7 +298,7 @@ Longa's implementation ( http://eprint.iacr.org/2013/158 ):
 - ecmul_gen : (faster) `48kcy`
 - ecmul : (faster) `96kcy`
 - ecsimul_gen : (faster) `116kcy`
-- ecsimul : (much faster) `116kcy`
+- ecsimul : (faster) `116kcy`
 - Availability : Not available online?
 
 Most other software with fast `mul_gen` is cheating a little.  The table
@@ -319,6 +307,13 @@ run in `30kcy` with two 128-entry tables or `36kcy` with two 64-entry tables
 (the current implementation) if the table lookups are similarly unprotected.
 Since it is trivial to allow an SPA unprotected mode and seems to almost
 double the speed in that case, the option is available in Snowshoe.
+
+Note that cycle counts are hard to compare.  One often-neglected factor is that
+a CPU running at 4 GHz will take *more cycles* than a processor running at 2 GHz.
+This is because memory lookups usually take roughly the same wall time, so the
+faster CPU is penalized more cycles for table/code reads.  Snowshoe does attempt
+to have a small code size by selectively inlining only small functions.
+A fair comparison only seems possible with a system like SUPERCOP.
 
 
 ## Details

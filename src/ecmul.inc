@@ -121,7 +121,7 @@ static CAT_INLINE void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8
  * Table index is simply = (a0 ^ a1) || b1 || b0
  */
 
-static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, const int index, const bool constant_time, ecpt &r) {
+static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, const int index, const bool constant_time, ecpt &r) {
 	u32 bits = (u32)(a.w >> index);
 	u32 k = ((bits ^ (bits >> 1)) & 1) << 2;
 	k |= (u32)(b.w >> index) & 3;
@@ -154,7 +154,7 @@ static CAT_INLINE void ec_table_select_2(const ecpt *table, const ufp &a, const 
  */
 
 // R = k*4*P
-void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
+static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp a, b;
 	s32 asign, bsign;
@@ -570,7 +570,7 @@ static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
-static CAT_INLINE void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time, ecpt &p1, ecpt &p2) {
+static void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time, ecpt &p1, ecpt &p2) {
 	// DCK(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -633,7 +633,8 @@ static CAT_INLINE void ec_table_select_comb(const u64 b[4], const int ii, const 
 	}
 }
 
-void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool constant_time, ecpt_affine &R) {
+// R = k * [4] * G, optionally constant-time
+static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool constant_time, ecpt_affine &R) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
@@ -1033,7 +1034,7 @@ static CAT_INLINE u32 comb_bit1(const u64 b[4], const int wp, const int ep) {
 }
 
 // NOTE: Not constant time because it does not need to be for ec_simul_gen
-void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const int ii, ecpt &p1) {
+static void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const int ii, ecpt &p1) {
 	// DCK(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -1068,7 +1069,7 @@ void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const int ii, e
  */
 
 // R = a*4*G + b*4*Q
-void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
+static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp b1, b2;
 	s32 b1sign, b2sign;
@@ -1179,7 +1180,7 @@ static void ec_gen_table_4(const ecpt &a, const ecpt &b, const ecpt &c, const ec
  * Constant-time table selection for m=4
  */
 
-static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, const ufp &c, const ufp &d, const int index, ecpt &r) {
+static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, const ufp &c, const ufp &d, const int index, ecpt &r) {
 	int k = ((u32)(b.w >> index) & 1);
 	k |= ((u32)(c.w >> index) & 1) << 1;
 	k |= ((u32)(d.w >> index) & 1) << 2;
@@ -1208,7 +1209,7 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
  */
 
 // R = a*4*P + b*4*Q
-void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
+static void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp a0, a1, b0, b1;
 	s32 a0sign, a1sign, b0sign, b1sign;

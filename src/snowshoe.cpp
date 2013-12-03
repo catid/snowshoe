@@ -34,6 +34,7 @@
  * + are inline to allow for full compiler optimization.
  * + attempt to use as few registers as possible.
  * + attempt to take advantage of CPU pipelining.
+ * + attempt to make the most of the CPU cache with selective inlining.
  *
  * The input-validation functions are not constant time, but that is not
  * going to leak any important information about long-term secrets.  Any

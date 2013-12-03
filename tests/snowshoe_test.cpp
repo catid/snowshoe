@@ -256,15 +256,15 @@ int main() {
 	// Example of verifying API level on startup
 	assert(0 == snowshoe_init());
 
-	for (int ii = 0; ii < 1000; ++ii) {
+	for (int ii = 0; ii < 10000; ++ii) {
 		assert(ec_dsa_test());
 	}
 
-	for (int ii = 0; ii < 1000; ++ii) {
+	for (int ii = 0; ii < 10000; ++ii) {
 		assert(ec_dh_fs_test());
 	}
 
-	for (int ii = 0; ii < 1000; ++ii) {
+	for (int ii = 0; ii < 10000; ++ii) {
 		assert(ec_dh_test());
 	}
 

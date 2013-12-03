@@ -4,6 +4,9 @@
 using namespace std;
 
 #include "Clock.hpp"
+using namespace cat;
+
+static Clock m_clock;
 
 // Math library
 #include "../src/ecmul.inc"
@@ -425,7 +428,7 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt_affine &P0, const u64 k2[4]
 
 //// Test Driver
 
-bool ec_mul_gen_test() {
+bool ec_mul_gen_test(bool spa_protection) {
 	u64 k[4] = {0};
 	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
@@ -439,15 +442,15 @@ bool ec_mul_gen_test() {
 		ec_mask_scalar(k);
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
+
+		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
-		ec_mul_gen(k, false, false, R2);
+		ec_mul_gen(k, false, spa_protection, R2);
 		u32 t1 = Clock::cycles();
-		cout << dec << (t1 - t0) << " ec_mul_gen (SPA unprotected)" << endl;
-		t0 = Clock::cycles();
-		ec_mul_gen(k, false, true, R2);
-		t1 = Clock::cycles();
-		cout << dec << (t1 - t0) << " ec_mul_gen (SPA protected)" << endl;
-		ec_mul_gen(k, true, true, R2);
+		double s1 = m_clock.usec();
+		cout << "ec_mul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec, SPA protection = " << spa_protection << endl;
+
+		ec_mul_gen(k, true, spa_protection, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -476,10 +479,12 @@ bool ec_mul_test() {
 		ec_mask_scalar(k);
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
+		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 		ec_mul(k, EC_G_AFFINE, R2);
 		u32 t1 = Clock::cycles();
-		cout << dec << (t1 - t0) << " ec_mul" << endl;
+		double s1 = m_clock.usec();
+		cout << "ec_mul: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -515,10 +520,12 @@ bool ec_simul_test() {
 		ec_mask_scalar(k2);
 
 		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
+		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 		ec_simul(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R2);
 		u32 t1 = Clock::cycles();
-		cout << dec << (t1 - t0) << " ec_simul" << endl;
+		double s1 = m_clock.usec();
+		cout << "ec_simul: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -554,10 +561,12 @@ bool ec_simul_gen_test() {
 		ec_mask_scalar(k2);
 
 		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
+		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 		ec_simul_gen(k1, k2, EC_EG_AFFINE, R2);
 		u32 t1 = Clock::cycles();
-		cout << dec << (t1 - t0) << " ec_simul_gen" << endl;
+		double s1 = m_clock.usec();
+		cout << "ec_simul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -654,6 +663,8 @@ int main() {
 
 	srand(0);
 
+	m_clock.OnInitialize();
+
 	// Verify tables have not been tampered with
 	assert(ec_gen_tables3_comb_test());
 	assert(ec_gen_tables_comb_test());
@@ -662,7 +673,8 @@ int main() {
 
 	assert(mul_mod_q_test());
 
-	assert(ec_mul_gen_test());
+	assert(ec_mul_gen_test(false));
+	assert(ec_mul_gen_test(true));
 
 	assert(ec_gen_table_2_test());
 
@@ -687,6 +699,8 @@ int main() {
 	assert(ec_simul_test());
 
 	cout << "All tests passed successfully." << endl;
+
+	m_clock.OnFinalize();
 
 	return 0;
 }
