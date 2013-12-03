@@ -22,7 +22,7 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ## Benchmarks
 
-On my Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge):
+##### libsnowshoe.a on Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge, June 2011):
 
 + ec_mul_gen: 36,023 cycles 21 usec (without SPA protection)
 + ec_mul_gen: 59,610 cycles 35 usec (with SPA protection)
@@ -30,20 +30,23 @@ On my Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge):
 + ec_simul_gen: 119,710 cycles 70 usec (without SPA protection)
 + ec_simul: 162,796 cycles 96 usec (with SPA protection)
 
-Simulating EdDSA (leaving out hashes and other operations):
-
 + ECSign server: 61,264 cycles 36 usec
 + Verify client: 119,667 cycles 70 usec
-
-Simulating EC-FHMQV (leaving out hashes and other operations):
-
 + EC-FHMQV server: 106,354 cycles 62 usec (16,000 connections/sec)
 + EC-FHMQV client: 158,782 cycles 94 usec
-
-Simulating EC-DH:
-
 + EC-DH client: 104,848 cycles 61 usec
 + EC-DH server: 104,917 cycles 61 usec
+
+##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
+
++ ECSign server: 100,752 cycles 37.7253 usec
++ Verify client: 246,551 cycles 92.7735 usec
++ EC-FHMQV server: 210,183 cycles 78.9152 usec (12,000 connections/sec)
++ EC-FHMQV client: 307,194 cycles 115.486 usec
++ EC-DH client: 208,474 cycles 78.5303 usec
++ EC-DH server: 207,633 cycles 78.1453 usec
+
+
 
 
 On my iMac (2.7 GHz Core i5-2500S Sandy Bridge), rounded up:
