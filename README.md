@@ -32,8 +32,8 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 + ECSign server: 61,264 cycles 36 usec
 + Verify client: 119,667 cycles 70 usec
-+ EC-FHMQV server: 106,354 cycles 62 usec (16,000 connections/sec)
-+ EC-FHMQV client: 158,782 cycles 94 usec
++ EC-FHMQV server: 105,746 cycles 62 usec (16,000 connections/sec)
++ EC-FHMQV client: 157,987 cycles 93 usec
 + EC-DH client: 104,848 cycles 61 usec
 + EC-DH server: 104,917 cycles 61 usec
 
