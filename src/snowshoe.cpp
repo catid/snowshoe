@@ -31,6 +31,7 @@
  * + are branchless and will run in constant time.
  * + optimized algorithms for Fp numbers with high bit = zero.
  * + work regardless of input aliasing (&a == &b == &r is okay).
+ * + use incomplete reduction (IR) optimizations where 2^127-1 = 0.
  * + are all in the same large C file for better compiler optimization.
  * + attempt to lower register pressure by using fewer variables.
  * + attempt to take advantage of instruction-level parallelism (ILP).
