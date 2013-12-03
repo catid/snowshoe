@@ -18,11 +18,6 @@ using namespace cat;
  * results and produce completey reduced output less than p.
  */
 
-#if defined(CAT_COMPILER_MSVC)
-#include <intrin.h>
-#pragma intrinsic(_bittestandreset64)
-#endif
-
 // Load ufp from endian-neutral data bytes (16)
 static void fp_load(const u8 *x, ufp &r) {
 	r.i[0] = getLE64(*(u64*)x);
@@ -117,11 +112,8 @@ static CAT_INLINE void fp_xor_mask(const ufp &a, const u128 mask, ufp &r) {
  */
 
 static CAT_INLINE void fp_add_reduce(ufp &x) {
-#if defined(CAT_COMPILER_MSVC) && defined(CAT_WORD_64) && !defined(CAT_DEBUG)
 
-	x.w += _bittestandreset64((LONG64*)&x.i[1], 63);
-
-#elif defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
 
 	CAT_ASM_BEGIN
 		"btrq $63, %1\n\t"
@@ -138,6 +130,7 @@ static CAT_INLINE void fp_add_reduce(ufp &x) {
 	x.i[1] &= 0x7fffffffffffffffULL;
 
 #endif
+
 }
 
 /*
@@ -179,11 +172,8 @@ static CAT_INLINE void fp_add_reduce(ufp &x) {
  */
 
 static CAT_INLINE void fp_sub_reduce(ufp &x) {
-#if defined(CAT_COMPILER_MSVC) && defined(CAT_WORD_64) && !defined(CAT_DEBUG)
 
-	w -= _bittestandreset64((LONG64*)&x.i[1], 63);
-
-#elif defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
 
 	CAT_ASM_BEGIN
 		"btrq $63, %1\n\t"
@@ -200,6 +190,7 @@ static CAT_INLINE void fp_sub_reduce(ufp &x) {
 	x.i[1] &= 0x7fffffffffffffffULL;
 
 #endif
+
 }
 
 /*

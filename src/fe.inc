@@ -73,6 +73,7 @@ static CAT_INLINE void fe_set_mask(const ufe &a, const u128 mask, ufe &r) {
 
 // r ^= a & mask
 static CAT_INLINE void fe_xor_mask(const ufe &a, const u128 mask, ufe &r) {
+
 #if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
 
 	const u32 m = static_cast<const u32>( mask );
