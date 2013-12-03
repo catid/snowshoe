@@ -149,9 +149,14 @@ static CAT_INLINE void ec_neg_affine(const ecpt_affine &a, ecpt_affine &r) {
 }
 
 // r = (mask==-1 ? r : -r)
-static CAT_INLINE void ec_neg_mask(const u128 mask, ecpt &r) {
+static CAT_INLINE void ec_neg_mask(const u64 mask, ecpt &r) {
 	fe_neg_mask(mask, r.x);
 	fe_neg_mask(mask, r.t);
+}
+
+// r = (mask==-1 ? r : -r)
+static CAT_INLINE void ec_neg_mask_affine(const u64 mask, ecpt_affine &r) {
+	fe_neg_mask(mask, r.x);
 }
 
 // r = a
@@ -173,7 +178,7 @@ static CAT_INLINE void ec_expand(const ecpt_affine &a, ecpt &r) {
 }
 
 // r = (mask == -1) ? a : r
-static CAT_INLINE void ec_set_mask(const ecpt &a, const u128 mask, ecpt &r) {
+static CAT_INLINE void ec_set_mask(const ecpt &a, const u64 mask, ecpt &r) {
 	fe_set_mask(a.x, mask, r.x);
 	fe_set_mask(a.y, mask, r.y);
 	fe_set_mask(a.t, mask, r.t);
@@ -181,7 +186,7 @@ static CAT_INLINE void ec_set_mask(const ecpt &a, const u128 mask, ecpt &r) {
 }
 
 // r ^= a & mask
-static CAT_INLINE void ec_xor_mask(const ecpt &a, const u128 mask, ecpt &r) {
+static CAT_INLINE void ec_xor_mask(const ecpt &a, const u64 mask, ecpt &r) {
 	fe_xor_mask(a.x, mask, r.x);
 	fe_xor_mask(a.y, mask, r.y);
 	fe_xor_mask(a.t, mask, r.t);
@@ -189,7 +194,7 @@ static CAT_INLINE void ec_xor_mask(const ecpt &a, const u128 mask, ecpt &r) {
 }
 
 // r ^= a & mask
-static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u128 mask, ecpt &r) {
+static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u64 mask, ecpt &r) {
 	fe_xor_mask(a.x, mask, r.x);
 	fe_xor_mask(a.y, mask, r.y);
 }
@@ -495,13 +500,13 @@ static bool ec_valid(const ufe &x, const ufe &y) {
 }
 
 /*
- * Generate 128-bit mask:
+ * Generate 64-bit mask:
  *
  * If x == y: return -1
  * Else: return 0
  */
 
-static CAT_INLINE s128 ec_gen_mask(const int x, const int y) {
+static CAT_INLINE s64 ec_gen_mask(const int x, const int y) {
 	// Produce a 32-bit mask:
 	// if x == y => -1
 	// if x != y => 0
@@ -510,8 +515,8 @@ static CAT_INLINE s128 ec_gen_mask(const int x, const int y) {
 	m32 >>= 31;
 	m32 = ~m32;
 
-	// Sign-extend it to 128 bits:
-	return (s128)m32;
+	// Sign-extend it to 64 bits:
+	return (s64)m32;
 }
 
 /*
@@ -525,10 +530,18 @@ static CAT_INLINE s128 ec_gen_mask(const int x, const int y) {
 
 static CAT_INLINE void ec_cond_neg(const s32 bit, ecpt &r) {
 	// Generate mask = -1 when bit == 1, else 0
-	const u128 mask = (s128)(-bit);
+	const u64 mask = (s64)(-bit);
 
 	// Effectively negate when bit == 1
 	ec_neg_mask(mask, r);
+}
+
+static CAT_INLINE void ec_cond_neg_affine(const s32 bit, ecpt_affine &r) {
+	// Generate mask = -1 when bit == 1, else 0
+	const u64 mask = (s64)(-bit);
+
+	// Effectively negate when bit == 1
+	ec_neg_mask_affine(mask, r);
 }
 
 /*
@@ -542,7 +555,7 @@ static CAT_INLINE void ec_cond_neg(const s32 bit, ecpt &r) {
 
 static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, ecpt &r, bool z2_one, bool precomp_t1, ufe &t2b) {
 	// Generate mask = -1 when bit == 1, else 0
-	const u128 mask = (s128)(-bit);
+	const u64 mask = (s64)(-bit);
 
 	// Set temporary point as identity or provided point
 	ecpt T;

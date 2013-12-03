@@ -83,14 +83,16 @@ static CAT_INLINE void fp_set(const ufp &a, ufp &r) {
 }
 
 // r = (mask == -1) ? a : r
-static CAT_INLINE void fp_set_mask(const ufp &a, const u128 mask, ufp &r) {
+static CAT_INLINE void fp_set_mask(const ufp &a, const u64 mask, ufp &r) {
 	// Not a critical path
-	r.w = (a.w & mask) ^ (r.w & ~mask);
+	r.i[0] ^= (a.i[0] ^ r.i[0]) & mask;
+	r.i[1] ^= (a.i[1] ^ r.i[1]) & mask;
 }
 
 // r ^= a & mask
-static CAT_INLINE void fp_xor_mask(const ufp &a, const u128 mask, ufp &r) {
-	r.w ^= a.w & mask;
+static CAT_INLINE void fp_xor_mask(const ufp &a, const u64 mask, ufp &r) {
+	r.i[0] ^= a.i[0] & mask;
+	r.i[1] ^= a.i[1] & mask;
 }
 
 /*
@@ -210,7 +212,7 @@ static CAT_INLINE void fp_neg(const ufp &a, ufp &r) {
 }
 
 // r = (mask==-1 ? r : -r)
-static CAT_INLINE void fp_neg_mask(const u128 mask, ufp &r) {
+static CAT_INLINE void fp_neg_mask(const u64 mask, ufp &r) {
 	ufp s;
 	s.w = 0 - r.w;
 
@@ -229,7 +231,8 @@ static CAT_INLINE void fp_neg_mask(const u128 mask, ufp &r) {
 
 #else
 
-	r.w = (s.w & mask) ^ (r.w & ~mask);
+	r.i[0] ^= (s.i[0] ^ r.i[0]) & mask;
+	r.i[1] ^= (s.i[1] ^ r.i[1]) & mask;
 
 #endif
 

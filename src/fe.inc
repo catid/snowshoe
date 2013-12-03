@@ -66,36 +66,17 @@ static CAT_INLINE void fe_set(const ufe &a, ufe &r) {
 }
 
 // r = (mask == -1) ? a : r
-static CAT_INLINE void fe_set_mask(const ufe &a, const u128 mask, ufe &r) {
+static CAT_INLINE void fe_set_mask(const ufe &a, const u64 mask, ufe &r) {
 	fp_set_mask(a.a, mask, r.a);
 	fp_set_mask(a.b, mask, r.b);
 }
 
 // r ^= a & mask
-static CAT_INLINE void fe_xor_mask(const ufe &a, const u128 mask, ufe &r) {
-
-#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
-
-	const u32 m = static_cast<const u32>( mask );
-
-	CAT_ASM_BEGIN
-		"testl %4, %4\n\t"
-		"cmovnzq %5, %0\n\t"
-		"cmovnzq %6, %1\n\t"
-		"cmovnzq %7, %2\n\t"
-		"cmovnzq %8, %3"
-		: "+r" (r.a.i[0]), "+r" (r.a.i[1]), "+r" (r.b.i[0]), "+r" (r.b.i[1])
-		: "r" (m),
-		  "m" (a.a.i[0]), "m" (a.a.i[1]), "m" (a.b.i[0]), "m" (a.b.i[1])
-		: "cc"
-	CAT_ASM_END
-
-#else
-
+static CAT_INLINE void fe_xor_mask(const ufe &a, const u64 mask, ufe &r) {
+	// I tried inline assembly code here for CMOV, which seems like the best
+	// place to do it.  That unexpectedly reduced performance noticeably.
 	fp_xor_mask(a.a, mask, r.a);
 	fp_xor_mask(a.b, mask, r.b);
-
-#endif
 }
 
 // r = a'
@@ -115,7 +96,7 @@ static CAT_INLINE void fe_neg(const ufe &a, ufe &r) {
 }
 
 // r = (mask==-1 ? r : -r)
-static CAT_INLINE void fe_neg_mask(const u128 mask, ufe &r) {
+static CAT_INLINE void fe_neg_mask(const u64 mask, ufe &r) {
 	fp_neg_mask(mask, r.a);
 	fp_neg_mask(mask, r.b);
 }

@@ -39,18 +39,18 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
-+ ec_mul_gen: 42,129 cycles 15 usec (without SPA protection)
-+ ec_mul_gen: 70,626 cycles 26 usec (with SPA protection)
-+ ec_mul: 123,480 cycles 45 usec (with SPA protection)
-+ ec_simul_gen: 125,316 cycles 46 usec (without SPA protection)
-+ ec_simul: 184,830 cycles 68 usec (with SPA protection)
++ ec_mul_gen: 37,530 cycles 14 usec (without SPA protection)
++ ec_mul_gen: 58,890 cycles 22 usec (with SPA protection)
++ ec_mul: 123,696 cycles 45 usec (with SPA protection)
++ ec_simul_gen: 125,031 cycles 46 usec (without SPA protection)
++ ec_simul: 162,768 cycles 60 usec (with SPA protection)
 
-+ ECSign server: 72,750 cycles 27 usec
-+ Verify client: 142,524 cycles 53 usec
-+ EC-FHMQV server: 125,718 cycles 46 usec (21,000 connections/sec)
-+ EC-FHMQV client: 187,122 cycles 69 usec
-+ EC-DH client: 124,890 cycles 46 usec
-+ EC-DH server: 124,935 cycles 46 usec
++ ECSign server: 68,787 cycles 25 usec
++ Verify client: 142,305 cycles 52 usec
++ EC-FHMQV server: 125,466 cycles 46 usec (21,000 connections/sec)
++ EC-FHMQV client: 187,047 cycles 69 usec
++ EC-DH client: 124,755 cycles 46 usec
++ EC-DH server: 125,091 cycles 47 usec
 
 + Curve25519 mul: `194,000 cycles` for reference
 

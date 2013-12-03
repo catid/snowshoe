@@ -132,7 +132,7 @@ static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, con
 
 		for (int ii = 0; ii < 8; ++ii) {
 			// Generate a mask that is -1 if ii == index, else 0
-			const u128 mask = ec_gen_mask(ii, k);
+			const u64 mask = ec_gen_mask(ii, k);
 
 			// Add in the masked table entry
 			ec_xor_mask(table[ii], mask, r);
@@ -160,18 +160,20 @@ static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	s32 asign, bsign;
 	gls_decompose(k, asign, a, bsign, b);
 
-	// Qa = endomorphism of P0
+	// Q0 = endomorphism of P0
 	ecpt_affine Q0;
 	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
+
+	// Set base point sign
+	ec_cond_neg_affine(bsign, Q0);
 
 	// Expand P, Q to extended coordinates
 	ecpt P, Q;
 	ec_expand(P0, P);
 	ec_expand(Q0, Q);
 
-	// Set base point signs
+	// Set base point sign
 	ec_cond_neg(asign, P);
-	ec_cond_neg(bsign, Q);
 
 	// Precompute multiplication table
 	ecpt table[8];
@@ -592,7 +594,7 @@ static void ec_table_select_comb(const u64 b[4], const int ii, const bool consta
 		ec_zero(p1);
 		for (int jj = 0; jj < 64; ++jj) {
 			// Generate a mask that is -1 if jj == index, else 0
-			const u128 mask = ec_gen_mask(jj, d_0);
+			const u64 mask = ec_gen_mask(jj, d_0);
 
 			// Add in the masked table entry
 			ec_xor_mask_affine(GEN_TABLE_0[jj], mask, p1);
@@ -619,7 +621,7 @@ static void ec_table_select_comb(const u64 b[4], const int ii, const bool consta
 		ec_zero(p2);
 		for (int jj = 0; jj < 64; ++jj) {
 			// Generate a mask that is -1 if jj == index, else 0
-			const u128 mask = ec_gen_mask(jj, d_1);
+			const u64 mask = ec_gen_mask(jj, d_1);
 
 			// Add in the masked table entry
 			ec_xor_mask_affine(GEN_TABLE_1[jj], mask, p2);
@@ -648,7 +650,6 @@ static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool const
 	// Initialize working point
 	ufe t2b;
 	ecpt X, S, T;
-
 	ec_table_select_comb(kp, e - 1, constant_time, S, T);
 	fe_set_smallk(1, S.z);
 	ec_add(S, T, X, true, true, false, t2b);
@@ -1029,8 +1030,7 @@ static u32 ec_recode_scalar_comb1(const u64 k[4], u64 b[4]) {
 
 static CAT_INLINE u32 comb_bit1(const u64 b[4], const int wp, const int ep) {
 	// K(w', v', e') = b_(d * w' + e * v' + e')
-	u32 jj = (wp << 5) + ep;
-
+	const u32 jj = (wp << 5) + ep;
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
@@ -1080,18 +1080,20 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 	ecpt_affine Q0;
 	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
 
-	// Expand base points to extended coordinates
-	ecpt P1, Q1;
-	ec_expand(P0, P1);
-	ec_expand(Q0, Q1);
+	// Set base point sign
+	ec_cond_neg_affine(b2sign, Q0);
 
-	// Set base point signs
-	ec_cond_neg(b1sign, P1);
-	ec_cond_neg(b2sign, Q1);
+	// Expand base points to extended coordinates
+	ecpt P, Q;
+	ec_expand(P0, P);
+	ec_expand(Q0, Q);
+
+	// Set base point sign
+	ec_cond_neg(b1sign, P);
 
 	// Precompute multiplication table
 	ecpt qtable[8];
-	ec_gen_table_2(P1, Q1, qtable);
+	ec_gen_table_2(P, Q, qtable);
 
 	// Recode subscalars
 	u64 a1[4];
@@ -1121,8 +1123,8 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 		ec_add(X, T, X, true, false, false, t2b);
 
 		ec_dbl(X, X, false, t2b);
-		ec_table_select_comb1(comb_lsb, a1, ii, T);
 
+		ec_table_select_comb1(comb_lsb, a1, ii, T);
 		ec_add(X, T, X, true, false, false, t2b);
 
 		ec_table_select_2(qtable, b1, b2, ii, false, T);
@@ -1131,7 +1133,7 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 
 	// If bit == 1, X <- X + P1 (inverted logic from [1])
 	if (recode_bit != 0) {
-		ec_add(X, P1, X, true, false, false, t2b);
+		ec_add(X, P, X, true, false, false, t2b);
 	}
 
 	// Multiply by 4 to avoid small subgroup attack
@@ -1192,7 +1194,7 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
 	const int TABLE_SIZE = 8;
 	for (int ii = 0; ii < TABLE_SIZE; ++ii) {
 		// Generate a mask that is -1 if ii == index, else 0
-		const u128 mask = ec_gen_mask(ii, k);
+		const u64 mask = ec_gen_mask(ii, k);
 
 		// Add in the masked table entry
 		ec_xor_mask(table[ii], mask, r);
@@ -1218,23 +1220,25 @@ static void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const
 	gls_decompose(a, a0sign, a0, a1sign, a1);
 	gls_decompose(b, b0sign, b0, b1sign, b1);
 
-	// P1, Q1 = endomorphism points
-	ecpt_affine P1a, Q1a;
-	gls_morph(P.x, P.y, P1a.x, P1a.y);
-	gls_morph(Q.x, Q.y, Q1a.x, Q1a.y);
+	// Compute endomorphism of base points
+	ecpt_affine Pe, Qe;
+	gls_morph(P.x, P.y, Pe.x, Pe.y);
+	gls_morph(Q.x, Q.y, Qe.x, Qe.y);
+
+	// Set base point signs
+	ec_cond_neg_affine(a1sign, Pe);
+	ec_cond_neg_affine(b1sign, Qe);
 
 	// Expand base points
-	ecpt P0, Q0, P1, Q1;
-	ec_expand(P1a, P1);
-	ec_expand(Q1a, Q1);
+	ecpt P0, P1, Q0, Q1;
 	ec_expand(P, P0);
+	ec_expand(Pe, P1);
 	ec_expand(Q, Q0);
+	ec_expand(Qe, Q1);
 
 	// Set base point signs
 	ec_cond_neg(a0sign, P0);
 	ec_cond_neg(b0sign, Q0);
-	ec_cond_neg(a1sign, P1);
-	ec_cond_neg(b1sign, Q1);
 
 	// Precompute multiplication table
 	ecpt table[8];
