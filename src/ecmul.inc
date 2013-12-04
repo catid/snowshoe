@@ -3,6 +3,12 @@
 #include "misc.inc"
 #include "precomp.inc"
 
+// Declare tables from precomp.inc
+static const ecpt_affine *GEN_TABLE_0 = (const ecpt_affine *)PRECOMP_TABLE_0;
+static const ecpt_affine *GEN_TABLE_1 = (const ecpt_affine *)PRECOMP_TABLE_1;
+static const ecpt *GEN_FIX = (const ecpt *)PRECOMP_TABLE_2;
+static const ecpt_affine *SIMUL_GEN_TABLE = (const ecpt_affine *)PRECOMP_TABLE_3;
+
 /*
  * GLV-SAC Scalar Recoding Algorithm for m=2 [1]
  *
@@ -244,10 +250,6 @@ static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
  * 4,6 -> 11,44 -> 80.52
  */
 
-static const ecpt_affine *GEN_TABLE_0 = (const ecpt_affine *)PRECOMP_TABLE_0;
-static const ecpt_affine *GEN_TABLE_1 = (const ecpt_affine *)PRECOMP_TABLE_1;
-static const ecpt *GEN_FIX = (const ecpt *)PRECOMP_TABLE_2;
-
 static CAT_INLINE u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const int t = 252;
 	const int w = 7;
@@ -448,8 +450,6 @@ static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool const
  * with just 32 extra ECADDs from table lookups, which falls
  * about mid-way between ec_mul and ec_simul for performance.
  */
-
-static const ecpt_affine *SIMUL_GEN_TABLE = (const ecpt_affine *)PRECOMP_TABLE_3;
 
 static u32 ec_recode_scalar_comb1(const u64 k[4], u64 b[4]) {
 	//const int t = 252;
