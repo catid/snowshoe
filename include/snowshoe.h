@@ -33,13 +33,13 @@
 extern "C" {
 #endif
 
-#define SNOWSHOE_VERSION 3
+#define SNOWSHOE_VERSION 4
 
 /*
  * Verify binary compatibility with the Snowshoe API on startup.
  *
  * Example:
- * 	assert(0 == snowshoe_init());
+ * 	if (snowshoe_init()) throw "Update snowshoe static library";
  *
  * Returns 0 on success.
  * Returns non-zero if the API level does not match.
@@ -77,13 +77,17 @@ void snowshoe_neg(const char P[64], char R[64]);
  *
  * Multiply generator point by k
  *
- * To protect against SPA attack, set constant_time == true (recommended).
- * It runs roughly twice as fast in unprotected mode.
+ * If SPA attack is not a concern you can pass the MULGEN_VARTIME
+ * flag, which will allow the algorithm to run faster.
  *
- * You can multiply by the cofactor of 4 optionally.
- * For signing this is a good idea to make the client verification
- * work out.  But for most other applications it is unnecessary.
- * Recommend setting mul_cofactor == false.
+ * If you want the resulting point to be multiplied by the cofactor 4,
+ * then pass the MULGEN_COFACTOR flag.  This is only expected to be
+ * useful for signature generation applications to make the client
+ * verification math work out.  For most other applications it is
+ * unnecessary.
+ *
+ * It is safe to set flags = 0.  To combine flags, logical-OR (|)
+ * the flags together.
  *
  * Preconditions:
  *	0 < k < q (prime order of curve)
@@ -92,7 +96,13 @@ void snowshoe_neg(const char P[64], char R[64]);
  * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-int snowshoe_mul_gen(const char k[32], bool mul_cofactor, bool constant_time, char R[64]);
+
+int snowshoe_mul_gen(const char k[32], const int flags, char R[64]);
+
+enum snowshoe_mul_gen_flags {
+	MULGEN_COFACTOR = 1,
+	MULGEN_VARTIME = 2
+};
 
 /*
  * R = k*4*P
