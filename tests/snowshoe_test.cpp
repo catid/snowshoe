@@ -58,14 +58,20 @@ bool ec_dh_test() {
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
 
-	assert(0 == snowshoe_mul_gen(sk_c, false, true, pp_c));
+	if (0 != snowshoe_mul_gen(sk_c, false, true, pp_c)) {
+		return false;
+	}
 
-	assert(0 == snowshoe_mul_gen(sk_s, false, true, pp_s));
+	if (0 != snowshoe_mul_gen(sk_s, false, true, pp_s)) {
+		return false;
+	}
 
 	double s0 = m_clock.usec();
 	u32 t0 = Clock::cycles();
 
-	assert(0 == snowshoe_mul(sk_c, pp_s, sp_c));
+	if (0 != snowshoe_mul(sk_c, pp_s, sp_c)) {
+		return false;
+	}
 
 	u32 t1 = Clock::cycles();
 	double s1 = m_clock.usec();
@@ -75,7 +81,9 @@ bool ec_dh_test() {
 	s0 = m_clock.usec();
 	t0 = Clock::cycles();
 
-	assert(0 == snowshoe_mul(sk_s, pp_c, sp_s));
+	if (0 != snowshoe_mul(sk_s, pp_c, sp_s)) {
+		return false;
+	}
 
 	t1 = Clock::cycles();
 	s1 = m_clock.usec();
@@ -113,17 +121,23 @@ bool ec_dh_fs_test() {
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	assert(0 == snowshoe_mul_gen(sk_s, false, false, pp_s));
+	if (0 != snowshoe_mul_gen(sk_s, false, false, pp_s)) {
+		return false;
+	}
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	assert(0 == snowshoe_mul_gen(sk_e, false, false, pp_e));
+	if (0 != snowshoe_mul_gen(sk_e, false, false, pp_e)) {
+		return false;
+	}
 
 	// Online: Client setup
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	assert(0 == snowshoe_mul_gen(sk_c, false, true, pp_c));
+	if (0 != snowshoe_mul_gen(sk_c, false, true, pp_c)) {
+		return false;
+	}
 	generate_k(h);
 
 	// Online: Server handles client request
@@ -133,7 +147,9 @@ bool ec_dh_fs_test() {
 
 	// d = sk_e + h * sk_s (mod q)
 	snowshoe_mul_mod_q(h, sk_s, sk_e, d);
-	assert(0 == snowshoe_mul(d, pp_c, sp_s));
+	if (0 != snowshoe_mul(d, pp_c, sp_s)) {
+		return false;
+	}
 
 	u32 t1 = Clock::cycles();
 	double s1 = m_clock.usec();
@@ -147,7 +163,9 @@ bool ec_dh_fs_test() {
 
 	// a = h * sk_c (mod q)
 	snowshoe_mul_mod_q(h, sk_c, 0, a);
-	assert(0 == snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c));
+	if (0 != snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c)) {
+		return false;
+	}
 
 	t1 = Clock::cycles();
 	s1 = m_clock.usec();
@@ -203,7 +221,9 @@ bool ec_dsa_test() {
 	// Offline precomputation:
 
 	snowshoe_secret_gen(a);
-	assert(0 == snowshoe_mul_gen(a, false, false, pp_A));
+	if (0 != snowshoe_mul_gen(a, false, false, pp_A)) {
+		return false;
+	}
 
 	// Sign:
 
@@ -212,7 +232,9 @@ bool ec_dsa_test() {
 
 	snowshoe_mod_q(h_hi_m, r);
 	snowshoe_mod_q(h_r_a_m, t);
-	assert(0 == snowshoe_mul_gen(r, true, true, pp_R));
+	if (0 != snowshoe_mul_gen(r, true, true, pp_R)) {
+		return false;
+	}
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
 
 	u32 t1 = Clock::cycles();
@@ -227,7 +249,9 @@ bool ec_dsa_test() {
 
 	snowshoe_mod_q(h_r_a_m, u);
 	snowshoe_neg(pp_A, pp_A);
-	assert(0 == snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
+	if (0 != snowshoe_simul_gen(s, u, pp_A, pp_Rtest)) {
+		return false;
+	}
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (pp_Rtest[ii] != pp_R[ii]) {
@@ -248,6 +272,9 @@ bool ec_dsa_test() {
 
 int main() {
 	cout << "Snowshoe Unit Tester" << endl;
+
+	// Note that assert() should not be used for crypto code since it is often compiled
+	// out in release mode.  It is only used here for testing.
 
 	m_clock.OnInitialize();
 

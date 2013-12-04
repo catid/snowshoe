@@ -91,7 +91,9 @@ To use the project you only need to include [include/snowshoe.h](https://github.
 Verify binary API compatibility on startup:
 
 ~~~
-	assert(0 == snowshoe_init());
+	if (0 != snowshoe_init()) {
+		// Buildtime failure: wrong static library
+	}
 ~~~
 
 Allocate memory for the keys:
@@ -107,7 +109,9 @@ Now generate the server public/private key pair:
 ~~~
 	char pp_s[64];
 	snowshoe_secret_gen(sk_s);
-	assert(0 == snowshoe_mul_gen(sk_s, pp_s));
+	if (0 != snowshoe_mul_gen(sk_s, pp_s)) {
+		// Secret key was generated wrong (developer error)
+	}
 ~~~
 
 `snowshoe_secret_gen` will mask off some bits of the random input string to make it suitable for use as a private key.
@@ -119,31 +123,37 @@ Generate client public/private key pair:
 ~~~
 	char pp_c[64];
 	snowshoe_secret_gen(sk_c);
-	assert(0 == snowshoe_mul_gen(sk_c, pp_c));
+	if (0 != snowshoe_mul_gen(sk_c, pp_c)) {
+		// Secret key was generated wrong (developer error)
+	}
 ~~~
 
 Client side: Multiply client secret key by server public point
 
 ~~~
 	char sp_c[64];
-	assert(0 == snowshoe_mul(sk_c, pp_s, sp_c));
+	if (0 != snowshoe_mul(sk_c, pp_s, sp_c)) {
+		// Reject input pp_s that is invalid
+	}
 ~~~
 
 Server side: Multiply server secret key by client public point
 
 ~~~
 	char sp_s[64];
-	assert(0 == snowshoe_mul(sk_s, pp_c, sp_s));
+	if (0 != snowshoe_mul(sk_s, pp_c, sp_s)) {
+		// Reject input pp_c that is invalid
+	}
 ~~~
 
 Server and client both arrive at `sp_c == sp_s`, which is the secret key for the session.
 
-The assertions used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return false, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
+The error checking used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return non-zero for failure, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
 
 
 #### Example Usage: MQV
 
-Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV):
+Here is a sketch of how to implement a protocol similar to [MQV](http://en.wikipedia.org/wiki/MQV):
 
 ~~~
 	char h[32], d[32], a[32];
@@ -156,6 +166,8 @@ Here is a sketch of how to implement [EC-FHMQV](http://en.wikipedia.org/wiki/MQV
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
 	assert(0 == snowshoe_mul_gen(sk_s, pp_s));
+
+	// Online: Server setup
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
