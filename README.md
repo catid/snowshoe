@@ -402,7 +402,7 @@ of the methods to be compared.
 + The curve supports constant-time multiplication with Montgomery Ladders
 + Prevents small-subgroup/invalid-curve attacks by validating input points
 + The doubling and unified addition formulae used are complete
-+ Supports Elligator 2 construction, though not implemented here
++ Supports Elligator construction, though not implemented here
 
 
 #### Implementation features:
