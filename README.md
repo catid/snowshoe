@@ -10,6 +10,8 @@
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
 
+It is designed for a "128-bit" security level to be used with 256-bit keys.
+
 Additionally to speed up signature verification a variable single-base
 simultaneous function `simul_gen` is provided that is not constant-time.
 And a similarly SPA unprotected `mul_gen` is provided for offline signing.
