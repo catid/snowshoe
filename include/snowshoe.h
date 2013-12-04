@@ -83,8 +83,8 @@ void snowshoe_neg(const char P[64], char R[64]);
  * If you want the resulting point to be multiplied by the cofactor 4,
  * then pass the MULGEN_COFACTOR flag.  This is only expected to be
  * useful for signature generation applications to make the client
- * verification math work out.  For most other applications it is
- * unnecessary.
+ * verification math work out.  For most other applications it will
+ * slow down the key generation without any benefits.
  *
  * It is safe to set flags = 0.  To combine flags, logical-OR (|)
  * the flags together.
