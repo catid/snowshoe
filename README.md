@@ -364,19 +364,13 @@ Longa's implementation ( http://eprint.iacr.org/2013/158 ):
 - ecsimul : (faster) `116kcy`
 - Availability : Not available online?
 
-Most other software with fast `mul_gen` is cheating a little.  The table
-lookups are often not protected against SPA attack.  Snowshoe's `mul_gen` can
-run in `30kcy` with two 128-entry tables or `36kcy` with two 64-entry tables
-(the current implementation) if the table lookups are similarly unprotected.
-Since it is trivial to allow an SPA unprotected mode and seems to almost
-double the speed in that case, the option is available in Snowshoe.
-
 Note that cycle counts are hard to compare.  One often-neglected factor is that
 a CPU running at 4 GHz will take *more cycles* than a processor running at 2 GHz.
 This is because memory lookups usually take roughly the same wall time, so the
-faster CPU is penalized more cycles for table/code reads.  Snowshoe does attempt
-to have a small code size by selectively inlining only small functions.
-A fair comparison only seems possible with a system like SUPERCOP.
+faster CPU is penalized more cycles for table/code reads.
+
+A fair comparison only seems possible with a system like SUPERCOP running both
+of the methods to be compared.
 
 
 ## Details
