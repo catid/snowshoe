@@ -1,3 +1,5 @@
+// Precomputed tables for generator point scalar multiplication
+
 static const u64 PRECOMP_TABLE_0[8 * 64] = {
 0xfULL, 0x0ULL, 0x0ULL, 0x0ULL,
 0x36d073dade2014abULL, 0x7869c919dd649b4cULL, 0xdd9869fe923191b0ULL, 0x6e848b46758ba443ULL,
@@ -524,4 +526,10 @@ static const u64 PRECOMP_TABLE_3[8 * 128] = {
 0x4a927d03f7eeda77ULL, 0x5390589168f06c23ULL, 0x6b5dc677531c6abeULL, 0x396d5ac5e6cce75dULL,
 0x6b3c947deb9a5dc0ULL, 0xeba709dc9a12a89ULL, 0xb0f25aac1fabf1b7ULL, 0x4fdf324318914cULL
 };
+
+// Declare tables
+static const ecpt_affine *GEN_TABLE_0 = (const ecpt_affine *)PRECOMP_TABLE_0;
+static const ecpt_affine *GEN_TABLE_1 = (const ecpt_affine *)PRECOMP_TABLE_1;
+static const ecpt *GEN_FIX = (const ecpt *)PRECOMP_TABLE_2;
+static const ecpt_affine *SIMUL_GEN_TABLE = (const ecpt_affine *)PRECOMP_TABLE_3;
 
