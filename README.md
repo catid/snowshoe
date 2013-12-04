@@ -14,7 +14,7 @@ It is designed for a "128-bit" security level to be used with 256-bit keys.
 
 Additionally to speed up signature verification a variable single-base
 simultaneous function `simul_gen` is provided that is not constant-time.
-And a similarly SPA unprotected `mul_gen` is provided for offline signing.
+And a similarly unprotected `mul_gen` is provided for offline signing.
 
 It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
@@ -27,11 +27,11 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ##### libsnowshoe.a on Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge, June 2011):
 
-+ ec_mul_gen: `35,307 cycles 20 usec` (without SPA protection)
-+ ec_mul_gen: `55,127 cycles 32 usec` (with SPA protection)
-+ ec_mul: `104,314 cycles 61 usec` (with SPA protection)
-+ ec_simul_gen: `118,103 cycles 69 usec` (without SPA protection)
-+ ec_simul: `154,313 cycles 90 usec` (with SPA protection)
++ ec_mul_gen: `35,307 cycles 20 usec` (without timing protection)
++ ec_mul_gen: `55,127 cycles 32 usec` (with timing protection)
++ ec_mul: `104,314 cycles 61 usec` (with timing protection)
++ ec_simul_gen: `118,103 cycles 69 usec` (without timing protection)
++ ec_simul: `154,313 cycles 90 usec` (with timing protection)
 
 Simulating protocols:
 
@@ -46,11 +46,11 @@ Simulating protocols:
 
 Curve25519 ec_mul takes `194,000 cycles` for reference
 
-+ ec_mul_gen: `37,530 cycles 14 usec` (without SPA protection)
-+ ec_mul_gen: `58,890 cycles 22 usec` (with SPA protection)
-+ ec_mul: `123,696 cycles 45 usec` (with SPA protection)
-+ ec_simul_gen: `125,031 cycles 46 usec` (without SPA protection)
-+ ec_simul: `162,768 cycles 60 usec` (with SPA protection)
++ ec_mul_gen: `37,530 cycles 14 usec` (without timing protection)
++ ec_mul_gen: `58,890 cycles 22 usec` (with timing protection)
++ ec_mul: `123,696 cycles 45 usec` (with timing protection)
++ ec_simul_gen: `125,031 cycles 46 usec` (without timing protection)
++ ec_simul: `162,768 cycles 60 usec` (with timing protection)
 
 Simulating protocols:
 
