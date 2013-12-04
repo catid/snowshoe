@@ -149,7 +149,7 @@ static bool ec_gen_tables3_comb_test() {
 	//const int e = 32; // t / wv
 	const int d = 32; // e*1
 
-	ecpt_affine table[128];
+	ecpt_z1 table[128];
 
 	const int ul = 1 << (w - 1);
 	for (int u = 0; u < ul; ++u) {
@@ -171,16 +171,24 @@ static bool ec_gen_tables3_comb_test() {
 			}
 		}
 
-		ec_affine(q, table[u]);
+		// Get affine version
+		ecpt_affine qa;
+		ec_affine(q, qa);
+
+		// Store in table entry without Z=1
+		table[u].x = qa.x;
+		table[u].y = qa.y;
+		fe_mul(qa.x, qa.y, table[u].t);
 	}
 
 #if 0
 
-	ecpt_affine *ptr = table;
-	cout << "static const u64 PRECOMP_TABLE_3[] = {" << endl;
+	ecpt_z1 *ptr = table;
+	cout << "static const u64 PRECOMP_TABLE_3[12*128] = {" << endl;
 	for (int ii = 0; ii < 128; ++ii) {
 		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
 		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
+		cout << "0x" << hex << ptr->t.a.i[0] << "ULL, 0x" << ptr->t.a.i[1] << "ULL, 0x" << ptr->t.b.i[0] << "ULL, 0x" << ptr->t.b.i[1] << "ULL," << endl;
 		ptr++;
 	}
 	cout << "};" << endl;

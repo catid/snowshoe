@@ -457,7 +457,9 @@ static void ec_table_select_comb_81(const u32 recode_lsb, const u64 b[4], const 
 	d_0 |= comb_bit_81(b, 1, ii);
 	u32 s_0 = comb_bit_81(b, 0, ii);
 
-	ec_expand(SIMUL_GEN_TABLE[d_0], p1);
+	p1.x = SIMUL_GEN_TABLE[d_0].x;
+	p1.y = SIMUL_GEN_TABLE[d_0].y;
+	p1.t = SIMUL_GEN_TABLE[d_0].t;
 
 	// Flip sign here rather than at the end to interleave more easily
 	if (s_0 ^ recode_lsb) {

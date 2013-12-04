@@ -32,6 +32,10 @@ struct ecpt_affine {
 	ufe x, y;
 };
 
+struct ecpt_z1 {
+	ufe x, y, t;
+};
+
 
 static const u32 EC_D = 109;
 
