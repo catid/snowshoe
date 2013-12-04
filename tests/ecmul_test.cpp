@@ -448,7 +448,7 @@ bool ec_mul_gen_test(bool spa_protection) {
 		ec_mul_gen(k, false, spa_protection, R2);
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
-		cout << "ec_mul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec, SPA protection = " << spa_protection << endl;
+		cout << "ec_mul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec, timing-attack protection = " << spa_protection << endl;
 
 		ec_mul_gen(k, true, spa_protection, R2);
 

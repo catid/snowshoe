@@ -228,7 +228,7 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
  * 4,6 -> 11,44 -> 80.52
  */
 
-static CAT_INLINE u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
+static CAT_INLINE u32 ec_recode_scalar_comb_72(const u64 k[4], u64 b[4]) {
 	const int t = 252;
 	const int w = 7;
 	const int v = 2;
@@ -278,14 +278,14 @@ static CAT_INLINE u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	return lsb ^ 1;
 }
 
-static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
+static CAT_INLINE u32 comb_bit_72(const u64 b[4], const int wp, const int vp, const int ep) {
 	// K(w', v', e') = b_(d * w' + e * v' + e')
 	u32 jj = (wp * 36) + (vp * 18) + ep;
 
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
-static void ec_table_select_comb(const u64 b[4], const int ii, const bool constant_time, ecpt &p1, ecpt &p2) {
+static void ec_table_select_comb_72(const u64 b[4], const int ii, const bool constant_time, ecpt &p1, ecpt &p2) {
 	// DCK(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -294,13 +294,13 @@ static void ec_table_select_comb(const u64 b[4], const int ii, const bool consta
 	// p2 = s(1, ii) * tables[DCK(1, ii)][1]
 
 	u32 d_0;
-	d_0 = comb_bit(b, 6, 0, ii) << 5;
-	d_0 |= comb_bit(b, 5, 0, ii) << 4;
-	d_0 |= comb_bit(b, 4, 0, ii) << 3;
-	d_0 |= comb_bit(b, 3, 0, ii) << 2;
-	d_0 |= comb_bit(b, 2, 0, ii) << 1;
-	d_0 |= comb_bit(b, 1, 0, ii);
-	u32 s_0 = comb_bit(b, 0, 0, ii);
+	d_0 = comb_bit_72(b, 6, 0, ii) << 5;
+	d_0 |= comb_bit_72(b, 5, 0, ii) << 4;
+	d_0 |= comb_bit_72(b, 4, 0, ii) << 3;
+	d_0 |= comb_bit_72(b, 3, 0, ii) << 2;
+	d_0 |= comb_bit_72(b, 2, 0, ii) << 1;
+	d_0 |= comb_bit_72(b, 1, 0, ii);
+	u32 s_0 = comb_bit_72(b, 0, 0, ii);
 
 	if (constant_time) {
 		ec_zero(p1);
@@ -321,13 +321,13 @@ static void ec_table_select_comb(const u64 b[4], const int ii, const bool consta
 	}
 
 	u32 d_1;
-	d_1 = comb_bit(b, 6, 1, ii) << 5;
-	d_1 |= comb_bit(b, 5, 1, ii) << 4;
-	d_1 |= comb_bit(b, 4, 1, ii) << 3;
-	d_1 |= comb_bit(b, 3, 1, ii) << 2;
-	d_1 |= comb_bit(b, 2, 1, ii) << 1;
-	d_1 |= comb_bit(b, 1, 1, ii);
-	u32 s_1 = comb_bit(b, 0, 1, ii);
+	d_1 = comb_bit_72(b, 6, 1, ii) << 5;
+	d_1 |= comb_bit_72(b, 5, 1, ii) << 4;
+	d_1 |= comb_bit_72(b, 4, 1, ii) << 3;
+	d_1 |= comb_bit_72(b, 3, 1, ii) << 2;
+	d_1 |= comb_bit_72(b, 2, 1, ii) << 1;
+	d_1 |= comb_bit_72(b, 1, 1, ii);
+	u32 s_1 = comb_bit_72(b, 0, 1, ii);
 
 	if (constant_time) {
 		ec_zero(p2);
@@ -381,7 +381,7 @@ static void ec_table_select_comb(const u64 b[4], const int ii, const bool consta
  * about mid-way between ec_mul and ec_simul for performance.
  */
 
-static u32 ec_recode_scalar_comb1(const u64 k[4], u64 b[4]) {
+static u32 ec_recode_scalar_comb_81(const u64 k[4], u64 b[4]) {
 	//const int t = 252;
 	const int w = 8;
 	const int v = 1;
@@ -431,14 +431,15 @@ static u32 ec_recode_scalar_comb1(const u64 k[4], u64 b[4]) {
 	return lsb ^ 1;
 }
 
-static CAT_INLINE u32 comb_bit1(const u64 b[4], const int wp, const int ep) {
+static CAT_INLINE u32 comb_bit_81(const u64 b[4], const int wp, const int ep) {
 	// K(w', v', e') = b_(d * w' + e * v' + e')
 	const u32 jj = (wp << 5) + ep;
+
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
 // NOTE: Not constant time because it does not need to be for ec_simul_gen
-static void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const int ii, ecpt &p1) {
+static void ec_table_select_comb_81(const u32 recode_lsb, const u64 b[4], const int ii, ecpt &p1) {
 	// DCK(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -447,14 +448,14 @@ static void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const in
 	// p2 = s(1, ii) * tables[DCK(1, ii)][1]
 
 	u32 d_0;
-	d_0 = comb_bit1(b, 7, ii) << 6;
-	d_0 |= comb_bit1(b, 6, ii) << 5;
-	d_0 |= comb_bit1(b, 5, ii) << 4;
-	d_0 |= comb_bit1(b, 4, ii) << 3;
-	d_0 |= comb_bit1(b, 3, ii) << 2;
-	d_0 |= comb_bit1(b, 2, ii) << 1;
-	d_0 |= comb_bit1(b, 1, ii);
-	u32 s_0 = comb_bit1(b, 0, ii);
+	d_0 = comb_bit_81(b, 7, ii) << 6;
+	d_0 |= comb_bit_81(b, 6, ii) << 5;
+	d_0 |= comb_bit_81(b, 5, ii) << 4;
+	d_0 |= comb_bit_81(b, 4, ii) << 3;
+	d_0 |= comb_bit_81(b, 3, ii) << 2;
+	d_0 |= comb_bit_81(b, 2, ii) << 1;
+	d_0 |= comb_bit_81(b, 1, ii);
+	u32 s_0 = comb_bit_81(b, 0, ii);
 
 	ec_expand(SIMUL_GEN_TABLE[d_0], p1);
 

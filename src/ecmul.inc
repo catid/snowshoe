@@ -24,17 +24,17 @@ static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool const
 
 	// Recode scalar
 	u64 kp[4];
-	u32 recode_lsb = ec_recode_scalar_comb(k, kp);
+	u32 recode_lsb = ec_recode_scalar_comb_72(k, kp);
 
 	// Initialize working point
 	ufe t2b;
 	ecpt X, S, T;
-	ec_table_select_comb(kp, e - 1, constant_time, S, T);
+	ec_table_select_comb_72(kp, e - 1, constant_time, S, T);
 	fe_set_smallk(1, S.z);
 	ec_add(S, T, X, true, true, false, t2b);
 
 	for (int ii = e - 2; ii >= 0; --ii) {
-		ec_table_select_comb(kp, ii, constant_time, S, T);
+		ec_table_select_comb_72(kp, ii, constant_time, S, T);
 
 		ec_dbl(X, X, false, t2b);
 		ec_add(X, S, X, true, false, false, t2b);
@@ -163,7 +163,7 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 
 	// Recode subscalars
 	u64 a1[4];
-	const u32 comb_lsb = ec_recode_scalar_comb1(a, a1);
+	const u32 comb_lsb = ec_recode_scalar_comb_81(a, a1);
 	u32 recode_bit = ec_recode_scalars_2(b1, b2, 128);
 
 	// Initialize working point
@@ -185,12 +185,12 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 	for (int ii = 30; ii >= 0; ii -= 2) {
 		ec_dbl(X, X, false, t2b);
 
-		ec_table_select_comb1(comb_lsb, a1, ii+1, T);
+		ec_table_select_comb_81(comb_lsb, a1, ii+1, T);
 		ec_add(X, T, X, true, false, false, t2b);
 
 		ec_dbl(X, X, false, t2b);
 
-		ec_table_select_comb1(comb_lsb, a1, ii, T);
+		ec_table_select_comb_81(comb_lsb, a1, ii, T);
 		ec_add(X, T, X, true, false, false, t2b);
 
 		ec_table_select_2(qtable, b1, b2, ii, false, T);
