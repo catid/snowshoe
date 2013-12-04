@@ -208,17 +208,17 @@ static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u64 mask, 
  * Optimized for Instruction-Level Paralellism (ILP) and low register usage.
  *
  * The original formula appears to produce all negative results, which is okay.
- * I changed it to produce the same as the math expressions in the paper which
- * works out better for my 'u'.
+ * It was adjusted to produce the same as the math expressions in the paper,
+ * which works out better for my 'u'.
  *
  * There are alternative formulae in [3] that do not seem preferable for my Fp.
  * The EFD website also has a z1=1 entry that is more efficient, but would
  * require implementing a whole new ec_dbl function so does not seem worth it.
  *
- * This doubling formula produces a split value for T.  The value of T can be
- * reconstructed after ec_dbl by multiplying r.t and r2b.  This lazier
- * calculation is preferable to generating T in this function for the EC scalar
- * multiplication approach taken in this project.
+ * This doubling formula produces a split value for T similar to Hamburg [17].
+ * The value of T can be reconstructed after ec_dbl by multiplying r.t and t2b.
+ * This lazier calculation is preferable to generating T in this function so
+ * that a regular execution pattern can be used to defeat timing attack.
  */
 
 // r = 2p
@@ -296,6 +296,11 @@ static void ec_dbl(const ecpt &p, ecpt &r, const bool z_one, ufe &t2b) {
  *
  * Both input points are in extended projective coordinates:
  * (X3, Y3, T3, Z3) = (X1, Y1, T1, Z1) + (X2, Y2, T2, Z2)
+ *
+ * This addition formula produces a split value for T similar to Hamburg [17].
+ * The value of T can be reconstructed after ec_add by multiplying r.t and t2b.
+ * This lazier calculation is preferable to generating T in this function so
+ * that a regular execution pattern can be used to defeat timing attack.
  *
  * If in_precomp_t1 is true:
  *	The t2b parameter will be ignored.  The p1.t field is assumed to be T1.
