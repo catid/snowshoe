@@ -4,6 +4,17 @@
 #include "misc.inc"
 #include "recode.inc"
 
+/*
+ * Multiplication by generator point using LSB-set comb method [1] with w=7,v=2
+ *
+ * Optionally multiplies the point by 4.
+ *
+ * Preconditions:
+ * 	0 < k < q
+ *
+ * Multiplies the point by k * [4] and stores the result in R
+ */
+
 // R = k * [4] * G, optionally constant-time
 static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool constant_time, ecpt_affine &R) {
 	const int t = 252;
@@ -51,7 +62,7 @@ static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool const
 }
 
 /*
- * Multiplication by variable base point
+ * Multiplication by variable base point using GLV-SAC method [1] with m=2
  *
  * Preconditions:
  * 	0 < k < q
@@ -115,7 +126,8 @@ static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 
 /*
  * Simultaneous multiplication by two base points,
- * where one is variable and the other is the generator point
+ * where one is variable and the other is the generator point,
+ * using a combination of GLV-SAC with m=2 and LSB-set comb with w=8,v=1 [1].
  *
  * Preconditions:
  * 	0 < a,b < q
@@ -200,6 +212,7 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 
 /*
  * Simultaneous multiplication by two variable base points
+ * using GLV-SAC with m=4 [1].
  *
  * Preconditions:
  * 	0 < a,b < q
