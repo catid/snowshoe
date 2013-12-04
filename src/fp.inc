@@ -397,7 +397,7 @@ static CAT_INLINE void fp_mul(const ufp &a, const ufp &b, ufp &r) {
 	fp_add(high, r, r);
 }
 
-// r = a * b(small 32-bit constant)
+// r = a * b, b = small 32-bit constant
 static CAT_INLINE void fp_mul_smallk(const ufp &a, const u32 b, ufp &r) {
 	// Uses 2m 3a 1r
 
