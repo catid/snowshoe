@@ -28,7 +28,7 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 + ec_mul_gen: `36,023 cycles 21 usec` (without SPA protection)
 + ec_mul_gen: `59,610 cycles 35 usec` (with SPA protection)
 + ec_mul: `104,314 cycles 61 usec` (with SPA protection)
-+ ec_simul_gen: `119,710 cycles 70` usec (without SPA protection)
++ ec_simul_gen: `119,710 cycles 70 usec` (without SPA protection)
 + ec_simul: `162,796 cycles 96 usec` (with SPA protection)
 
 Simulating protocols:
