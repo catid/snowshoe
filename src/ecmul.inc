@@ -260,16 +260,15 @@ static CAT_INLINE u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 
 	// If k0 == 0, b = q - k (and return 1), else b = k (and return 0)
 
-	u32 lsb = ((u32)k[0] & 1) ^ 1;
-	u64 mask = (s64)0 - lsb;
+	const u32 lsb = (u32)k[0] & 1;
+	const u64 mask = (s64)0 - lsb;
 
-	u64 nk[4];
-	neg_mod_q(k, nk);
+	neg_mod_q(k, b);
 
-	b[0] = (k[0] & ~mask) ^ (nk[0] & mask);
-	b[1] = (k[1] & ~mask) ^ (nk[1] & mask);
-	b[2] = (k[2] & ~mask) ^ (nk[2] & mask);
-	b[3] = (k[3] & ~mask) ^ (nk[3] & mask);
+	b[0] ^= (k[0] ^ b[0]) & mask;
+	b[1] ^= (k[1] ^ b[1]) & mask;
+	b[2] ^= (k[2] ^ b[2]) & mask;
+	b[3] ^= (k[3] ^ b[3]) & mask;
 
 	// Recode scalar:
 
@@ -298,7 +297,7 @@ static CAT_INLINE u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 		b[3] = (u64)sum;
 	}
 
-	return lsb;
+	return lsb ^ 1;
 }
 
 static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
@@ -461,16 +460,15 @@ static u32 ec_recode_scalar_comb1(const u64 k[4], u64 b[4]) {
 
 	// If k0 == 0, b = q - k (and return 1), else b = k (and return 0)
 
-	u32 lsb = ((u32)k[0] & 1) ^ 1;
-	u64 mask = (s64)0 - lsb;
+	const u32 lsb = (u32)k[0] & 1;
+	const u64 mask = (s64)0 - lsb;
 
-	u64 nk[4];
-	neg_mod_q(k, nk);
+	neg_mod_q(k, b);
 
-	b[0] = (k[0] & ~mask) ^ (nk[0] & mask);
-	b[1] = (k[1] & ~mask) ^ (nk[1] & mask);
-	b[2] = (k[2] & ~mask) ^ (nk[2] & mask);
-	b[3] = (k[3] & ~mask) ^ (nk[3] & mask);
+	b[0] ^= (k[0] ^ b[0]) & mask;
+	b[1] ^= (k[1] ^ b[1]) & mask;
+	b[2] ^= (k[2] ^ b[2]) & mask;
+	b[3] ^= (k[3] ^ b[3]) & mask;
 
 	// Recode scalar:
 
@@ -499,7 +497,7 @@ static u32 ec_recode_scalar_comb1(const u64 k[4], u64 b[4]) {
 		b[3] = (u64)sum;
 	}
 
-	return lsb;
+	return lsb ^ 1;
 }
 
 static CAT_INLINE u32 comb_bit1(const u64 b[4], const int wp, const int ep) {
