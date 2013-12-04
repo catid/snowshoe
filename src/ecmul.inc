@@ -17,28 +17,33 @@
 
 // R = k * [4] * G, optionally constant-time
 static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool constant_time, ecpt_affine &R) {
-	const int t = 252;
-	const int w = 7;
-	const int v = 2;
-	const int e = t / (w * v); // t / wv
+	const int e = 9;
 
 	// Recode scalar
 	u64 kp[4];
-	u32 recode_lsb = ec_recode_scalar_comb_72(k, kp);
+	u32 recode_lsb = ec_recode_scalar_comb_74(k, kp);
 
-	// Initialize working point
+	// Unroll first evaluation loop
+	ecpt T[4];
+	ec_table_select_comb_74(kp, e - 1, constant_time, T);
+	fe_set_smallk(1, T[0].z);
+
+	// X = T[0] + T[1] + T[2] + T[3]
 	ufe t2b;
-	ecpt X, S, T;
-	ec_table_select_comb_72(kp, e - 1, constant_time, S, T);
-	fe_set_smallk(1, S.z);
-	ec_add(S, T, X, true, true, false, t2b);
+	ecpt X;
+	ec_add(T[0], T[1], X, true, true, false, t2b);
+	ec_add(X, T[2], X, true, false, false, t2b);
+	ec_add(X, T[3], X, true, false, false, t2b);
 
+	// Evaluate
 	for (int ii = e - 2; ii >= 0; --ii) {
-		ec_table_select_comb_72(kp, ii, constant_time, S, T);
+		ec_table_select_comb_74(kp, ii, constant_time, T);
 
 		ec_dbl(X, X, false, t2b);
-		ec_add(X, S, X, true, false, false, t2b);
-		ec_add(X, T, X, true, false, false, t2b);
+		ec_add(X, T[0], X, true, false, false, t2b);
+		ec_add(X, T[1], X, true, false, false, t2b);
+		ec_add(X, T[2], X, true, false, false, t2b);
+		ec_add(X, T[3], X, true, false, false, t2b);
 	}
 
 	// NOTE: Do conditional addition here rather than after the ec_cond_neg
@@ -103,6 +108,7 @@ static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	ecpt X;
 	ec_table_select_2(table, a, b, 126, true, X);
 
+	// Evaluate
 	ufe t2b;
 	for (int ii = 124; ii >= 0; ii -= 2) {
 		ecpt T;
@@ -170,6 +176,7 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 	ecpt X;
 	ec_table_select_2(qtable, b1, b2, 126, false, X);
 
+	// Evaluate
 	ufe t2b;
 	ecpt T;
 	for (int ii = 124; ii >= 32; ii -= 2) {
@@ -181,7 +188,6 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 	}
 
 	// For the last 32 doubles, interleave ec_mul_gen adds
-
 	for (int ii = 30; ii >= 0; ii -= 2) {
 		ec_dbl(X, X, false, t2b);
 
@@ -259,6 +265,7 @@ static void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const
 	ecpt X;
 	ec_table_select_4(table, a0, a1, b0, b1, 126, X);
 
+	// Evaluate
 	ufe t2b;
 	for (int ii = 125; ii >= 0; --ii) {
 		ecpt T;

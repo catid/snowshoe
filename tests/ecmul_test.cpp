@@ -53,11 +53,11 @@ static void ec_print_xy(const ecpt_affine &p) {
 static bool ec_gen_tables_comb_test() {
 	const int t = 252;
 	const int w = 7;
-	const int v = 2;
-	const int e = t / (w * v); // t / wv
+	const int v = 4;
+	const int e = t / (w * v); // ceil(t / wv)
 	const int d = e * v; // ev
 
-	ecpt_affine table0[64], table1[64];
+	ecpt_affine table[v][64];
 
 	const int ul = 1 << (w - 1);
 	for (int u = 0; u < ul; ++u) {
@@ -103,41 +103,31 @@ static bool ec_gen_tables_comb_test() {
 				ec_dbl(q, q, false, t2b);
 			}
 
-			if (vp == 0) {
-				ec_affine(q, table0[u]);
-			} else {
-				ec_affine(q, table1[u]);
-			}
+			ec_affine(q, table[vp][u]);
 		}
 	}
 
 #if 0
 
-	ecpt_affine *ptr = table0;
-	cout << "static const u64 PRECOMP_TABLE_0[] = {" << endl;
-	for (int ii = 0; ii < 64; ++ii) {
-		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
-		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
-		ptr++;
-	}
-	cout << "};" << endl;
-
-	ptr = table1;
-	cout << "static const u64 PRECOMP_TABLE_1[] = {" << endl;
-	for (int ii = 0; ii < 64; ++ii) {
-		cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
-		cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
-		ptr++;
+	cout << "static const u64 PRECOMP_TABLE[4][8 * 64] = {" << endl;
+	for (int jj = 0; jj < v; ++jj) {
+		cout << "{";
+		ecpt_affine *ptr = &table[jj][0];
+		for (int ii = 0; ii < 64; ++ii) {
+			cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
+			cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
+			ptr++;
+		}
+		cout << "},";
 	}
 	cout << "};" << endl;
 
 #endif
 
-	if (0 != memcmp(table0, GEN_TABLE_0, sizeof(table0))) {
-		return false;
-	}
-	if (0 != memcmp(table1, GEN_TABLE_1, sizeof(table1))) {
-		return false;
+	for (int jj = 0; jj < v; ++jj) {
+		if (0 != memcmp(table[jj], GEN_TABLE[jj], sizeof(table[jj]))) {
+			return false;
+		}
 	}
 
 	return true;
@@ -146,8 +136,8 @@ static bool ec_gen_tables_comb_test() {
 static bool ec_gen_tables3_comb_test() {
 	//const int t = 252;
 	const int w = 8;
-	//const int e = 32; // t / wv
-	const int d = 32; // e*1
+	//const int e = 32; // ceil(t / wv)
+	const int d = 32; // e*v, v = 1
 
 	ecpt_z1 table[128];
 
