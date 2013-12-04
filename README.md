@@ -1,4 +1,5 @@
-## Snowshoe :: Portable, Secure, Fast Elliptic Curve Math Library in C
+## Snowshoe
+### Portable, Secure, Fast Elliptic Curve Math Library in C
 
 [This project](http://github.com/catid/snowshoe) aims to provide a simple C API for various types of optimized elliptic curve point multiplication:
 
