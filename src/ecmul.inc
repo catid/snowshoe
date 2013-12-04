@@ -277,12 +277,12 @@ static CAT_INLINE u32 ec_recode_scalar_comb(const u64 k[4], u64 b[4]) {
 	const u64 low_mask = d_bit - 1;
 
 	// for bits 0..(d-1), 0 => -1, 1 => +1
-	b[0] = (b[0] & ~low_mask) | d_bit | ((b[0] >> 1) & low_mask);
+	b[0] = (b[0] | (low_mask | d_bit)) ^ (d_bit | ((b[0] >> 1) & low_mask));
 
 	for (int i = d; i < l; ++i) {
 		u32 b_imd = (u32)(b[0] >> (i % d));
 		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
-		u32 bit = (b_imd ^ 1) & b_i & 1;
+		u32 bit = b_imd & b_i & 1;
 
 		const int j = i + 1;
 		u64 t[4] = {0};
@@ -335,10 +335,10 @@ static void ec_table_select_comb(const u64 b[4], const int ii, const bool consta
 			ec_xor_mask_affine(GEN_TABLE_0[jj], mask, p1);
 		}
 		fe_mul(p1.x, p1.y, p1.t);
-		ec_cond_neg(s_0 ^ 1, p1);
+		ec_cond_neg(s_0, p1);
 	} else {
 		ec_expand(GEN_TABLE_0[d_0], p1);
-		if (s_0 == 0) {
+		if (s_0) {
 			ec_neg(p1, p1);
 		}
 	}
@@ -362,10 +362,10 @@ static void ec_table_select_comb(const u64 b[4], const int ii, const bool consta
 			ec_xor_mask_affine(GEN_TABLE_1[jj], mask, p2);
 		}
 		fe_mul(p2.x, p2.y, p2.t);
-		ec_cond_neg(s_1 ^ 1, p2);
+		ec_cond_neg(s_1, p2);
 	} else {
 		ec_expand(GEN_TABLE_1[d_1], p2);
-		if (s_1 == 0) {
+		if (s_1) {
 			ec_neg(p2, p2);
 		}
 	}
@@ -478,12 +478,12 @@ static u32 ec_recode_scalar_comb1(const u64 k[4], u64 b[4]) {
 	const u64 low_mask = d_bit - 1;
 
 	// for bits 0..(d-1), 0 => -1, 1 => +1
-	b[0] = (b[0] & ~low_mask) | d_bit | ((b[0] >> 1) & low_mask);
+	b[0] = (b[0] | (low_mask | d_bit)) ^ (d_bit | ((b[0] >> 1) & low_mask));
 
 	for (int i = d; i < l; ++i) {
-		u32 b_imd = (u32)(b[0] >> (i % d));
+		u32 b_imd = (u32)(b[0] >> (i & 31));
 		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
-		u32 bit = (b_imd ^ 1) & b_i & 1;
+		u32 bit = b_imd & b_i & 1;
 
 		const int j = i + 1;
 		u64 t[4] = {0};
@@ -530,7 +530,9 @@ static void ec_table_select_comb1(const u32 recode_lsb, const u64 b[4], const in
 	ec_expand(SIMUL_GEN_TABLE[d_0], p1);
 
 	// Flip sign here rather than at the end to interleave more easily
-	ec_cond_neg(s_0 ^ recode_lsb ^ 1, p1);
+	if (s_0 ^ recode_lsb) {
+		ec_neg(p1, p1);
+	}
 }
 
 /*
