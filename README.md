@@ -27,20 +27,20 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ##### libsnowshoe.a on Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge, June 2011):
 
-+ ec_mul_gen: `36,023 cycles 21 usec` (without SPA protection)
-+ ec_mul_gen: `59,610 cycles 35 usec` (with SPA protection)
++ ec_mul_gen: `35,307 cycles 20 usec` (without SPA protection)
++ ec_mul_gen: `55,127 cycles 32 usec` (with SPA protection)
 + ec_mul: `104,314 cycles 61 usec` (with SPA protection)
-+ ec_simul_gen: `119,710 cycles 70 usec` (without SPA protection)
-+ ec_simul: `162,796 cycles 96 usec` (with SPA protection)
++ ec_simul_gen: `118,103 cycles 69 usec` (without SPA protection)
++ ec_simul: `154,313 cycles 90 usec` (with SPA protection)
 
 Simulating protocols:
 
-+ ECSign server: `61,264 cycles 36 usec`
-+ Verify client: `119,667 cycles 70 usec`
-+ EC-FHMQV server: `105,746 cycles 62 usec` (16,000 connections/sec)
-+ EC-FHMQV client: `157,987 cycles 93 usec`
-+ EC-DH client: `104,848 cycles 61 usec`
-+ EC-DH server: `104,917 cycles 61 usec`
++ ECSign server: `51,012 cycles 30 usec`
++ Verify client: `106,584 cycles 63 usec`
++ EC-FHMQV server: `105,534 cycles 62 usec` (16,000 connections/sec)
++ EC-FHMQV client: `159,970 cycles 94 usec`
++ EC-DH server: `105,009 cycles 61 usec`
++ EC-DH client: `104,811 cycles 61 usec`
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
@@ -375,7 +375,7 @@ A fair comparison only seems possible with a system like SUPERCOP.
 + The curve supports constant-time multiplication with Montgomery Ladders
 + Prevents small-subgroup/invalid-curve attacks by validating input points
 + The doubling and unified addition formulae used are complete
-+ Supports Elligator 1 construction, though not implemented here
++ Supports Elligator 2 construction, though not implemented here
 
 
 #### Implementation features:
