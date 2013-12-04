@@ -24,44 +24,48 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 ##### libsnowshoe.a on Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge, June 2011):
 
-+ ec_mul_gen: 36,023 cycles 21 usec (without SPA protection)
-+ ec_mul_gen: 59,610 cycles 35 usec (with SPA protection)
-+ ec_mul: 104,314 cycles 61 usec (with SPA protection)
-+ ec_simul_gen: 119,710 cycles 70 usec (without SPA protection)
-+ ec_simul: 162,796 cycles 96 usec (with SPA protection)
++ ec_mul_gen: `36,023 cycles 21 usec` (without SPA protection)
++ ec_mul_gen: `59,610 cycles 35 usec` (with SPA protection)
++ ec_mul: `104,314 cycles 61 usec` (with SPA protection)
++ ec_simul_gen: `119,710 cycles 70` usec (without SPA protection)
++ ec_simul: `162,796 cycles 96 usec` (with SPA protection)
 
-+ ECSign server: 61,264 cycles 36 usec
-+ Verify client: 119,667 cycles 70 usec
-+ EC-FHMQV server: 105,746 cycles 62 usec (16,000 connections/sec)
-+ EC-FHMQV client: 157,987 cycles 93 usec
-+ EC-DH client: 104,848 cycles 61 usec
-+ EC-DH server: 104,917 cycles 61 usec
+Simulating protocols:
+
++ ECSign server: `61,264 cycles 36 usec`
++ Verify client: `119,667 cycles 70 usec`
++ EC-FHMQV server: `105,746 cycles 62 usec` (16,000 connections/sec)
++ EC-FHMQV client: `157,987 cycles 93 usec`
++ EC-DH client: `104,848 cycles 61 usec`
++ EC-DH server: `104,917 cycles 61 usec`
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
-+ ec_mul_gen: 37,530 cycles 14 usec (without SPA protection)
-+ ec_mul_gen: 58,890 cycles 22 usec (with SPA protection)
-+ ec_mul: 123,696 cycles 45 usec (with SPA protection)
-+ ec_simul_gen: 125,031 cycles 46 usec (without SPA protection)
-+ ec_simul: 162,768 cycles 60 usec (with SPA protection)
+Curve25519 ec_mul takes `194,000 cycles` for reference
 
-+ ECSign server: 68,787 cycles 25 usec
-+ Verify client: 142,305 cycles 52 usec
-+ EC-FHMQV server: 125,466 cycles 46 usec (21,000 connections/sec)
-+ EC-FHMQV client: 187,047 cycles 69 usec
-+ EC-DH client: 124,755 cycles 46 usec
-+ EC-DH server: 125,091 cycles 47 usec
++ ec_mul_gen: `37,530 cycles 14 usec` (without SPA protection)
++ ec_mul_gen: `58,890 cycles 22 usec` (with SPA protection)
++ ec_mul: `123,696 cycles 45 usec` (with SPA protection)
++ ec_simul_gen: `125,031 cycles 46 usec` (without SPA protection)
++ ec_simul: `162,768 cycles 60 usec` (with SPA protection)
 
-+ Curve25519 mul: `194,000 cycles` for reference
+Simulating protocols:
+
++ ECSign server: `68,787 cycles 25 usec`
++ Verify client: `142,305 cycles 52 usec`
++ EC-FHMQV server: `125,466 cycles 46 usec` (21,000 connections/sec)
++ EC-FHMQV client: `187,047 cycles 69 usec`
++ EC-DH client: `124,755 cycles 46 usec`
++ EC-DH server: `125,091 cycles 47 usec`
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
-+ ECSign server: 100,752 cycles 37.7253 usec
-+ Verify client: 246,551 cycles 92.7735 usec
-+ EC-FHMQV server: 210,183 cycles 78.9152 usec (12,000 connections/sec)
-+ EC-FHMQV client: 307,194 cycles 115.486 usec
-+ EC-DH client: 208,474 cycles 78.5303 usec
-+ EC-DH server: 207,633 cycles 78.1453 usec
++ ECSign server: `100,752 cycles 37.7253 usec`
++ Verify client: `246,551 cycles 92.7735 usec`
++ EC-FHMQV server: `210,183 cycles 78.9152 usec` (12,000 connections/sec)
++ EC-FHMQV client: `307,194 cycles 115.486 usec`
++ EC-DH client: `208,474 cycles 78.5303 usec`
++ EC-DH server: `207,633 cycles 78.1453 usec`
 
 
 #### Usage
