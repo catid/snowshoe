@@ -100,6 +100,7 @@ void snowshoe_neg(const char P[64], char R[64]);
 int snowshoe_mul_gen(const char k[32], const int flags, char R[64]);
 
 enum snowshoe_mul_gen_flags {
+	MULGEN_SAFE_DEFAULTS = 0,
 	MULGEN_COFACTOR = 1,
 	MULGEN_VARTIME = 2
 };
