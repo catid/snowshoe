@@ -100,9 +100,22 @@ bool ec_dh_test() {
 }
 
 /*
+ * EC-DH-FS:
+ *
+ * An improvement on EC-DH is the concept of "forward secrecy", where if the server's long-term
+ * secret key is revealed it is not any easier to decrypt past logged communication.
+ *
+ * This example sketches how to implement a protocol that can achieve this goal.  It requires
+ * that the client generate a new public key periodically to delete the past sessions, and
+ * the server should also regenerate an ephemeral key periodically.
+ *
+ * After the key agreement completes, the server should provide a proof that it knows the
+ * secret key in its response to the client.  This message can also carry the first encrypted
+ * packet.
+ *
  * server side ec_mul:
  * h = H(stuff) > 1000
- * d = (long-term server private key) + h * (ephemeral private key) (mod q) > 1000
+ * d = (long-term server private key) * h + (ephemeral private key) (mod q) > 1000
  * (private point) = d * 4 * (client public point)
  *
  * client side ec_simul:
@@ -117,27 +130,31 @@ bool ec_dh_fs_test() {
 	char pp_c[64], pp_s[64], pp_e[64];
 	char sp_c[64], sp_s[64];
 
-	// Offline precomputation:
+	// Offline: Server long-term public key generation
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	if (snowshoe_mul_gen(sk_s, MULGEN_VARTIME, pp_s)) {
+	if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
 		return false;
 	}
+
+	// Online: Server ephemeral public key (changes periodically)
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	if (snowshoe_mul_gen(sk_e, MULGEN_VARTIME, pp_e)) {
+	if (snowshoe_mul_gen(sk_e, 0, pp_e)) {
 		return false;
 	}
 
-	// Online: Client setup
+	// Online: Client ephemeral public key (changes periodically)
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
 	if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
 		return false;
 	}
+
+	// h = H(pp_s, pp_e, pp_c, client_nonce, server_nonce)
 	generate_k(h);
 
 	// Online: Server handles client request
@@ -154,7 +171,7 @@ bool ec_dh_fs_test() {
 	u32 t1 = Clock::cycles();
 	double s1 = m_clock.usec();
 
-	cout << "EC-FHMQV server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+	cout << "EC-DH-FS server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	// Online: Client handles server response
 
@@ -170,7 +187,7 @@ bool ec_dh_fs_test() {
 	t1 = Clock::cycles();
 	s1 = m_clock.usec();
 
-	cout << "EC-FHMQV client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+	cout << "EC-DH-FS client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	for (int ii = 0; ii < 64; ++ii) {
 		if (sp_c[ii] != sp_s[ii]) {
@@ -240,7 +257,7 @@ bool ec_dsa_test() {
 	u32 t1 = Clock::cycles();
 	double s1 = m_clock.usec();
 
-	cout << "ECSign server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+	cout << "EdDSA sign: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	// Verify:
 
@@ -262,7 +279,7 @@ bool ec_dsa_test() {
 	t1 = Clock::cycles();
 	s1 = m_clock.usec();
 
-	cout << "Verify client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+	cout << "EdDSA verify: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
 
 	return true;
 }
@@ -280,11 +297,14 @@ int main() {
 
 	srand(0);
 
-	// Example of verifying API level on startup
-	assert(0 == snowshoe_init());
+	// Example of verifying API level on startup:
+
+	if (snowshoe_init()) {
+		throw "Wrong snowshoe static library is linked";
+	}
 
 	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dsa_test());
+		assert(ec_dh_test());
 	}
 
 	for (int ii = 0; ii < 10000; ++ii) {
@@ -292,7 +312,7 @@ int main() {
 	}
 
 	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dh_test());
+		assert(ec_dsa_test());
 	}
 
 	cout << "All tests passed successfully." << endl;

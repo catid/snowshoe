@@ -5,7 +5,7 @@
 
 + Fixed-base (Public key generation, Signature generation) `mul_gen`
 + Variable-base (Diffie-Hellman key agreement) `mul`
-+ Variable double-base Simultaneous (MQV key agreement) `simul`
++ Variable double-base Simultaneous (EC-DH-FS key agreement) `simul`
 
 Each multiplication routine is fast, constant-time, simple, easy to analyze,
 portable, well-documented, and uses no dynamic memory allocation.
@@ -35,10 +35,10 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 
 Simulating protocols:
 
-+ ECSign server: `51,012 cycles 30 usec`
-+ Verify client: `106,584 cycles 63 usec`
-+ EC-FHMQV server: `105,534 cycles 62 usec` (16,000 connections/sec)
-+ EC-FHMQV client: `159,970 cycles 94 usec`
++ EdDSA sign: `51,012 cycles 30 usec`
++ EdDSA verify: `106,584 cycles 63 usec`
++ EC-DH-FS server: `105,534 cycles 62 usec` (16,000 connections/sec)
++ EC-DH-FS client: `159,970 cycles 94 usec`
 + EC-DH server: `105,009 cycles 61 usec`
 + EC-DH client: `104,811 cycles 61 usec`
 
@@ -54,19 +54,19 @@ Curve25519 ec_mul takes `194,000 cycles` for reference
 
 Simulating protocols:
 
-+ ECSign server: `68,787 cycles 25 usec`
-+ Verify client: `142,305 cycles 52 usec`
-+ EC-FHMQV server: `125,466 cycles 46 usec` (21,000 connections/sec)
-+ EC-FHMQV client: `187,047 cycles 69 usec`
++ EdDSA sign: `68,787 cycles 25 usec`
++ EdDSA verify: `142,305 cycles 52 usec`
++ EC-DH-FS server: `125,466 cycles 46 usec` (21,000 connections/sec)
++ EC-DH-FS client: `187,047 cycles 69 usec`
 + EC-DH client: `124,755 cycles 46 usec`
 + EC-DH server: `125,091 cycles 47 usec`
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
-+ ECSign server: `100,752 cycles 37.7253 usec`
-+ Verify client: `246,551 cycles 92.7735 usec`
-+ EC-FHMQV server: `210,183 cycles 78.9152 usec` (12,000 connections/sec)
-+ EC-FHMQV client: `307,194 cycles 115.486 usec`
++ EdDSA sign: `100,752 cycles 37.7253 usec`
++ EdDSA verify: `246,551 cycles 92.7735 usec`
++ EC-DH-FS server: `210,183 cycles 78.9152 usec` (12,000 connections/sec)
++ EC-DH-FS client: `307,194 cycles 115.486 usec`
 + EC-DH client: `208,474 cycles 78.5303 usec`
 + EC-DH server: `207,633 cycles 78.1453 usec`
 
@@ -91,8 +91,8 @@ To use the project you only need to include [include/snowshoe.h](https://github.
 Verify binary API compatibility on startup:
 
 ~~~
-	if (0 != snowshoe_init()) {
-		// Buildtime failure: wrong static library
+	if (snowshoe_init()) {
+		throw "Buildtime failure: Wrong snowshoe static library";
 	}
 ~~~
 
@@ -109,8 +109,8 @@ Now generate the server public/private key pair:
 ~~~
 	char pp_s[64];
 	snowshoe_secret_gen(sk_s);
-	if (0 != snowshoe_mul_gen(sk_s, pp_s)) {
-		// Secret key was generated wrong (developer error)
+	if (snowshoe_mul_gen(sk_s, MULGEN_SAFE_DEFAULTS, pp_s)) {
+		throw "Secret key was generated wrong (developer error)";
 	}
 ~~~
 
@@ -123,8 +123,8 @@ Generate client public/private key pair:
 ~~~
 	char pp_c[64];
 	snowshoe_secret_gen(sk_c);
-	if (0 != snowshoe_mul_gen(sk_c, pp_c)) {
-		// Secret key was generated wrong (developer error)
+	if (snowshoe_mul_gen(sk_c, MULGEN_SAFE_DEFAULTS, pp_c)) {
+		throw "Secret key was generated wrong (developer error)";
 	}
 ~~~
 
@@ -132,8 +132,9 @@ Client side: Multiply client secret key by server public point
 
 ~~~
 	char sp_c[64];
-	if (0 != snowshoe_mul(sk_c, pp_s, sp_c)) {
-		// Reject input pp_s that is invalid
+	if (snowshoe_mul(sk_c, pp_s, sp_c)) {
+		// Reject server input pp_s that is invalid
+		return false;
 	}
 ~~~
 
@@ -141,8 +142,9 @@ Server side: Multiply server secret key by client public point
 
 ~~~
 	char sp_s[64];
-	if (0 != snowshoe_mul(sk_s, pp_c, sp_s)) {
-		// Reject input pp_c that is invalid
+	if (snowshoe_mul(sk_s, pp_c, sp_s)) {
+		// Reject client input pp_c that is invalid
+		return false;
 	}
 ~~~
 
@@ -151,9 +153,18 @@ Server and client both arrive at `sp_c == sp_s`, which is the secret key for the
 The error checking used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return non-zero for failure, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
 
 
-#### Example Usage: MQV
+#### Example Usage: EC-DH-FS
 
-Here is a sketch of how to implement a protocol similar to [MQV](http://en.wikipedia.org/wiki/MQV):
+An improvement on EC-DH is the concept of "forward secrecy", where if the server's long-term
+secret key is revealed it is not any easier to decrypt past logged communication.
+
+This example sketches how to implement a protocol that can achieve this goal.  It requires
+that the client generate a new public key periodically to delete the past sessions, and
+the server should also regenerate an ephemeral key periodically.
+
+After the key agreement completes, the server should provide a proof that it knows the
+secret key in its response to the client.  This message can also carry the first encrypted
+packet.
 
 ~~~
 	char h[32], d[32], a[32];
@@ -161,40 +172,57 @@ Here is a sketch of how to implement a protocol similar to [MQV](http://en.wikip
 	char pp_c[64], pp_s[64], pp_e[64];
 	char sp_c[64], sp_s[64];
 
-	// Offline precomputation:
+	// Offline: Server long-term public key generation
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	assert(0 == snowshoe_mul_gen(sk_s, pp_s));
+	if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
+		return false;
+	}
 
-	// Online: Server setup
+	// Online: Server ephemeral public key (changes periodically)
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	assert(0 == snowshoe_mul_gen(sk_e, pp_e));
+	if (snowshoe_mul_gen(sk_e, 0, pp_e)) {
+		return false;
+	}
 
-	// Online: Client setup
+	// Online: Client ephemeral public key (changes periodically)
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	assert(0 == snowshoe_mul_gen(sk_c, pp_c));
+	if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
+		return false;
+	}
 
+	// h = H(pp_s, pp_e, pp_c, client_nonce, server_nonce)
 	generate_k(h);
 
 	// Online: Server handles client request
 
-	// d = h * sk_e + sk_s (mod q)
-	snowshoe_mul_mod_q(h, sk_e, sk_s, d);
-	assert(0 == snowshoe_mul(d, pp_c, sp_s));
+	// d = sk_e + h * sk_s (mod q)
+	snowshoe_mul_mod_q(h, sk_s, sk_e, d);
+	if (snowshoe_mul(d, pp_c, sp_s)) {
+		return false;
+	}
 
 	// Online: Client handles server response
 
 	// a = h * sk_c (mod q)
 	snowshoe_mul_mod_q(h, sk_c, 0, a);
-	assert(0 == snowshoe_simul(a, pp_e, sk_c, pp_s, sp_c));
+	if (snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c)) {
+		return false;
+	}
+
+	for (int ii = 0; ii < 64; ++ii) {
+		if (sp_c[ii] != sp_s[ii]) {
+			return false;
+		}
+	}
 ~~~
 
-Similar to the EC-DH example, assert() is used in place of appropriate error handling.  `generate_k` should be replaced by a CSPRNG.  And `h` should be the output of a hash function.
+The error checking used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return non-zero for failure, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
 
 
 #### Example Usage: EdDSA
@@ -227,7 +255,7 @@ Verify:
 
 ~~~
 	char a[32], h_hi_m[64], h_r_a_m[64], r[32], t[32], s[32], u[32];
-	char pp_A[64], pp_R[64]
+	char pp_A[64], pp_R[64], pp_Rtest[64];
 
 	// Fake hashes to avoid implementing Skein-512 and Skein-256 just for testing
 	generate_k(a);
@@ -239,22 +267,27 @@ Verify:
 	// Offline precomputation:
 
 	snowshoe_secret_gen(a);
-	assert(0 == snowshoe_mul_gen(a, pp_A));
+	if (snowshoe_mul_gen(a, MULGEN_VARTIME, pp_A)) {
+		return false;
+	}
 
 	// Sign:
 
 	snowshoe_mod_q(h_hi_m, r);
 	snowshoe_mod_q(h_r_a_m, t);
-	assert(0 == snowshoe_mul_gen(r, pp_R));
+	if (snowshoe_mul_gen(r, MULGEN_COFACTOR, pp_R)) {
+		return false;
+	}
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
 
 	// Verify:
 
 	snowshoe_mod_q(h_r_a_m, u);
 	snowshoe_neg(pp_A, pp_A);
-	assert(0 == snowshoe_simul_gen(s, u, pp_A, pp_Rtest));
+	if (snowshoe_simul_gen(s, u, pp_A, pp_Rtest)) {
+		return false;
+	}
 
-	// This comparison does not need to be constant-time
 	for (int ii = 0; ii < 64; ++ii) {
 		if (pp_Rtest[ii] != pp_R[ii]) {
 			return false;
