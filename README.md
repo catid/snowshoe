@@ -942,3 +942,9 @@ Demonstrates several new techniques including Q-curve endomorphisms
 
 ##### [17] ["Fast and compact elliptic-curve cryptography" (Hamburg 2012)](http://eprint.iacr.org/2012/309.pdf)
 Explores SAB-set comb multiplication and special prime moduli
+
+
+## Credits
+
+I appreciate suggestions and criticism from Mike Hamburg on an early version of the software.
+
