@@ -75,12 +75,14 @@ ecpttest : $(ecpt_test_o)
 	$(CCPP) $(LIBS) -o ecpttest $(ecpt_test_o)
 
 ecmultest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-ecmultest : $(ecmul_test_o)
+ecmultest : clean $(ecmul_test_o)
 	$(CCPP) $(LIBS) -o ecmultest $(ecmul_test_o)
+	./ecmultest
 
 snowshoetest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-snowshoetest : $(snowshoe_test_o) library
+snowshoetest : clean $(snowshoe_test_o) library
 	$(CCPP) $(LIBS) -L. -lsnowshoe -o snowshoetest $(snowshoe_test_o)
+	./snowshoetest
 
 
 # Shared objects

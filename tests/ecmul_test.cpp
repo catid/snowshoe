@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include <vector>
 using namespace std;
 
 #include "Clock.hpp"
@@ -18,6 +19,55 @@ static void random_k(u64 k[4]) {
 		}
 	}
 }
+
+/*
+	This Quickselect routine is based on the algorithm described in
+	"Numerical recipes in C", Second Edition,
+	Cambridge University Press, 1992, Section 8.5, ISBN 0-521-43108-5
+	This code by Nicolas Devillard - 1998. Public domain.
+*/
+#define ELEM_SWAP(a,b) { register u32 t=(a);(a)=(b);(b)=t; }
+static u32 quick_select(u32 arr[], int n)
+{
+	int low, high ;
+	int median;
+	int middle, ll, hh;
+	low = 0 ; high = n-1 ; median = (low + high) / 2;
+	for (;;) {
+		if (high <= low) /* One element only */
+			return arr[median] ;
+		if (high == low + 1) { /* Two elements only */
+			if (arr[low] > arr[high])
+				ELEM_SWAP(arr[low], arr[high]) ;
+			return arr[median] ;
+		}
+		/* Find median of low, middle and high items; swap into position low */
+		middle = (low + high) / 2;
+		if (arr[middle] > arr[high]) ELEM_SWAP(arr[middle], arr[high]) ;
+		if (arr[low] > arr[high]) ELEM_SWAP(arr[low], arr[high]) ;
+		if (arr[middle] > arr[low]) ELEM_SWAP(arr[middle], arr[low]) ;
+		/* Swap low item (now in position middle) into position (low+1) */
+		ELEM_SWAP(arr[middle], arr[low+1]) ;
+		/* Nibble from each end towards middle, swapping items when stuck */
+		ll = low + 1;
+		hh = high;
+		for (;;) {
+			do ll++; while (arr[low] > arr[ll]) ;
+			do hh--; while (arr[hh] > arr[low]) ;
+			if (hh < ll)
+				break;
+			ELEM_SWAP(arr[ll], arr[hh]) ;
+		}
+		/* Swap middle item (in position low) back into correct position */
+		ELEM_SWAP(arr[low], arr[hh]) ;
+		/* Re-set active partition */
+		if (hh <= median)
+			low = ll;
+		if (hh >= median)
+			high = hh - 1;
+	}
+}
+#undef ELEM_SWAP
 
 static const ecpt_affine EC_G_AFFINE = {
 	EC_GX, EC_GY
@@ -435,6 +485,9 @@ bool ec_mul_gen_test(bool timing_protection) {
 	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
 
+	vector<u32> t;
+	double wall = 0;
+
 	for (int jj = 0; jj < 10000; ++jj) {
 		random_k(k);
 		ec_mask_scalar(k);
@@ -449,7 +502,8 @@ bool ec_mul_gen_test(bool timing_protection) {
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
 
-		cout << "ec_mul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec, timing-attack protection = " << timing_protection << endl;
+		t.push_back(t1 - t0);
+		wall += s1 - s0;
 
 		ecpt temp;
 		ec_expand(R2, temp);
@@ -468,6 +522,15 @@ bool ec_mul_gen_test(bool timing_protection) {
 		}
 	}
 
+	u32 median = quick_select(&t[0], (int)t.size());
+	wall /= t.size();
+
+	cout << "+ ec_mul_gen: `" << dec << median << "` median cycles, `" << wall << "` avg usec";
+	if (!timing_protection) {
+		cout << " (NO timing protection)";
+	}
+	cout << endl;
+
 	return true;
 }
 
@@ -479,6 +542,9 @@ bool ec_mul_test() {
 
 	random_k(k);
 	ec_mul_ref(k, EC_G_AFFINE, BP);
+
+	vector<u32> t;
+	double wall = 0;
 
 	for (int jj = 0; jj < 10000; ++jj) {
 		random_k(k);
@@ -493,7 +559,9 @@ bool ec_mul_test() {
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
-		cout << "ec_mul: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+
+		t.push_back(t1 - t0);
+		wall += s1 - s0;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -504,6 +572,11 @@ bool ec_mul_test() {
 			}
 		}
 	}
+
+	u32 median = quick_select(&t[0], (int)t.size());
+	wall /= t.size();
+
+	cout << "+ ec_mul: `" << dec << median << "` median cycles, `" << wall << "` avg usec" << endl;
 
 	return true;
 }
@@ -520,6 +593,9 @@ bool ec_simul_test() {
 	ec_mul_ref(k1, EC_G_AFFINE, B1);
 	ec_mul_ref(k2, EC_G_AFFINE, B2);
 
+	vector<u32> t;
+	double wall = 0;
+
 	for (int jj = 0; jj < 10000; ++jj) {
 		random_k(k1);
 		random_k(k2);
@@ -535,7 +611,9 @@ bool ec_simul_test() {
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
-		cout << "ec_simul: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+
+		t.push_back(t1 - t0);
+		wall += s1 - s0;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -546,6 +624,11 @@ bool ec_simul_test() {
 			}
 		}
 	}
+
+	u32 median = quick_select(&t[0], (int)t.size());
+	wall /= t.size();
+
+	cout << "+ ec_simul: `" << dec << median << "` median cycles, `" << wall << "` avg usec" << endl;
 
 	return true;
 }
@@ -559,6 +642,9 @@ bool ec_simul_gen_test() {
 
 	random_k(k2);
 	ec_mul_ref(k2, EC_G_AFFINE, BP);
+
+	vector<u32> t;
+	double wall = 0;
 
 	for (int jj = 0; jj < 10000; ++jj) {
 		random_k(k1);
@@ -575,7 +661,9 @@ bool ec_simul_gen_test() {
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
-		cout << "ec_simul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+
+		t.push_back(t1 - t0);
+		wall += s1 - s0;
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -586,6 +674,11 @@ bool ec_simul_gen_test() {
 			}
 		}
 	}
+
+	u32 median = quick_select(&t[0], (int)t.size());
+	wall /= t.size();
+
+	cout << "+ ec_simul_gen: `" << dec << median << "` median cycles, `" << wall << "` avg usec" << endl;
 
 	return true;
 }

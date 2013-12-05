@@ -34,27 +34,31 @@ On Sandy Bridge and newer processors, the RDTSC instruction does not return
 actual clock cycle counts.  Instead it returns a clock at a fixed frequency,
 which is determined during testing.  The actual processor cycles are typically
 at a higher Turbo Boost frequency under load, which varies unpredictably.
+The median of 10,000 measurements is taken, and repeat measurements indicate
+that they are accurate to ~100 cycles.
 
 + To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext).
 + To disable TB on Windows, edit the BIOS settings.
 
 ##### libsnowshoe.a on Macbook Air (1.7 GHz Core i5-2557M Sandy Bridge, July 2011):
 
-+ RDTSC instruction runs at 1.70004 GHz
-+ No correction needed with Turbo Boost disabled
+RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 
-ECMulTest results:
+`make ecmultest` results:
 
-+ ec_mul_gen: `47,608 cycles` (NO timing protection)
-+ ec_mul_gen: `67,560 cycles`
-+ ec_mul: `137,716 cycles`
-+ ec_simul_gen: `153,756 cycles` (NO timing protection)
-+ ec_simul: `207,964 cycles`
++ ec_mul_gen: `47220` median cycles, `28.1519` avg usec (NO timing protection)
++ ec_mul_gen: `74476` median cycles, `44.0666` avg usec
++ ec_mul: `152644` median cycles, `90.5397` avg usec
++ ec_simul_gen: `158844` median cycles, `93.7508` avg usec
++ ec_simul: `211652` median cycles, `125.342` avg usec
 
-Simulating protocols:
+`make snowshoetest` results:
 
-EC-DH client: `143,780 cycles`
-EC-DH server: `144,200 cycles`
+EC-DH client: `144,036 cycles`
+EC-DH server: `144,544 cycles`
+EC-DH-FS client: `215,692 cycles`
+EC-DH-FS server: `144,724 cycles`
+
 + EdDSA sign: ``
 + EdDSA verify: ``
 + EC-DH-FS server: `` (16,000 connections/sec)
