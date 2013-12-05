@@ -208,15 +208,11 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
  * e = roundup(t / wv)
  * d = e * v
  * l = d * w
- */
-
-/*
- * Tuning for comb method:
  *
  * The parameters w,v are tunable.  The number of table entries:
  *	= v * 2^(w - 1)
  *
- * Number of ECADDs and ECDBLs = e - 1, d - 1, respectively.
+ * Number of ECADDs and ECDBLs = d - 1, e - 1, respectively.
  *
  * Each step during evaulation needs to access all of the table entries,
  * which takes time.  So the total number of entries needs to be tuned along
@@ -230,58 +226,63 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
  */
 
 /*
+	Modern ARM and Intel processors all have L1 data cache size of 32 KB,
+	so going much above 16 KB seems like a bad idea.
+
 	v	w	e	d	cost	table size	table bytes
-	5	8	7	35	26370	640	40960 ** too big for L1 data cache of 32 KB
-	6	8	6	36	27780	768	49152 ** too big for L1 data cache of 32 KB
-	2	9	14	28	25680	512	32768 ** too big for L1 data cache of 32 KB
-	4	8	8	32	24060	512	32768 ** too big for L1 data cache of 32 KB
-	8	7	5	40	25950	512	32768 ** too big for L1 data cache of 32 KB
-	7	7	6	42	26655	448	28672 ** too big for L1 data cache of 32 KB
-	3	8	11	33	24690	384	24576 ** too big for L1 data cache of 32 KB
-	6	7	6	36	23190	384	24576 ** too big for L1 data cache of 32 KB
-	5	7	8	40	25365	320	20480 ** too big for L1 data cache of 32 KB
+
+	These are too big for L1 data cache of 32 KB:
+
+	6	8	6	36	31380	768	49152
+	5	8	7	35	29730	640	40960
+	2	9	14	28	27360	512	32768
+	4	8	8	32	26940	512	32768
+	8	7	5	40	30150	512	32768
+	7	7	6	42	30975	448	28672
+	3	8	11	33	27330	384	24576
+	6	7	6	36	26790	384	24576
+	5	7	8	40	29205	320	20480
 
 	Interesting region:
 
 	1	9	28	28	30600	256	16384
-	4	7	9	36	23370	256	16384 <- Optimal
-	8	6	6	48	27060	256	16384 <- Longa's parameters [1] on my curve
-	7	6	6	42	23977.5	224	14336 <- 2.6% slower
-	3	7	12	36	24315	192	12288
-	6	6	7	42	24165	192	12288 <- 3.4% slower
-	5	6	9	45	26272.5	160	10240
-	2	7	18	36	26970	128	8192
-	4	6	11	44	26580	128	8192 <- 13.7% slower, Longa's parameters [1] on my curve
-	8	5	7	56	29700	128	8192
+	4	7	9	36	26610	256	16384 <- ec_mul_gen: 59805 cycles 22 usec
+	8	6	6	48	32100	256	16384 <- Longa's parameters [1] on this curve
+	7	6	6	42	28297.5	224	14336
+	3	7	12	36	27195	192	12288  <- ec_mul_gen: 60048 cycles 22 usec
+	6	6	7	42	28365	192	12288
+	5	6	9	45	30592.5	160	10240
+	2	7	18	36	29130	128	8192 <- ec_mul_gen: 58890 cycles 22 usec
+	4	6	11	44	30540	128	8192 <- 14.8% slower, Longa's parameters [1] on this curve
+	8	5	7	56	35580	128	8192
 
 	The rest of these are much slower:
 
-	7	5	8	56	30079	112	7168
-	3	6	14	42	27007.5	96	6144
-	6	5	9	54	29557.5	96	6144
-	5	5	11	55	30956	80	5120 <- Hamburg's parameters [17] on my curve
+	7	5	8	56	35839	112	7168
+	3	6	14	42	30367.5	96	6144
+	6	5	9	54	34957.5	96	6144
+	5	5	11	55	36236	80	5120 <- Hamburg's parameters [17] on my curve
 	1	7	36	36	36465	64	4096
-	2	6	21	42	30615	64	4096
-	4	5	13	52	30555	64	4096 <- Longa's parameters [1] on my curve
-	3	5	17	51	32194	48	3072
+	2	6	21	42	33135	64	4096
+	4	5	13	52	35235	64	4096 <- Longa's parameters [1] on this curve
+	3	5	17	51	36274	48	3072
 	1	6	42	42	42202.5	32	2048
-	2	5	26	52	37582.5	32	2048
+	2	5	26	52	40702.5	32	2048
 	1	5	51	51	51191	16	1024
 
-	Interesting that v=4 seems to be the best choice in general.
-
-	Modern ARM and Intel processors all have L1 data cache size of 32 KB,
-	so going much above 16 KB seems like a bad idea.
+	In practice these estimated costs do not match reality.
 */
 
-static CAT_INLINE u32 ec_recode_scalar_comb_74(const u64 k[4], u64 b[4]) {
-	const int t = 252;
-	const int w = 7;
-	const int v = 4;
-	const int e = t / (w * v); // ceil(t / wv)
-	const int d = e * v; // ev
-	const int l = d * w; // dw
+// Selected parameters for ec_mul_gen:
+static const int MG_t = 252;
+static const int MG_w = 7;
+static const int MG_v = 3;
+static const int MG_e = (MG_t + MG_w*MG_v - 1) / (MG_w * MG_v); // = ceil(t/wv)
+static const int MG_d = MG_e * MG_v;
+static const int MG_l = MG_d * MG_w;
+static const int MG_width = 1 << (MG_w - 1); // subtable width
 
+static CAT_INLINE u32 ec_recode_scalar_comb_gen(const u64 k[4], u64 b[4]) {
 	// If k0 == 0, b = q - k (and return 1), else b = k (and return 0)
 
 	const u32 lsb = (u32)k[0] & 1;
@@ -296,14 +297,15 @@ static CAT_INLINE u32 ec_recode_scalar_comb_74(const u64 k[4], u64 b[4]) {
 
 	// Recode scalar:
 
-	const u64 d_bit = (u64)1 << (d - 1);
+	const u64 d_bit = (u64)1 << (MG_d - 1);
 	const u64 low_mask = d_bit - 1;
 
-	// for bits 0..(d-1), 0 => -1, 1 => +1
+	// For bits 0..(d-1), 1 => -1, 0 => +1
 	b[0] = (b[0] | (low_mask | d_bit)) ^ (d_bit | ((b[0] >> 1) & low_mask));
 
-	for (int i = d; i < l; ++i) {
-		u32 b_imd = (u32)(b[0] >> (i % d));
+	// Recode remaining bits as per [1]
+	for (int i = MG_d; i < MG_l; ++i) {
+		u32 b_imd = (u32)(b[0] >> (i % MG_d));
 		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
 		u32 bit = b_imd & b_i & 1;
 
@@ -324,20 +326,14 @@ static CAT_INLINE u32 ec_recode_scalar_comb_74(const u64 k[4], u64 b[4]) {
 	return lsb ^ 1;
 }
 
-static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int d, const int vp, const int e, const int ep) {
+static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
 	// K(w', v', e') = b_(d * w' + e * v' + e')
-	u32 jj = (wp * d) + (vp * e) + ep;
+	u32 jj = (wp * MG_d) + (vp * MG_e) + ep;
 
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
-static void ec_table_select_comb_74(const u64 b[4], const int ii, const bool constant_time, ecpt r[4]) {
-	const int t = 252;
-	const int w = 7;
-	const int v = 4;
-	const int e = t / (w * v); // ceil(t / wv)
-	const int d = e * v; // ev
-
+static void ec_table_select_comb_gen(const u64 b[4], const int ii, const bool constant_time, ecpt r[MG_v]) {
 	// D(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -346,21 +342,18 @@ static void ec_table_select_comb_74(const u64 b[4], const int ii, const bool con
 	// p2 = s(1, ii) * tables[D(1, ii)][1]
 	// p3 = s(2, ii) * tables[D(2, ii)][2]
 	// p4 = s(3, ii) * tables[D(3, ii)][3]
-
-	for (int vp = 0; vp < v; ++vp) {
-		u32 d = comb_bit(b, 6, d, vp, e, ii) << 5;
-		d |= comb_bit(b, 5, d, vp, e, ii) << 4;
-		d |= comb_bit(b, 4, d, vp, e, ii) << 3;
-		d |= comb_bit(b, 3, d, vp, e, ii) << 2;
-		d |= comb_bit(b, 2, d, vp, e, ii) << 1;
-		d |= comb_bit(b, 1, d, vp, e, ii);
-		const u32 s = comb_bit(b, 0, d, vp, e, ii);
+	for (int vp = 0; vp < MG_v; ++vp) {
+		u32 d = comb_bit(b, 1, vp, ii);
+		for (int jj = 1; jj < (MG_w - 1); ++jj) {
+			d |= comb_bit(b, jj+1, vp, ii) << jj;
+		}
+		const u32 s = comb_bit(b, 0, vp, ii);
 
 		ecpt &p = r[vp];
 
 		if (constant_time) {
 			ec_zero(p);
-			for (int jj = 0; jj < 64; ++jj) {
+			for (int jj = 0; jj < MG_width; ++jj) {
 				// Generate a mask that is -1 if jj == index, else 0
 				const u64 mask = ec_gen_mask(jj, d);
 

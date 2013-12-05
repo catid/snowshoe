@@ -17,33 +17,31 @@
 
 // R = k * [4] * G, optionally constant-time
 static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool constant_time, ecpt_affine &R) {
-	const int e = 9;
-
 	// Recode scalar
 	u64 kp[4];
-	u32 recode_lsb = ec_recode_scalar_comb_74(k, kp);
+	u32 recode_lsb = ec_recode_scalar_comb_gen(k, kp);
 
 	// Unroll first evaluation loop
-	ecpt T[4];
-	ec_table_select_comb_74(kp, e - 1, constant_time, T);
+	ecpt T[MG_v];
+	ec_table_select_comb_gen(kp, MG_e - 1, constant_time, T);
 	fe_set_smallk(1, T[0].z);
 
-	// X = T[0] + T[1] + T[2] + T[3]
+	// X = T[0] + T[1] + T[2]
 	ufe t2b;
 	ecpt X;
 	ec_add(T[0], T[1], X, true, true, false, t2b);
-	ec_add(X, T[2], X, true, false, false, t2b);
-	ec_add(X, T[3], X, true, false, false, t2b);
+	for (int jj = 2; jj < MG_v; ++jj) {
+		ec_add(X, T[jj], X, true, false, false, t2b);
+	}
 
 	// Evaluate
-	for (int ii = e - 2; ii >= 0; --ii) {
-		ec_table_select_comb_74(kp, ii, constant_time, T);
+	for (int ii = MG_e - 2; ii >= 0; --ii) {
+		ec_table_select_comb_gen(kp, ii, constant_time, T);
 
 		ec_dbl(X, X, false, t2b);
-		ec_add(X, T[0], X, true, false, false, t2b);
-		ec_add(X, T[1], X, true, false, false, t2b);
-		ec_add(X, T[2], X, true, false, false, t2b);
-		ec_add(X, T[3], X, true, false, false, t2b);
+		for (int jj = 0; jj < MG_v; ++jj) {
+			ec_add(X, T[jj], X, true, false, false, t2b);
+		}
 	}
 
 	// NOTE: Do conditional addition here rather than after the ec_cond_neg

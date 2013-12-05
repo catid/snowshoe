@@ -53,7 +53,7 @@ static void ec_print_xy(const ecpt_affine &p) {
 static bool ec_gen_tables_comb_test() {
 	const int t = 252;
 	const int w = 7;
-	const int v = 4;
+	const int v = 3;
 	const int e = t / (w * v); // ceil(t / wv)
 	const int d = e * v; // ev
 
@@ -109,9 +109,9 @@ static bool ec_gen_tables_comb_test() {
 
 #if 0
 
-	cout << "static const u64 PRECOMP_TABLE[4][8 * 64] = {" << endl;
+	cout << "static const u64 PRECOMP_TABLE[" << v << "][8 * 64] = {";
 	for (int jj = 0; jj < v; ++jj) {
-		cout << "{";
+		cout << "{" << endl;
 		ecpt_affine *ptr = &table[jj][0];
 		for (int ii = 0; ii < 64; ++ii) {
 			cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
