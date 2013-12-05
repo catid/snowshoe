@@ -1,6 +1,6 @@
 // Precomputed tables for generator point scalar multiplication
 
-static const u64 PRECOMP_TABLE_2[] = {
+static const u64 PRECOMP_TABLE_2[4 * 4] = {
 0x3dee5bb295508114ULL, 0x12ae82ddc97f6fcfULL, 0x60f5c1e2f5beb566ULL, 0x3f99172a63932f0cULL,
 0xe33eff8dbdb66890ULL, 0x139291ca41bde4bbULL, 0x34c0b221c953415bULL, 0x5a934ebf6b24fb58ULL,
 0xf197f1de2d1467b1ULL, 0x3aa3c12734d1e9efULL, 0xf08498d52a27ceb5ULL, 0x3b5fe12d9ced696aULL,
