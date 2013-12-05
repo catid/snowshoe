@@ -49,6 +49,8 @@ Simulating protocols:
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
++ RDTSC instruction runs at 2.69391 GHz
+
 Curve25519 ec_mul takes `194,000 cycles` for reference
 
 + ec_mul_gen: `37,530 cycles 14 usec` (without timing protection)
@@ -59,12 +61,12 @@ Curve25519 ec_mul takes `194,000 cycles` for reference
 
 Simulating protocols:
 
-+ EdDSA sign: `68,787 cycles 25 usec`
-+ EdDSA verify: `142,305 cycles 52 usec`
-+ EC-DH-FS server: `125,466 cycles 46 usec` (21,000 connections/sec)
-+ EC-DH-FS client: `187,047 cycles 69 usec`
-+ EC-DH client: `124,755 cycles 46 usec`
-+ EC-DH server: `125,091 cycles 47 usec`
++ EdDSA sign: `37,971 cycles 14 usec`
++ EdDSA verify: `124,143 cycles 46 usec`
++ EC-DH-FS server: `124,989 cycles 46 usec` (21,000 connections/sec)
++ EC-DH-FS client: `189,813 cycles 70 usec`
++ EC-DH client: `124,443 cycles 46 usec`
++ EC-DH server: `124,446 cycles 46 usec`
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 

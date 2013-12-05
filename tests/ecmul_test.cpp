@@ -652,12 +652,30 @@ bool mul_mod_q_test() {
 
 //// Entrypoint
 
+static void tscTime() {
+	const u32 c0 = Clock::cycles();
+	const double t0 = m_clock.usec();
+	const double t_end = t0 + 1000000.0;
+
+	double t;
+	u32 c;
+	do {
+		c = Clock::cycles();
+		t = m_clock.usec();
+	} while (t < t_end);
+
+	// Note: this fails for GHz > 4
+	cout << "RDTSC instruction runs at " << (c - c0)/(t - t0)/1000.0 << " GHz" << endl;
+}
+
 int main() {
 	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
 
 	srand(0);
 
 	m_clock.OnInitialize();
+
+	tscTime();
 
 	// Verify tables have not been tampered with
 	assert(ec_gen_tables3_comb_test());

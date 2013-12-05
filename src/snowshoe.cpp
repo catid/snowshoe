@@ -155,7 +155,7 @@ int snowshoe_mul_gen(const char k_raw[32], const int flags, char R[64]) {
 	}
 
 	const bool mul_cofactor = (flags & MULGEN_COFACTOR) != 0;
-	const bool constant_time = (flags & MULGEN_VARTIME) != 0;
+	const bool constant_time = (flags & MULGEN_VARTIME) == 0;
 
 	// Run the math routine
 	ecpt_affine r;
