@@ -29,7 +29,7 @@
 /*
  * All of the fp_*, fe_*, gls_*, and ec_* math functions:
  * + are branchless and will run in constant time.
- * + optimized algorithms for Fp numbers with high bit = zero.
+ * + are optimized to exploit Fp numbers with high bit = zero.
  * + work regardless of input aliasing (&a == &b == &r is okay).
  * + use incomplete reduction (IR) optimizations where 2^127-1 = 0.
  * + are all in the same large C file for better compiler optimization.
