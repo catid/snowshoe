@@ -40,6 +40,29 @@ Sandy Bridge cycle counts on my laptop and desktop matched with TB off.
 + To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext) (included under ./tests)
 + To disable TB on Windows, edit the BIOS settings.
 
+
+##### libsnowshoe.a on Macbook Air (1.7 GHz Core i7-4650U Haswell, June 2013):
+
++ RDTSC instruction runs at 2.29988 GHz so a correction factor of 1.7/2.29988 = 0.7391690 is needed.
+
+`make snowshoetest` results (TB off) after applying the correction factor:
+
++ EC-DH client: `123748` corrected cycles, `73.2569` avg usec
++ EC-DH server: `123751` corrected cycles, `73.2452` avg usec
++ EdDSA sign: `61304` corrected cycles, `-134.132` avg usec
++ EdDSA verify: `137672` corrected cycles, `82.6574` avg usec
+
+These corrected cycle counts can be directly compared with the latest SUPERCOP
+Haswell results.  Not sure why time went backwards for signing. :-/
+
+`make ecmultest` results (TB on, demonstrating usual walltime):
+
++ EC-DH client: `86284` median cycles, `37.9291` avg usec
++ EC-DH server: `86286` median cycles, `37.9505` avg usec
++ EdDSA sign: `41894` median cycles, `18.5784` avg usec
++ EdDSA verify: `95956` median cycles, `42.4539` avg usec
+
+
 ##### libsnowshoe.a on Macbook Air (1.7 GHz Core i5-2557M Sandy Bridge, July 2011):
 
 RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
@@ -78,6 +101,7 @@ RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 + EdDSA sign: `43484` median cycles, `25.9709` avg usec
 + EdDSA verify: `100594` median cycles, `59.945` avg usec
 
+
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
 RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
@@ -88,6 +112,9 @@ RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 + ec_mul_gen: `66504` median cycles, `24.7868` avg usec
 + ec_simul: `211512` median cycles, `78.6369` avg usec
 + ec_simul_gen: `158516` median cycles, `58.9256` avg usec
+
+These results serve to justify the benchmarking methodology.  Notice that the
+cycle counts exactly match the laptop version.
 
 `make snowshoetest` results (TB off):
 
@@ -115,6 +142,7 @@ RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 + EC-DH-FS client proc: `159096` median cycles, `60.4561` avg usec
 + EdDSA sign: `56850` median cycles, `21.6322` avg usec
 + EdDSA verify: `116632` median cycles, `43.6502` avg usec
+
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
