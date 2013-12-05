@@ -350,7 +350,7 @@ On 2.9 GHz i5-4570S Haswell, TB off, using SUPERCOP:
 
 On 2.9 GHz i5-4570S Haswell, TB off, using SUPERCOP:
 
-- ecmul_gen : (faster) `67kcy`
+- ecmul_gen : (similar) `67kcy`
 - ecmul : (not implemented)
 - ecsimul_gen : (slower) `207kcy`
 - ecsimul : (not implemented)
