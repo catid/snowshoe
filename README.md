@@ -79,10 +79,40 @@ RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
-+ RDTSC instruction runs at 2.69391 GHz
-+ No correction needed with Turbo Boost disabled
+RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 
-((Needs to be updated))
+`make ecmultest` results (TB off):
+
++ ec_mul: `143340` median cycles, `53.3619` avg usec
++ ec_mul_gen: `66504` median cycles, `24.7868` avg usec
++ ec_simul: `211512` median cycles, `78.6369` avg usec
++ ec_simul_gen: `158516` median cycles, `58.9256` avg usec
+
+`make snowshoetest` results (TB off):
+
++ EC-DH client: `143132` median cycles, `53.2676` avg usec
++ EC-DH server: `142544` median cycles, `53.0599` avg usec
++ EC-DH-FS client gen: `78216` median cycles, `29.1562` avg usec
++ EC-DH-FS server proc: `144436` median cycles, `53.7718` avg usec
++ EC-DH-FS client proc: `217696` median cycles, `80.9581` avg usec
++ EdDSA sign: `68992` median cycles, `25.73` avg usec
++ EdDSA verify: `159732` median cycles, `59.4472` avg usec
+
+`make ecmultest` results (TB on, demonstrating usual walltime):
+
++ ec_mul: `105072` median cycles, `40.0293` avg usec
++ ec_mul_gen: `54002` median cycles, `20.5376` avg usec
++ ec_simul: `154556` median cycles, `59.6957` avg usec
++ ec_simul_gen: `117918` median cycles, `45.1856` avg usec
+
+`make snowshoetest` results (TB on, demonstrating usual walltime):
+
++ EC-DH client: `104440` median cycles, `40.9807` avg usec
++ EC-DH server: `104188` median cycles, `40.845` avg usec
++ EC-DH-FS client gen: `63638` median cycles, `24.1297` avg usec
++ EC-DH-FS server proc: `105428` median cycles, `40.0834` avg usec
++ EC-DH-FS client proc: `159096` median cycles, `60.4561` avg usec
++ EdDSA sign: `56850` median cycles, `21.6322` avg usec
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
