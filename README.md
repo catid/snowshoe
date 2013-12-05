@@ -125,6 +125,17 @@ all of the other source files.  Or link to a prebuilt static library under `bin/
 To use the project you only need to include [include/snowshoe.h](https://github.com/catid/snowshoe/blob/master/include/snowshoe.h), which declares the C exports from the source files.
 
 
+#### Building: Mac
+
+To build the static library, install command-line Xcode tools and simply run the make script:
+
+~~~
+make release
+~~~
+
+This produces `libsnowshoe.a` with optimizations.
+
+
 #### Example Usage: EC-DH
 
 [Elliptic Curve Diffie-Hellman](http://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman) is the baseline for key agreement over the Internet.  Implementing it with this library is straight-forward:
@@ -339,79 +350,85 @@ Verify:
 Note that this library provides a number of helpful math functions for doing math modulo q.
 
 
-#### Building: Mac
+#### Comparisons
 
-To build the static library, install command-line Xcode tools and simply run the make script:
+This section demonstrates performance comparisons with other fast timing-attack resilient
+elliptic curve math libraries at the roughly "128-bit" security level.  Note that only
+Curve25519 and Ed25519 are fully in the public domain at this time.
 
-~~~
-make release
-~~~
+##### Curve25519 [http://cr.yp.to/ecdh/curve25519-20060209.pdf](http://cr.yp.to/ecdh/curve25519-20060209.pdf):
 
-This produces `libsnowshoe.a` with optimizations.
+- Availability : Equivalently free, open-source, and portable
 
+On 2.9 GHz i5-4570S Haswell, TB off, using SUPERCOP:
 
-#### Comparison with other fast ECC implementations at ~128 bit security:
-
-Curve25519 ( http://cr.yp.to/ecdh/curve25519-20060209.pdf ):
-
-- ecmul_gen : (much slower) `171kcy`
-- ecmul : (much slower) `162kcy`
+- ecmul_gen : (slower) `171kcy`
+- ecmul : (slower) `162kcy`
 - ecsimul_gen : (not implemented)
 - ecsimul : (not implemented)
+
+##### Ed25519 [http://ed25519.cr.yp.to/ed25519-20110926.pdf](http://ed25519.cr.yp.to/ed25519-20110926.pdf):
+
 - Availability : Equivalently free, open-source, and portable
 
-Ed25519 ( http://ed25519.cr.yp.to/ed25519-20110926.pdf ):
+On 2.9 GHz i5-4570S Haswell, TB off, using SUPERCOP:
 
-- ecmul_gen : (slower) `67kcy`
+- ecmul_gen : (faster) `67kcy`
 - ecmul : (not implemented)
-- ecsimul_gen : (much slower) `207kcy`
+- ecsimul_gen : (slower) `207kcy`
 - ecsimul : (not implemented)
-- Availability : Equivalently free, open-source, and portable
 
-monfp127e2 ( http://eprint.iacr.org/2013/692.pdf ):
+##### monfp127e2 [http://eprint.iacr.org/2013/692.pdf](http://eprint.iacr.org/2013/692.pdf):
+
+- Availability : Free, open-source, but not portable (uncommented assembly only)
+
+On i7-3520M Ivy Bridge, TB off, using SUPERCOP:
 
 - ecmul_gen : (not implemented)
-- ecmul : (not implemented)
-- ecsimul_gen : (slower) `>145kcy` (Ivy Bridge, usually faster than Sandy Bridge)
-- ecsimul : (not implemented)
-- Availability : Free, open-source, and but not portable (assembly only)
-
-kumfp127g ( http://eprint.iacr.org/2012/670.pdf ):
-
-- ecmul_gen : (much slower) `108kcy`
-- ecmul : (equivalent) `110kcy`
+- ecmul : (similar) `145kcy`
 - ecsimul_gen : (not implemented)
 - ecsimul : (not implemented)
-- Availability : Free, open-source, and but not portable (assembly only)
+
+##### kumfp127g [http://eprint.iacr.org/2012/670.pdf](http://eprint.iacr.org/2012/670.pdf):
+
+- Availability : Free, open-source, but not portable (uncommented assembly only)
 - This code is also extremely complex and looks tricky to audit.
 
-gls254 ( http://cacr.uwaterloo.ca/techreports/2013/cacr2013-14.pdf ):
+On i7-3520M Ivy Bridge, TB off, using SUPERCOP:
 
-- Threatened by polynomial-time DLP algorithms over binary fields (likely insecure)
-
-Hamburg's implementation ( http://mikehamburg.com/papers/fff/fff.pdf ):
-
-- ecmul_gen : (equivalent) `60kcy`
-- ecmul : (much slower) `153kcy`
-- ecsimul_gen : (much slower) `<169kcy` (includes signature ops)
+- ecmul_gen : (slower) `108kcy`
+- ecmul : (faster) `110kcy`
+- ecsimul_gen : (not implemented)
 - ecsimul : (not implemented)
+
+##### Hamburg's implementation [http://mikehamburg.com/papers/fff/fff.pdf](http://mikehamburg.com/papers/fff/fff.pdf):
+
+- Availability : Not available online
+
+On i7 2720QM Sandy Bridge with TB on, but scaled cycle counts:
+
+- ecmul_gen : (faster) `60kcy`
+- ecmul : (similar) `153kcy`
+- ecsimul_gen : (similar) `169kcy`
+- ecsimul : (not implemented)
+
+##### Longa's implementation [http://eprint.iacr.org/2013/158](http://eprint.iacr.org/2013/158):
+
 - Availability : Not available online?
 
-Longa's implementation ( http://eprint.iacr.org/2013/158 ):
+On 3.4 GHz i7-2600 Sandy Bridge with TB off:
 
 - ecmul_gen : (faster) `48kcy`
 - ecmul : (faster) `96kcy`
 - ecsimul_gen : (faster) `116kcy`
-- ecsimul : (faster) `116kcy`
-- Availability : Not available online?
+- ecsimul : (not implemented)
 
-Note that cycle counts are hard to compare.  One often-neglected factor is that
-a CPU running at 4 GHz will take *more cycles* than a processor running at 2 GHz.
-This is because memory lookups usually take roughly the same wall time, so the
-faster CPU is penalized more cycles for table/code reads.
+On 3.4 GHz i7-3770 Ivy Bridge with TB off:
 
-A fair comparison only seems possible with a system like SUPERCOP running both
-of the methods to be compared.
+- ecmul_gen : (faster) `46kcy`
+- ecmul : (faster) `92kcy`
+- ecsimul_gen : (faster) `111kcy`
+- ecsimul : (not implemented)
 
 
 ## Details
