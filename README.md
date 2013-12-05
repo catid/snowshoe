@@ -34,7 +34,8 @@ actual clock cycle counts.  Instead it returns a clock at a fixed frequency,
 which is determined during testing.  The actual processor cycles are typically
 at a higher Turbo Boost frequency under load, which varies unpredictably.
 The median of 10,000 measurements is taken, and repeat measurements indicate
-that they are accurate to ~100 cycles.
+that they are accurate to ~100 cycles.  I was able to demonstrate that the
+Sandy Bridge cycle counts on my laptop and desktop matched with TB off.
 
 + To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext).
 + To disable TB on Windows, edit the BIOS settings.
