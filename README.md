@@ -37,7 +37,7 @@ The median of 10,000 measurements is taken, and repeat measurements indicate
 that they are accurate to ~100 cycles.  I was able to demonstrate that the
 Sandy Bridge cycle counts on my laptop and desktop matched with TB off.
 
-+ To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext).
++ To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext) (included under ./tests)
 + To disable TB on Windows, edit the BIOS settings.
 
 ##### libsnowshoe.a on Macbook Air (1.7 GHz Core i5-2557M Sandy Bridge, July 2011):
