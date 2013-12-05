@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include <vector>
 using namespace std;
 
 #include "Clock.hpp"
@@ -101,49 +102,64 @@ bool ec_dh_test() {
 	char pp_c[64], pp_s[64];
 	char sp_c[64], sp_s[64];
 
-	generate_k(sk_c);
-	snowshoe_secret_gen(sk_c);
+	vector<u32> tc, ts;
+	double wc = 0, ws = 0;
 
-	generate_k(sk_s);
-	snowshoe_secret_gen(sk_s);
+	for (int iteration = 0; iteration < 10000; ++iteration) {
+		generate_k(sk_c);
+		snowshoe_secret_gen(sk_c);
 
-	if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
-		return false;
-	}
+		generate_k(sk_s);
+		snowshoe_secret_gen(sk_s);
 
-	if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
-		return false;
-	}
-
-	double s0 = m_clock.usec();
-	u32 t0 = Clock::cycles();
-
-	if (snowshoe_mul(sk_c, pp_s, sp_c)) {
-		return false;
-	}
-
-	u32 t1 = Clock::cycles();
-	double s1 = m_clock.usec();
-
-	cout << "EC-DH client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
-
-	s0 = m_clock.usec();
-	t0 = Clock::cycles();
-
-	if (snowshoe_mul(sk_s, pp_c, sp_s)) {
-		return false;
-	}
-
-	t1 = Clock::cycles();
-	s1 = m_clock.usec();
-
-	cout << "EC-DH server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
-
-	for (int ii = 0; ii < 64; ++ii) {
-		if (sp_c[ii] != sp_s[ii]) {
+		if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
 			return false;
 		}
+
+		if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
+			return false;
+		}
+
+		double s0 = m_clock.usec();
+		u32 t0 = Clock::cycles();
+
+		if (snowshoe_mul(sk_c, pp_s, sp_c)) {
+			return false;
+		}
+
+		u32 t1 = Clock::cycles();
+		double s1 = m_clock.usec();
+
+		tc.push_back(t1 - t0);
+		wc += s1 - s0;
+
+		s0 = m_clock.usec();
+		t0 = Clock::cycles();
+
+		if (snowshoe_mul(sk_s, pp_c, sp_s)) {
+			return false;
+		}
+
+		t1 = Clock::cycles();
+		s1 = m_clock.usec();
+
+		ts.push_back(t1 - t0);
+		ws += s1 - s0;
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (sp_c[ii] != sp_s[ii]) {
+				return false;
+			}
+		}
 	}
+
+	u32 mc = quick_select(&tc[0], (int)tc.size());
+	wc /= tc.size();
+	u32 ms = quick_select(&ts[0], (int)ts.size());
+	ws /= ts.size();
+
+	cout << "+ EC-DH client: `" << dec << mc << "` median cycles, `" << wc << "` avg usec" << endl;
+	cout << "+ EC-DH server: `" << dec << ms << "` median cycles, `" << ws << "` avg usec" << endl;
 
 	return true;
 }
@@ -179,70 +195,97 @@ bool ec_dh_fs_test() {
 	char pp_c[64], pp_s[64], pp_e[64];
 	char sp_c[64], sp_s[64];
 
-	// Offline: Server long-term public key generation
+	vector<u32> tc, ts, tc1;
+	double wc = 0, ws = 0, wc1 = 0;
 
-	generate_k(sk_s);
-	snowshoe_secret_gen(sk_s);
-	if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
-		return false;
-	}
+	for (int iteration = 0; iteration < 10000; ++iteration) {
+		// Offline: Server long-term public key generation
 
-	// Online: Server ephemeral public key (changes periodically)
-
-	generate_k(sk_e);
-	snowshoe_secret_gen(sk_e);
-	if (snowshoe_mul_gen(sk_e, 0, pp_e)) {
-		return false;
-	}
-
-	// Online: Client ephemeral public key (changes periodically)
-
-	generate_k(sk_c);
-	snowshoe_secret_gen(sk_c);
-	if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
-		return false;
-	}
-
-	// h = H(pp_s, pp_e, pp_c, client_nonce, server_nonce)
-	generate_k(h);
-
-	// Online: Server handles client request
-
-	double s0 = m_clock.usec();
-	u32 t0 = Clock::cycles();
-
-	// d = sk_e + h * sk_s (mod q)
-	snowshoe_mul_mod_q(h, sk_s, sk_e, d);
-	if (snowshoe_mul(d, pp_c, sp_s)) {
-		return false;
-	}
-
-	u32 t1 = Clock::cycles();
-	double s1 = m_clock.usec();
-
-	cout << "EC-DH-FS server: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
-
-	// Online: Client handles server response
-
-	s0 = m_clock.usec();
-	t0 = Clock::cycles();
-
-	// a = h * sk_c (mod q)
-	snowshoe_mul_mod_q(h, sk_c, 0, a);
-	if (snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c)) {
-		return false;
-	}
-
-	t1 = Clock::cycles();
-	s1 = m_clock.usec();
-
-	cout << "EC-DH-FS client: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
-
-	for (int ii = 0; ii < 64; ++ii) {
-		if (sp_c[ii] != sp_s[ii]) {
+		generate_k(sk_s);
+		snowshoe_secret_gen(sk_s);
+		if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
 			return false;
 		}
+
+		// Online: Server ephemeral public key (changes periodically)
+
+		generate_k(sk_e);
+		snowshoe_secret_gen(sk_e);
+		if (snowshoe_mul_gen(sk_e, 0, pp_e)) {
+			return false;
+		}
+
+		// Online: Client ephemeral public key (changes periodically)
+
+		double s0 = m_clock.usec();
+		u32 t0 = Clock::cycles();
+
+		generate_k(sk_c);
+		snowshoe_secret_gen(sk_c);
+		if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
+			return false;
+		}
+
+		u32 t1 = Clock::cycles();
+		double s1 = m_clock.usec();
+
+		tc.push_back(t1 - t0);
+		wc += s1 - s0;
+
+		// h = H(pp_s, pp_e, pp_c, client_nonce, server_nonce)
+		generate_k(h);
+
+		// Online: Server handles client request
+
+		s0 = m_clock.usec();
+		t0 = Clock::cycles();
+
+		// d = sk_e + h * sk_s (mod q)
+		snowshoe_mul_mod_q(h, sk_s, sk_e, d);
+		if (snowshoe_mul(d, pp_c, sp_s)) {
+			return false;
+		}
+
+		t1 = Clock::cycles();
+		s1 = m_clock.usec();
+
+		ts.push_back(t1 - t0);
+		ws += s1 - s0;
+
+		// Online: Client handles server response
+
+		s0 = m_clock.usec();
+		t0 = Clock::cycles();
+
+		// a = h * sk_c (mod q)
+		snowshoe_mul_mod_q(h, sk_c, 0, a);
+		if (snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c)) {
+			return false;
+		}
+
+		t1 = Clock::cycles();
+		s1 = m_clock.usec();
+
+		tc1.push_back(t1 - t0);
+		wc1 += s1 - s0;
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (sp_c[ii] != sp_s[ii]) {
+				return false;
+			}
+		}
 	}
+
+	u32 mc = quick_select(&tc[0], (int)tc.size());
+	wc /= tc.size();
+	u32 mc1 = quick_select(&tc1[0], (int)tc1.size());
+	wc1 /= tc1.size();
+	u32 ms = quick_select(&ts[0], (int)ts.size());
+	ws /= ts.size();
+
+	cout << "+ EC-DH-FS client gen: `" << dec << mc << "` median cycles, `" << wc << "` avg usec" << endl;
+	cout << "+ EC-DH-FS server proc: `" << dec << ms << "` median cycles, `" << ws << "` avg usec" << endl;
+	cout << "+ EC-DH-FS client proc: `" << dec << mc1 << "` median cycles, `" << wc1 << "` avg usec" << endl;
 
 	return true;
 }
@@ -277,58 +320,73 @@ bool ec_dsa_test() {
 	char a[32], h_hi_m[64], h_r_a_m[64], r[32], t[32], s[32], u[32];
 	char pp_A[64], pp_R[64], pp_Rtest[64];
 
-	// Fake hashes to avoid implementing Skein-512 and Skein-256 just for testing
-	generate_k(a);
-	generate_k(h_hi_m);
-	generate_k(h_hi_m+32);
-	generate_k(h_r_a_m);
-	generate_k(h_r_a_m+32);
+	vector<u32> tc, ts;
+	double wc = 0, ws = 0;
 
-	// Offline precomputation:
+	for (int iteration = 0; iteration < 10000; ++iteration) {
+		// Fake hashes to avoid implementing Skein-512 and Skein-256 just for testing
+		generate_k(a);
+		generate_k(h_hi_m);
+		generate_k(h_hi_m+32);
+		generate_k(h_r_a_m);
+		generate_k(h_r_a_m+32);
 
-	snowshoe_secret_gen(a);
-	if (snowshoe_mul_gen(a, MULGEN_VARTIME, pp_A)) {
-		return false;
-	}
+		// Offline precomputation:
 
-	// Sign:
-
-	double s0 = m_clock.usec();
-	u32 t0 = Clock::cycles();
-
-	snowshoe_mod_q(h_hi_m, r);
-	snowshoe_mod_q(h_r_a_m, t);
-	if (snowshoe_mul_gen(r, MULGEN_COFACTOR, pp_R)) {
-		return false;
-	}
-	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
-
-	u32 t1 = Clock::cycles();
-	double s1 = m_clock.usec();
-
-	cout << "EdDSA sign: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
-
-	// Verify:
-
-	s0 = m_clock.usec();
-	t0 = Clock::cycles();
-
-	snowshoe_mod_q(h_r_a_m, u);
-	snowshoe_neg(pp_A, pp_A);
-	if (snowshoe_simul_gen(s, u, pp_A, pp_Rtest)) {
-		return false;
-	}
-
-	for (int ii = 0; ii < 64; ++ii) {
-		if (pp_Rtest[ii] != pp_R[ii]) {
+		snowshoe_secret_gen(a);
+		if (snowshoe_mul_gen(a, MULGEN_VARTIME, pp_A)) {
 			return false;
 		}
+
+		// Sign:
+
+		double s0 = m_clock.usec();
+		u32 t0 = Clock::cycles();
+
+		snowshoe_mod_q(h_hi_m, r);
+		snowshoe_mod_q(h_r_a_m, t);
+		if (snowshoe_mul_gen(r, MULGEN_COFACTOR, pp_R)) {
+			return false;
+		}
+		snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
+
+		u32 t1 = Clock::cycles();
+		double s1 = m_clock.usec();
+
+		ts.push_back(t1 - t0);
+		ws += s1 - s0;
+
+		// Verify:
+
+		s0 = m_clock.usec();
+		t0 = Clock::cycles();
+
+		snowshoe_mod_q(h_r_a_m, u);
+		snowshoe_neg(pp_A, pp_A);
+		if (snowshoe_simul_gen(s, u, pp_A, pp_Rtest)) {
+			return false;
+		}
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (pp_Rtest[ii] != pp_R[ii]) {
+				return false;
+			}
+		}
+
+		t1 = Clock::cycles();
+		s1 = m_clock.usec();
+
+		tc.push_back(t1 - t0);
+		wc += s1 - s0;
 	}
 
-	t1 = Clock::cycles();
-	s1 = m_clock.usec();
+	u32 mc = quick_select(&tc[0], (int)tc.size());
+	wc /= tc.size();
+	u32 ms = quick_select(&ts[0], (int)ts.size());
+	ws /= ts.size();
 
-	cout << "EdDSA verify: " << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
+	cout << "+ EdDSA sign: `" << dec << ms << "` median cycles, `" << ws << "` avg usec" << endl;
+	cout << "+ EdDSA verify: `" << dec << mc << "` median cycles, `" << wc << "` avg usec" << endl;
 
 	return true;
 }
@@ -369,17 +427,9 @@ int main() {
 		throw "Wrong snowshoe static library is linked";
 	}
 
-	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dh_test());
-	}
-
-	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dh_fs_test());
-	}
-
-	for (int ii = 0; ii < 10000; ++ii) {
-		assert(ec_dsa_test());
-	}
+	assert(ec_dh_test());
+	assert(ec_dh_fs_test());
+	assert(ec_dsa_test());
 
 	cout << "All tests passed successfully." << endl;
 

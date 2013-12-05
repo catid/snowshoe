@@ -44,27 +44,23 @@ that they are accurate to ~100 cycles.
 
 RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 
-`make ecmultest` results:
+`make ecmultest` results (TB off):
 
-+ ec_mul_gen: `47220` median cycles, `28.1519` avg usec (NO timing protection)
-+ ec_mul_gen: `74476` median cycles, `44.0666` avg usec
-+ ec_mul: `152644` median cycles, `90.5397` avg usec
-+ ec_simul_gen: `158844` median cycles, `93.7508` avg usec
-+ ec_simul: `211652` median cycles, `125.342` avg usec
++ ec_mul_gen: `46716` median cycles, `27.8275` avg usec (NO timing protection)
++ ec_mul_gen: `66244` median cycles, `39.5455` avg usec
++ ec_mul: `152600` median cycles, `89.7081` avg usec
++ ec_simul_gen: `158812` median cycles, `94.0958` avg usec
++ ec_simul: `211640` median cycles, `125.099` avg usec
 
-`make snowshoetest` results:
+`make snowshoetest` results (TB off):
 
-EC-DH client: `144,036 cycles`
-EC-DH server: `144,544 cycles`
-EC-DH-FS client: `215,692 cycles`
-EC-DH-FS server: `144,724 cycles`
-
-+ EdDSA sign: ``
-+ EdDSA verify: ``
-+ EC-DH-FS server: `` (16,000 connections/sec)
-+ EC-DH-FS client: ``
-+ EC-DH server: ``
-+ EC-DH client: ``
++ EC-DH client: `142796` median cycles, `84.2361` avg usec
++ EC-DH server: `142672` median cycles, `84.1449` avg usec
++ EC-DH-FS client gen: `79448` median cycles, `47.0702` avg usec
++ EC-DH-FS server proc: `144168` median cycles, `85.3364` avg usec
++ EC-DH-FS client proc: `214040` median cycles, `126.587` avg usec
++ EdDSA sign: `70604` median cycles, `41.7105` avg usec
++ EdDSA verify: `160460` median cycles, `94.5884` avg usec
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
