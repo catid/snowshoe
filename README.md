@@ -114,6 +114,7 @@ RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 + EC-DH-FS server proc: `105428` median cycles, `40.0834` avg usec
 + EC-DH-FS client proc: `159096` median cycles, `60.4561` avg usec
 + EdDSA sign: `56850` median cycles, `21.6322` avg usec
++ EdDSA verify: `116632` median cycles, `43.6502` avg usec
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
