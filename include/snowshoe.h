@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define SNOWSHOE_VERSION 4
+#define SNOWSHOE_VERSION 5
 
 /*
  * Verify binary compatibility with the Snowshoe API on startup.
@@ -77,9 +77,6 @@ void snowshoe_neg(const char P[64], char R[64]);
  *
  * Multiply generator point by k
  *
- * If SPA attack is not a concern you can pass the MULGEN_VARTIME
- * flag, which will allow the algorithm to run faster.
- *
  * If you want the resulting point to be multiplied by the cofactor 4,
  * then pass the MULGEN_COFACTOR flag.  This is only expected to be
  * useful for signature generation applications to make the client
@@ -101,8 +98,7 @@ int snowshoe_mul_gen(const char k[32], const int flags, char R[64]);
 
 enum snowshoe_mul_gen_flags {
 	MULGEN_SAFE_DEFAULTS = 0,
-	MULGEN_COFACTOR = 1,
-	MULGEN_VARTIME = 2
+	MULGEN_COFACTOR = 1
 };
 
 /*

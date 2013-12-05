@@ -15,15 +15,15 @@
  * Multiplies the point by k * [4] and stores the result in R
  */
 
-// R = k * [4] * G, optionally constant-time
-static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool constant_time, ecpt_affine &R) {
+// R = k * [4] * G
+static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, ecpt_affine &R) {
 	// Recode scalar
 	u64 kp[4];
 	u32 recode_lsb = ec_recode_scalar_comb_gen(k, kp);
 
 	// Unroll first evaluation loop
 	ecpt T[MG_v];
-	ec_table_select_comb_gen(kp, MG_e - 1, constant_time, T);
+	ec_table_select_comb_gen(kp, MG_e - 1, T);
 	fe_set_smallk(1, T[0].z);
 
 	// X = T[0] + T[1] + T[2]
@@ -36,7 +36,7 @@ static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, const bool const
 
 	// Evaluate
 	for (int ii = MG_e - 2; ii >= 0; --ii) {
-		ec_table_select_comb_gen(kp, ii, constant_time, T);
+		ec_table_select_comb_gen(kp, ii, T);
 
 		ec_dbl(X, X, false, t2b);
 		for (int jj = 0; jj < MG_v; ++jj) {

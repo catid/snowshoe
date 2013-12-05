@@ -331,7 +331,7 @@ static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const
 	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
 }
 
-static void ec_table_select_comb_gen(const u64 b[4], const int ii, const bool constant_time, ecpt r[MG_v]) {
+static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v]) {
 	// D(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -341,6 +341,7 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, const bool co
 	// p3 = s(2, ii) * tables[D(2, ii)][2]
 	// p4 = s(3, ii) * tables[D(3, ii)][3]
 	for (int vp = 0; vp < MG_v; ++vp) {
+		// Calculate table index
 		u32 d = comb_bit(b, 1, vp, ii);
 		for (int jj = 1; jj < (MG_w - 1); ++jj) {
 			d |= comb_bit(b, jj+1, vp, ii) << jj;
@@ -349,23 +350,21 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, const bool co
 
 		ecpt &p = r[vp];
 
-		if (constant_time) {
-			ec_zero(p);
-			for (int jj = 0; jj < MG_width; ++jj) {
-				// Generate a mask that is -1 if jj == index, else 0
-				const u64 mask = ec_gen_mask(jj, d);
+		ec_zero(p);
 
-				// Add in the masked table entry
-				ec_xor_mask_affine(GEN_TABLE[vp][jj], mask, p);
-			}
-			fe_mul(p.x, p.y, p.t);
-			ec_cond_neg(s, p);
-		} else {
-			ec_expand(GEN_TABLE[vp][d], p);
-			if (s) {
-				ec_neg(p, p);
-			}
+		for (int jj = 0; jj < MG_width; ++jj) {
+			// Generate a mask that is -1 if jj == index, else 0
+			const u64 mask = ec_gen_mask(jj, d);
+
+			// Add in the masked table entry
+			ec_xor_mask_affine(GEN_TABLE[vp][jj], mask, p);
 		}
+
+		// Reconstruct T
+		fe_mul(p.x, p.y, p.t);
+
+		// Apply sign bit
+		ec_cond_neg(s, p);
 	}
 }
 

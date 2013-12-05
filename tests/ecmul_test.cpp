@@ -480,7 +480,7 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt_affine &P0, const u64 k2[4]
 
 //// Test Driver
 
-bool ec_mul_gen_test(bool timing_protection) {
+bool ec_mul_gen_test() {
 	u64 k[4] = {0};
 	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
@@ -497,7 +497,7 @@ bool ec_mul_gen_test(bool timing_protection) {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ec_mul_gen(k, false, timing_protection, R2);
+		ec_mul_gen(k, false, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
@@ -525,11 +525,7 @@ bool ec_mul_gen_test(bool timing_protection) {
 	u32 median = quick_select(&t[0], (int)t.size());
 	wall /= t.size();
 
-	cout << "+ ec_mul_gen: `" << dec << median << "` median cycles, `" << wall << "` avg usec";
-	if (!timing_protection) {
-		cout << " (NO timing protection)";
-	}
-	cout << endl;
+	cout << "+ ec_mul_gen: `" << dec << median << "` median cycles, `" << wall << "` avg usec" << endl;
 
 	return true;
 }
@@ -793,9 +789,6 @@ int main() {
 
 	assert(mul_mod_q_test());
 
-	assert(ec_mul_gen_test(false));
-	assert(ec_mul_gen_test(true));
-
 	assert(ec_gen_table_2_test());
 
 	ufp a, b;
@@ -813,10 +806,9 @@ int main() {
 	assert(ec_table_select_2_test());
 
 	assert(ec_mul_test());
-
-	assert(ec_simul_gen_test());
-
+	assert(ec_mul_gen_test());
 	assert(ec_simul_test());
+	assert(ec_simul_gen_test());
 
 	cout << "All tests passed successfully." << endl;
 

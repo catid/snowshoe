@@ -334,7 +334,7 @@ bool ec_dsa_test() {
 		// Offline precomputation:
 
 		snowshoe_secret_gen(a);
-		if (snowshoe_mul_gen(a, MULGEN_VARTIME, pp_A)) {
+		if (snowshoe_mul_gen(a, 0, pp_A)) {
 			return false;
 		}
 

@@ -19,7 +19,6 @@ information in power traces.
 
 Additionally to speed up signature verification a variable single-base
 simultaneous function `simul_gen` is provided that is not constant-time.
-And a similarly unprotected `mul_gen` is provided for offline signing.
 
 It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
@@ -46,70 +45,48 @@ RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 
 `make ecmultest` results (TB off):
 
-+ ec_mul_gen: `46716` median cycles, `27.8275` avg usec (NO timing protection)
-+ ec_mul_gen: `66244` median cycles, `39.5455` avg usec
-+ ec_mul: `152600` median cycles, `89.7081` avg usec
-+ ec_simul_gen: `158812` median cycles, `94.0958` avg usec
-+ ec_simul: `211640` median cycles, `125.099` avg usec
++ ec_mul: `143436` median cycles, `85.7102` avg usec
++ ec_mul_gen: `66556` median cycles, `39.5677` avg usec
++ ec_simul: `211592` median cycles, `125.251` avg usec
++ ec_simul_gen: `158660` median cycles, `94.2651` avg usec
 
 `make snowshoetest` results (TB off):
 
-+ EC-DH client: `142796` median cycles, `84.2361` avg usec
-+ EC-DH server: `142672` median cycles, `84.1449` avg usec
-+ EC-DH-FS client gen: `79448` median cycles, `47.0702` avg usec
-+ EC-DH-FS server proc: `144168` median cycles, `85.3364` avg usec
-+ EC-DH-FS client proc: `214040` median cycles, `126.587` avg usec
-+ EdDSA sign: `70604` median cycles, `41.7105` avg usec
-+ EdDSA verify: `160460` median cycles, `94.5884` avg usec
++ EC-DH client: `143108` median cycles, `84.5548` avg usec
++ EC-DH server: `142560` median cycles, `84.2602` avg usec
++ EC-DH-FS client gen: `78240` median cycles, `46.3381` avg usec
++ EC-DH-FS server proc: `144400` median cycles, `85.4915` avg usec
++ EC-DH-FS client proc: `218448` median cycles, `129.19` avg usec
++ EdDSA sign: `68976` median cycles, `40.8497` avg usec
++ EdDSA verify: `159732` median cycles, `94.3881` avg usec
 
 `make ecmultest` results (TB on, demonstrating usual walltime):
 
-+ ec_mul_gen: `29412` median cycles, `17.8676` avg usec (NO timing protection)
-+ ec_mul_gen: `41708` median cycles, `24.7504` avg usec
-+ ec_mul: `96084` median cycles, `56.7419` avg usec
-+ ec_simul_gen: `100012` median cycles, `59.5005` avg usec
-+ ec_simul: `133294` median cycles, `79.2926` avg usec
++ ec_mul: `90284` median cycles, `53.8007` avg usec
++ ec_mul_gen: `41880` median cycles, `25.007` avg usec
++ ec_simul: `133192` median cycles, `79.5398` avg usec
++ ec_simul_gen: `99878` median cycles, `59.9538` avg usec
 
 `make snowshoetest` results (TB on, demonstrating usual walltime):
 
-+ EC-DH client: `89906` median cycles, `53.5986` avg usec
-+ EC-DH server: `89832` median cycles, `53.5235` avg usec
-+ EC-DH-FS client gen: `50076` median cycles, `30.1167` avg usec
-+ EC-DH-FS server proc: `90778` median cycles, `54.4678` avg usec
-+ EC-DH-FS client proc: `134780` median cycles, `80.7683` avg usec
-+ EdDSA sign: `44478` median cycles, `26.5169` avg usec
-+ EdDSA verify: `101006` median cycles, `60.0984` avg usec
++ EC-DH client: `90108` median cycles, `54.5618` avg usec
++ EC-DH server: `89760` median cycles, `54.3989` avg usec
++ EC-DH-FS client gen: `49314` median cycles, `29.6691` avg usec
++ EC-DH-FS server proc: `90936` median cycles, `54.7233` avg usec
++ EC-DH-FS client proc: `137570` median cycles, `82.665` avg usec
++ EdDSA sign: `43484` median cycles, `25.9709` avg usec
++ EdDSA verify: `100594` median cycles, `59.945` avg usec
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
 + RDTSC instruction runs at 2.69391 GHz
 + No correction needed with Turbo Boost disabled
 
-ECMulTest results:
-
-+ ec_mul_gen: `37,530 cycles 44,581 proper 14 usec` (NO timing protection)
-+ ec_mul_gen: `51,402 cycles 61,059 proper 19 usec`
-+ ec_mul: `123,696 cycles 146,934 proper 45 usec`
-+ ec_simul_gen: `122,418 cycles 145,416 proper 45 usec` (NO timing protection)
-+ ec_simul: `162,768 cycles 193,346 proper 60 usec`
-
-Simulating protocols:
-
-+ EdDSA sign: `56,763 cycles 67,427 proper 22 usec`
-+ EdDSA verify: `124,143 cycles 147,465 proper 46 usec`
-+ EC-DH-FS server: `124,989 cycles 148,470 proper 46 usec` (21,000 connections/sec)
-+ EC-DH-FS client: `189,813 cycles 225,472 proper 70 usec`
-+ EC-DH client: `124,443 cycles 147,821 proper 46 usec`
-+ EC-DH server: `124,446 cycles 147,825 proper 46 usec`
+((Needs to be updated))
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
-+ EdDSA sign: `100,752 cycles 37.7253 usec`
-+ EdDSA verify: `246,551 cycles 92.7735 usec`
-+ EC-DH-FS server: `210,183 cycles 78.9152 usec` (12,000 connections/sec)
-+ EC-DH-FS client: `307,194 cycles 115.486 usec`
-+ EC-DH client: `208,474 cycles 78.5303 usec`
-+ EC-DH server: `207,633 cycles 78.1453 usec`
+((Needs to be updated))
 
 
 #### Usage

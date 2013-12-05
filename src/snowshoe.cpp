@@ -155,11 +155,10 @@ int snowshoe_mul_gen(const char k_raw[32], const int flags, char R[64]) {
 	}
 
 	const bool mul_cofactor = (flags & MULGEN_COFACTOR) != 0;
-	const bool constant_time = (flags & MULGEN_VARTIME) == 0;
 
 	// Run the math routine
 	ecpt_affine r;
-	ec_mul_gen(k, mul_cofactor, constant_time, r);
+	ec_mul_gen(k, mul_cofactor, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
