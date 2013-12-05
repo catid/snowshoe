@@ -222,7 +222,7 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
  * ec_dbl cost 450 cycles.
  * ec_add cost 570 cycles.
  *
- * Rough cost = (e - 1) * 570 + (d - 1) * 450 + (660/64) * 2^(w-1) * v
+ * Rough cost = (e - 1) * 570 + (d - 1) * 450 + (660/64) * 2^(w-1) * v * e
  */
 
 /*
@@ -233,50 +233,48 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
 
 	These are too big for L1 data cache of 32 KB:
 
-	6	8	6	36	31380	768	49152
-	5	8	7	35	29730	640	40960
-	2	9	14	28	27360	512	32768
-	4	8	8	32	26940	512	32768
-	8	7	5	40	30150	512	32768
-	7	7	6	42	30975	448	28672
-	3	8	11	33	27330	384	24576
-	6	7	6	36	26790	384	24576
-	5	7	8	40	29205	320	20480
+	6	8	6	36	77280	768	49152
+	5	8	7	35	75630	640	40960
+	2	9	14	28	106920	512	32768
+	4	8	8	32	69780	512	32768
+	8	7	5	40	54630	512	32768
+	7	7	6	42	57750	448	28672
+	3	8	11	33	73230	384	24576
+	6	7	6	36	49740	384	24576
+	5	7	8	40	55980	320	20480
 
 	Interesting region:
 
-	1	9	28	28	30600	256	16384
-	4	7	9	36	26610	256	16384 <- ec_mul_gen: 59805 cycles 22 usec
-	8	6	6	48	32100	256	16384 <- Longa's parameters [1] on this curve
-	7	6	6	42	28297.5	224	14336
-	3	7	12	36	27195	192	12288  <- ec_mul_gen: 60048 cycles 22 usec
-	6	6	7	42	28365	192	12288
-	5	6	9	45	30592.5	160	10240
-	2	7	18	36	29130	128	8192 <- ec_mul_gen: 58890 cycles 22 usec
-	4	6	11	44	30540	128	8192 <- 14.8% slower, Longa's parameters [1] on this curve
-	8	5	7	56	35580	128	8192
+	1	9	28	28	113220	256	16384
+	4	7	9	36	51090	256	16384 <- ec_mul_gen: 59805 cycles 22 usec
+	8	6	6	48	47400	256	16384 <- Longa's parameters [1] on this curve
+	7	6	6	42	41685	224	14336 <- ec_mul_gen: 50889 cycles 18 usec
+	3	7	12	36	52440	192	12288 <- ec_mul_gen: 60048 cycles 22 usec
+	6	6	7	42	42135	192	12288 <- ec_mul_gen: 56979 cycles 21 usec
+	5	6	9	45	45892.5	160	10240
+	2	7	18	36	55140	128	8192 <- ec_mul_gen: 58890 cycles 22 usec
+	4	6	11	44	45840	128	8192 <- Longa's parameters [1] on this curve
+	8	5	7	56	44760	128	8192
+	7	5	8	56	45210	112	7168
+	3	6	14	42	45285	96	6144 <- ec_mul_gen: 53517 cycles 19 usec
+	6	5	9	54	44137.5	96	6144
+	5	5	11	55	45799	80	5120 <- Hamburg's parameters [17] on this curve
+	1	7	36	36	63240	64	4096
+	2	6	21	42	48435	64	4096 <- ec_mul_gen: 56442 cycles 20 usec
+	4	5	13	52	44415	64	4096 <- Longa's parameters [1] on this curve
+	3	5	17	51	45454	48	3072
+	1	6	42	42	57885	32	2048
+	2	5	26	52	50265	32	2048
+	1	5	51	51	60754	16	1024
 
-	The rest of these are much slower:
-
-	7	5	8	56	35839	112	7168
-	3	6	14	42	30367.5	96	6144
-	6	5	9	54	34957.5	96	6144
-	5	5	11	55	36236	80	5120 <- Hamburg's parameters [17] on my curve
-	1	7	36	36	36465	64	4096
-	2	6	21	42	33135	64	4096
-	4	5	13	52	35235	64	4096 <- Longa's parameters [1] on this curve
-	3	5	17	51	36274	48	3072
-	1	6	42	42	42202.5	32	2048
-	2	5	26	52	40702.5	32	2048
-	1	5	51	51	51191	16	1024
-
-	In practice these estimated costs do not match reality.
+	I tested a number of configurations, neglecting v=5 or w=5 since it does
+	not evenly divide t=252.  The cost function was not entirely accurate.
 */
 
 // Selected parameters for ec_mul_gen:
 static const int MG_t = 252;
-static const int MG_w = 7;
-static const int MG_v = 3;
+static const int MG_w = 6;
+static const int MG_v = 7;
 static const int MG_e = (MG_t + MG_w*MG_v - 1) / (MG_w * MG_v); // = ceil(t/wv)
 static const int MG_d = MG_e * MG_v;
 static const int MG_l = MG_d * MG_w;

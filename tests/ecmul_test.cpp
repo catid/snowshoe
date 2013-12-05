@@ -49,19 +49,15 @@ static void ec_print_xy(const ecpt_affine &p) {
 	cout << "Y : = " << setw(16) << hex << p.y.a.i[1] << "," << setw(16) << p.y.a.i[0] << " + i * " << setw(16) << p.y.b.i[1] << "," << setw(16) << p.y.b.i[0] << endl;
 }
 
+//#define EC_GEN_PRINT_TABLES
+
 // Verify generator multiplication tables are correct
 static bool ec_gen_tables_comb_test() {
-	const int t = 252;
-	const int w = 7;
-	const int v = 3;
-	const int e = t / (w * v); // ceil(t / wv)
-	const int d = e * v; // ev
+	ecpt_affine table[MG_v][MG_width];
 
-	ecpt_affine table[v][64];
-
-	const int ul = 1 << (w - 1);
+	const int ul = 1 << (MG_w - 1);
 	for (int u = 0; u < ul; ++u) {
-		for (int vp = 0; vp < v; ++vp) {
+		for (int vp = 0; vp < MG_v; ++vp) {
 			// P[u][v'] = 2^(ev') * (1 + u0*2^d + ... + u_(w-2)*2^((w-1)*d)) * P
 
 			// q = u * P
@@ -70,9 +66,9 @@ static bool ec_gen_tables_comb_test() {
 
 			ec_set(EC_G, q);
 
-#if 0
+#ifdef EC_GEN_PRINT_TABLES
 			ec_set(EC_G, s);
-			for (int jj = 0; jj < (d * w); ++jj) {
+			for (int jj = 0; jj < (MG_d * MG_w); ++jj) {
 				ec_dbl(s, s, false, t2b);
 			}
 			ecpt_affine TEST;
@@ -88,17 +84,17 @@ static bool ec_gen_tables_comb_test() {
 
 #endif
 
-			for (int ii = 0; ii < (w - 1); ++ii) {
+			for (int ii = 0; ii < (MG_w - 1); ++ii) {
 				if (u & (1 << ii)) {
 					ec_set(EC_G, s);
-					for (int jj = 0; jj < (d * (ii + 1)); ++jj) {
+					for (int jj = 0; jj < (MG_d * (ii + 1)); ++jj) {
 						ec_add(s, s, s, false, true, true, t2b);
 					}
 					ec_add(q, s, q, false, true, true, t2b);
 				}
 			}
 
-			u32 ev = e * vp;
+			u32 ev = MG_e * vp;
 			for (int ii = 0; ii < ev; ++ii) {
 				ec_dbl(q, q, false, t2b);
 			}
@@ -107,13 +103,13 @@ static bool ec_gen_tables_comb_test() {
 		}
 	}
 
-#if 0
+#ifdef EC_GEN_PRINT_TABLES
 
-	cout << "static const u64 PRECOMP_TABLE[" << v << "][8 * 64] = {";
-	for (int jj = 0; jj < v; ++jj) {
+	cout << dec << "static const u64 PRECOMP_TABLE_0[" << MG_v << "][8 * " << MG_width << "] = {";
+	for (int jj = 0; jj < MG_v; ++jj) {
 		cout << "{" << endl;
 		ecpt_affine *ptr = &table[jj][0];
-		for (int ii = 0; ii < 64; ++ii) {
+		for (int ii = 0; ii < MG_width; ++ii) {
 			cout << "0x" << hex << ptr->x.a.i[0] << "ULL, 0x" << ptr->x.a.i[1] << "ULL, 0x" << ptr->x.b.i[0] << "ULL, 0x" << ptr->x.b.i[1] << "ULL," << endl;
 			cout << "0x" << hex << ptr->y.a.i[0] << "ULL, 0x" << ptr->y.a.i[1] << "ULL, 0x" << ptr->y.b.i[0] << "ULL, 0x" << ptr->y.b.i[1] << "ULL," << endl;
 			ptr++;
@@ -124,7 +120,7 @@ static bool ec_gen_tables_comb_test() {
 
 #endif
 
-	for (int jj = 0; jj < v; ++jj) {
+	for (int jj = 0; jj < MG_v; ++jj) {
 		if (0 != memcmp(table[jj], GEN_TABLE[jj], sizeof(table[jj]))) {
 			return false;
 		}
