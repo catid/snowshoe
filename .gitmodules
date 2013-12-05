@@ -1,3 +1,6 @@
 [submodule "libcat"]
 	path = libcat
 	url = git@github.com:catid/libcat.git
+[submodule "tests/DisableTurboBoost.kext"]
+	path = tests/DisableTurboBoost.kext
+	url = https://github.com/nanoant/DisableTurboBoost.kext.git

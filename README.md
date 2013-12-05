@@ -33,14 +33,41 @@ SUPERCOP Level 0 copyright/patent protection: There are no known present or futu
 On Sandy Bridge and newer processors, the RDTSC instruction does not return
 actual clock cycle counts.  Instead it returns a clock at a fixed frequency,
 which is determined during testing.  The actual processor cycles are typically
-at a higher Turbo Boost frequency.  The RDTSC cycle count, the proper corrected
-value, and the wall time are measured for each timed algorithm.
+at a higher Turbo Boost frequency under load, which varies unpredictably.
+
++ To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext).
++ To disable TB on Windows, edit the BIOS settings.
+
+##### libsnowshoe.a on Macbook Air (1.7 GHz Core i5-2557M Sandy Bridge, July 2011):
+
++ RDTSC instruction runs at 1.70004 GHz
++ No correction needed with Turbo Boost disabled
+
+ECMulTest results:
+
++ ec_mul_gen: `47,608 cycles` (NO timing protection)
++ ec_mul_gen: `67,560 cycles`
++ ec_mul: `137,716 cycles`
++ ec_simul_gen: `153,756 cycles` (NO timing protection)
++ ec_simul: `207,964 cycles`
+
+Simulating protocols:
+
+EC-DH client: `143,780 cycles`
+EC-DH server: `144,200 cycles`
++ EdDSA sign: ``
++ EdDSA verify: ``
++ EC-DH-FS server: `` (16,000 connections/sec)
++ EC-DH-FS client: ``
++ EC-DH server: ``
++ EC-DH client: ``
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 
 + RDTSC instruction runs at 2.69391 GHz
-+ CPU turbo boosts to 3.2 GHz
-+ Correction factor = 3.2/2.69391 = 1.187864
++ No correction needed with Turbo Boost disabled
+
+ECMulTest results:
 
 + ec_mul_gen: `37,530 cycles 44,581 proper 14 usec` (NO timing protection)
 + ec_mul_gen: `51,402 cycles 61,059 proper 19 usec`
@@ -56,23 +83,6 @@ Simulating protocols:
 + EC-DH-FS client: `189,813 cycles 225,472 proper 70 usec`
 + EC-DH client: `124,443 cycles 147,821 proper 46 usec`
 + EC-DH server: `124,446 cycles 147,825 proper 46 usec`
-
-##### libsnowshoe.a on Macbook Air (1.6 GHz Core i5-2467M Sandy Bridge, June 2011):
-
-+ ec_mul_gen: `35,307 cycles 20 usec` (without timing protection)
-+ ec_mul_gen: `55,127 cycles 32 usec` (with timing protection)
-+ ec_mul: `104,314 cycles 61 usec` (with timing protection)
-+ ec_simul_gen: `118,103 cycles 69 usec` (without timing protection)
-+ ec_simul: `154,313 cycles 90 usec` (with timing protection)
-
-Simulating protocols:
-
-+ EdDSA sign: `51,012 cycles 30 usec`
-+ EdDSA verify: `106,584 cycles 63 usec`
-+ EC-DH-FS server: `105,534 cycles 62 usec` (16,000 connections/sec)
-+ EC-DH-FS client: `159,970 cycles 94 usec`
-+ EC-DH server: `105,009 cycles 61 usec`
-+ EC-DH client: `104,811 cycles 61 usec`
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 

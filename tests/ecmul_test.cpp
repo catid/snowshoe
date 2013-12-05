@@ -11,6 +11,14 @@ static Clock m_clock;
 // Math library
 #include "../src/ecmul.inc"
 
+static void random_k(u64 k[4]) {
+	for (int ii = 0; ii < 4; ++ii) {
+		for (int jj = 0; jj < 30; ++jj) {
+			k[ii] ^= (k[ii] << 3) | (rand() >> 2);
+		}
+	}
+}
+
 static const ecpt_affine EC_G_AFFINE = {
 	EC_GX, EC_GY
 };
@@ -422,29 +430,33 @@ static bool ec_simul_ref(const u64 k1[4], const ecpt_affine &P0, const u64 k2[4]
 
 //// Test Driver
 
-bool ec_mul_gen_test(bool spa_protection) {
+bool ec_mul_gen_test(bool timing_protection) {
 	u64 k[4] = {0};
 	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
 
 	for (int jj = 0; jj < 10000; ++jj) {
-		for (int ii = 0; ii < 4; ++ii) {
-			for (int jj = 0; jj < 30; ++jj) {
-				k[ii] ^= (k[ii] << 3) | (rand() >> 2);
-			}
-		}
+		random_k(k);
 		ec_mask_scalar(k);
 
 		ec_mul_ref(k, EC_G_AFFINE, R1);
 
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
-		ec_mul_gen(k, false, spa_protection, R2);
+
+		ec_mul_gen(k, false, timing_protection, R2);
+
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
-		cout << "ec_mul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec, timing-attack protection = " << spa_protection << endl;
 
-		ec_mul_gen(k, true, spa_protection, R2);
+		cout << "ec_mul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec, timing-attack protection = " << timing_protection << endl;
+
+		ecpt temp;
+		ec_expand(R2, temp);
+		ufe t2b;
+		ec_dbl(temp, temp, true, t2b);
+		ec_dbl(temp, temp, false, t2b);
+		ec_affine(temp, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);
@@ -462,20 +474,23 @@ bool ec_mul_gen_test(bool spa_protection) {
 bool ec_mul_test() {
 	u64 k[4] = {0};
 	ecpt_affine R1, R2;
+	ecpt_affine BP;
 	u8 a1[64], a2[64];
 
+	random_k(k);
+	ec_mul_ref(k, EC_G_AFFINE, BP);
+
 	for (int jj = 0; jj < 10000; ++jj) {
-		for (int ii = 0; ii < 4; ++ii) {
-			for (int jj = 0; jj < 30; ++jj) {
-				k[ii] ^= (k[ii] << 3) | (rand() >> 2);
-			}
-		}
+		random_k(k);
 		ec_mask_scalar(k);
 
-		ec_mul_ref(k, EC_G_AFFINE, R1);
+		ec_mul_ref(k, BP, R1);
+
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
-		ec_mul(k, EC_G_AFFINE, R2);
+
+		ec_mul(k, BP, R2);
+
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
 		cout << "ec_mul: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
@@ -496,27 +511,28 @@ bool ec_mul_test() {
 bool ec_simul_test() {
 	u64 k1[4] = {0};
 	u64 k2[4] = {0};
+	ecpt_affine B1, B2;
 	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
 
+	random_k(k1);
+	random_k(k2);
+	ec_mul_ref(k1, EC_G_AFFINE, B1);
+	ec_mul_ref(k2, EC_G_AFFINE, B2);
+
 	for (int jj = 0; jj < 10000; ++jj) {
-		for (int ii = 0; ii < 4; ++ii) {
-			for (int jj = 0; jj < 30; ++jj) {
-				k1[ii] ^= (k1[ii] << 3) | (rand() >> 2);
-			}
-		}
-		for (int ii = 0; ii < 4; ++ii) {
-			for (int jj = 0; jj < 30; ++jj) {
-				k2[ii] ^= (k2[ii] << 3) | (rand() >> 2);
-			}
-		}
+		random_k(k1);
+		random_k(k2);
 		ec_mask_scalar(k1);
 		ec_mask_scalar(k2);
 
-		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
+		ec_simul_ref(k1, B1, k2, B2, R1);
+
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
-		ec_simul(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R2);
+
+		ec_simul(k1, B1, k2, B2, R2);
+
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
 		cout << "ec_simul: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
@@ -538,26 +554,25 @@ bool ec_simul_gen_test() {
 	u64 k1[4] = {0};
 	u64 k2[4] = {0};
 	ecpt_affine R1, R2;
+	ecpt_affine BP;
 	u8 a1[64], a2[64];
 
+	random_k(k2);
+	ec_mul_ref(k2, EC_G_AFFINE, BP);
+
 	for (int jj = 0; jj < 10000; ++jj) {
-		for (int ii = 0; ii < 4; ++ii) {
-			for (int jj = 0; jj < 30; ++jj) {
-				k1[ii] ^= (k1[ii] << 3) | (rand() >> 2);
-			}
-		}
-		for (int ii = 0; ii < 4; ++ii) {
-			for (int jj = 0; jj < 30; ++jj) {
-				k2[ii] ^= (k2[ii] << 3) | (rand() >> 2);
-			}
-		}
+		random_k(k1);
+		random_k(k2);
 		ec_mask_scalar(k1);
 		ec_mask_scalar(k2);
 
-		ec_simul_ref(k1, EC_G_AFFINE, k2, EC_EG_AFFINE, R1);
+		ec_simul_ref(k1, EC_G_AFFINE, k2, BP, R1);
+
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
-		ec_simul_gen(k1, k2, EC_EG_AFFINE, R2);
+
+		ec_simul_gen(k1, k2, BP, R2);
+
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
 		cout << "ec_simul_gen: " << dec << (t1 - t0) << " cycles " << (s1 - s0) << " usec" << endl;
