@@ -52,7 +52,7 @@ Simulating protocols:
 Curve25519 ec_mul takes `194,000 cycles` for reference
 
 + ec_mul_gen: `37,530 cycles 14 usec` (without timing protection)
-+ ec_mul_gen: `58,890 cycles 22 usec` (with timing protection)
++ ec_mul_gen: `51,402 cycles 19 usec` (with timing protection)
 + ec_mul: `123,696 cycles 45 usec` (with timing protection)
 + ec_simul_gen: `122,418 cycles 45 usec` (without timing protection)
 + ec_simul: `162,768 cycles 60 usec` (with timing protection)

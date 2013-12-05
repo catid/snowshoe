@@ -248,7 +248,7 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
 	1	9	28	28	113220	256	16384
 	4	7	9	36	51090	256	16384 <- ec_mul_gen: 59805 cycles 22 usec
 	8	6	6	48	47400	256	16384 <- Longa's parameters [1] on this curve
-	7	6	6	42	41685	224	14336 <- ec_mul_gen: 50889 cycles 18 usec
+	7	6	6	42	41685	224	14336 <- ec_mul_gen: 51402 cycles 19 usec
 	3	7	12	36	52440	192	12288 <- ec_mul_gen: 60048 cycles 22 usec
 	6	6	7	42	42135	192	12288 <- ec_mul_gen: 56979 cycles 21 usec
 	5	6	9	45	45892.5	160	10240
