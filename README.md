@@ -991,6 +991,5 @@ I appreciate suggestions and criticism from Mike Hamburg on an early version of 
 ## TODO
 
 + SAB-set recoding for key generation
-+ Remove COFACTOR flag from key generation and implement signature verification without it so that the client is validating the public keys
 + Implement Tabby and base benchmark results on that instead
 
