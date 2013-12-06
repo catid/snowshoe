@@ -388,10 +388,9 @@ Verify:
 		return false;
 	}
 
-	for (int ii = 0; ii < 64; ++ii) {
-		if (pp_Rtest[ii] != pp_R[ii]) {
-			return false;
-		}
+	// Test if 4 * pp_R == pp_Rtest
+	if (snowshoe_equals4(pp_Rtest, pp_R)) {
+		return false;
 	}
 ~~~
 
