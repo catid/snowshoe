@@ -981,6 +981,7 @@ I appreciate suggestions and criticism from Mike Hamburg on an early version of 
 
 + Extended Twisted Edwards Dedicated Addition Formula for key generation
 + SAB-set recoding for key generation
++ Investigate clang vector extensions for faster constant-time table lookups
 + Remove COFACTOR flag from key generation and implement signature verification without it so that the client is validating the public keys
 + Implement Tabby and base benchmark results on that instead
 
