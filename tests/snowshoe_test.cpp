@@ -412,6 +412,10 @@ static void tscTime() {
 int main() {
 	cout << "Snowshoe Unit Tester" << endl;
 
+#ifdef CAT_HAS_VECTOR_EXTENSIONS
+	cout << "Using vector extensions for table lookups! <3" << endl;
+#endif
+
 	// Note that assert() should not be used for crypto code since it is often compiled
 	// out in release mode.  It is only used here for testing.
 

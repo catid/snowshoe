@@ -37,10 +37,6 @@ struct ecpt_z1 {
 };
 
 #ifdef CAT_HAS_VECTOR_EXTENSIONS
-#define CAT_HAS_VECTOR_EXTENSIONS
-#endif
-
-#ifdef SNOWSHOE_VECTORIZE_LUT
 
 typedef u64 vec_ecpt_affine __attribute__((ext_vector_type(4*2)));
 typedef u64 vec_ecpt_z1 __attribute__((ext_vector_type(4*3)));

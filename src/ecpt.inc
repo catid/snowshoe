@@ -188,7 +188,7 @@ static CAT_INLINE void ec_set_mask(const ecpt &a, const u64 mask, ecpt &r) {
 // r ^= a & mask
 static CAT_INLINE void ec_xor_mask(const ecpt &a, const u64 mask, ecpt &r) {
 
-#ifdef SNOWSHOE_VECTORIZE_LUT
+#ifdef CAT_HAS_VECTOR_EXTENSIONS
 
 	const vec_ecpt *tp = (const vec_ecpt *)&a;
 	vec_ecpt *rp = (vec_ecpt *)&r;
@@ -209,7 +209,7 @@ static CAT_INLINE void ec_xor_mask(const ecpt &a, const u64 mask, ecpt &r) {
 // r ^= a & mask
 static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u64 mask, ecpt &r) {
 
-#ifdef SNOWSHOE_VECTORIZE_LUT
+#ifdef CAT_HAS_VECTOR_EXTENSIONS
 
 	const vec_ecpt_affine *tp = (const vec_ecpt_affine *)&a;
 	vec_ecpt_affine *rp = (vec_ecpt_affine *)&r;

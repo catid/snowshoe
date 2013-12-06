@@ -775,6 +775,10 @@ static void tscTime() {
 int main() {
 	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
 
+#ifdef CAT_HAS_VECTOR_EXTENSIONS
+	cout << "Using vector extensions for table lookups! <3" << endl;
+#endif
+
 	srand(0);
 
 	m_clock.OnInitialize();
