@@ -147,7 +147,17 @@ cycle counts exactly match the laptop version.
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
-((Needs to be updated))
+RDTSC instruction runs at 2.66008 GHz so no correction factor is needed.
+
+MSVC2010 build results (TB on, demonstrating usual walltime):
+
++ EC-DH client: `196116` median cycles, `78.8592` avg usec
++ EC-DH server: `196000` median cycles, `78.5831` avg usec
++ EC-DH-FS client gen: `117535` median cycles, `46.9823` avg usec
++ EC-DH-FS server proc: `196954` median cycles, `79.1186` avg usec
++ EC-DH-FS client proc: `295612` median cycles, `118.62` avg usec
++ EdDSA sign: `101751` median cycles, `40.7472` avg usec
++ EdDSA verify: `210717` median cycles, `84.3919` avg usec
 
 
 #### Usage

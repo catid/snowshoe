@@ -36,7 +36,9 @@ struct ecpt_z1 {
 	ufe x, y, t;
 };
 
-#define SNOWSHOE_VECTORIZE_LUT /* Enable vectorized table lookup */
+#ifdef CAT_HAS_VECTOR_EXTENSIONS
+#define CAT_HAS_VECTOR_EXTENSIONS
+#endif
 
 #ifdef SNOWSHOE_VECTORIZE_LUT
 

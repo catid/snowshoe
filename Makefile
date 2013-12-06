@@ -1,12 +1,12 @@
 # Change your compiler settings here
 
 # Clang seems to produce faster code
-#CCPP = g++
-#CC = gcc
-#OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
-CCPP = clang++
-CC = clang
-OPTFLAGS = -O4
+CCPP = C:\mingw64\bin\g++
+CC = C:\mingw64\bin\gcc
+OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
+#CCPP = clang++
+#CC = clang
+#OPTFLAGS = -O4
 DBGFLAGS = -g -O0 -DDEBUG
 CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include
 LIBNAME = libsnowshoe.a
@@ -75,14 +75,12 @@ ecpttest : $(ecpt_test_o)
 	$(CCPP) $(LIBS) -o ecpttest $(ecpt_test_o)
 
 ecmultest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-ecmultest : clean $(ecmul_test_o)
+ecmultest : $(ecmul_test_o)
 	$(CCPP) $(LIBS) -o ecmultest $(ecmul_test_o)
-	./ecmultest
 
 snowshoetest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-snowshoetest : clean $(snowshoe_test_o) library
+snowshoetest : $(snowshoe_test_o) library
 	$(CCPP) $(LIBS) -L. -lsnowshoe -o snowshoetest $(snowshoe_test_o)
-	./snowshoetest
 
 
 # Shared objects
@@ -126,6 +124,5 @@ snowshoe_test.o : tests/snowshoe_test.cpp
 .PHONY : clean
 
 clean :
-	git submodule update --init
 	-rm fptest fetest endotest ecpttest ecmultest snowshoetest libsnowshoe.a $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
 
