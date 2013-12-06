@@ -102,13 +102,28 @@ static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, con
 	if (constant_time) {
 		ec_zero(r);
 
+#ifdef SNOWSHOE_VECTORIZE_LUT
+
+		const vec_ecpt *tp = (const vec_ecpt *)table;
+		vec_ecpt *rp = (vec_ecpt *)&r;
+
 		for (int ii = 0; ii < 8; ++ii) {
 			// Generate a mask that is -1 if ii == index, else 0
 			const u64 mask = ec_gen_mask(ii, k);
 
-			// Add in the masked table entry
+			*rp ^= tp[ii] & mask;
+		}
+
+#else
+
+		for (int ii = 0; ii < 8; ++ii) {
+			// Generate a mask that is -1 if ii == index, else 0
+			const u64 mask = ec_gen_mask(ii, k);
+
 			ec_xor_mask(table[ii], mask, r);
 		}
+
+#endif
 	} else {
 		ec_set(table[k], r);
 	}
@@ -185,14 +200,29 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
 
 	ec_zero(r);
 
-	const int TABLE_SIZE = 8;
-	for (int ii = 0; ii < TABLE_SIZE; ++ii) {
+#ifdef SNOWSHOE_VECTORIZE_LUT
+
+	const vec_ecpt *tp = (const vec_ecpt *)table;
+	vec_ecpt *rp = (vec_ecpt *)&r;
+
+	for (int ii = 0; ii < 8; ++ii) {
+		// Generate a mask that is -1 if ii == index, else 0
+		const u64 mask = ec_gen_mask(ii, k);
+
+		*rp ^= tp[ii] & mask;
+	}
+	
+#else
+
+	for (int ii = 0; ii < 8; ++ii) {
 		// Generate a mask that is -1 if ii == index, else 0
 		const u64 mask = ec_gen_mask(ii, k);
 
 		// Add in the masked table entry
 		ec_xor_mask(table[ii], mask, r);
 	}
+
+#endif
 
 	ec_cond_neg(((a.w >> index) & 1) ^ 1, r);
 }
@@ -352,6 +382,20 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
 
 		ec_zero(p);
 
+#ifdef SNOWSHOE_VECTORIZE_LUT
+
+		const vec_ecpt_affine *tp = (const vec_ecpt_affine *)GEN_TABLE[vp];
+		vec_ecpt_affine *rp = (vec_ecpt_affine *)&p;
+
+		for (int jj = 0; jj < MG_width; ++jj) {
+			// Generate a mask that is -1 if jj == index, else 0
+			const u64 mask = ec_gen_mask(jj, d);
+
+			*rp ^= tp[jj] & mask;
+		}
+	
+#else
+
 		for (int jj = 0; jj < MG_width; ++jj) {
 			// Generate a mask that is -1 if jj == index, else 0
 			const u64 mask = ec_gen_mask(jj, d);
@@ -359,6 +403,8 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
 			// Add in the masked table entry
 			ec_xor_mask_affine(GEN_TABLE[vp][jj], mask, p);
 		}
+
+#endif
 
 		// Reconstruct T
 		fe_mul(p.x, p.y, p.t);

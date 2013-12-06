@@ -36,6 +36,15 @@ struct ecpt_z1 {
 	ufe x, y, t;
 };
 
+#define SNOWSHOE_VECTORIZE_LUT /* Enable vectorized table lookup */
+
+#ifdef SNOWSHOE_VECTORIZE_LUT
+
+typedef u64 vec_ecpt_affine __attribute__((ext_vector_type(4*2)));
+typedef u64 vec_ecpt_z1 __attribute__((ext_vector_type(4*3)));
+typedef u64 vec_ecpt __attribute__((ext_vector_type(4*4)));
+
+#endif
 
 static const u32 EC_D = 109;
 

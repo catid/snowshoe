@@ -35,7 +35,8 @@ which is determined during testing.  The actual processor cycles are typically
 at a higher Turbo Boost frequency under load, which varies unpredictably.
 The median of 10,000 measurements is taken, and repeat measurements indicate
 that they are accurate to ~100 cycles.  I was able to demonstrate that the
-Sandy Bridge cycle counts on my laptop and desktop matched with TB off.
+Sandy Bridge cycle counts on my laptop and desktop matched with TB off,
+which validates the benchmarking methodology.
 
 + To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext) (included under ./tests)
 + To disable TB on Windows, edit the BIOS settings.
@@ -108,40 +109,40 @@ RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 
 `make ecmultest` results (TB off):
 
-+ ec_mul: `143340` median cycles, `53.3619` avg usec
-+ ec_mul_gen: `66504` median cycles, `24.7868` avg usec
-+ ec_simul: `211512` median cycles, `78.6369` avg usec
-+ ec_simul_gen: `158516` median cycles, `58.9256` avg usec
++ ec_mul: `136704` median cycles, `50.8865` avg usec
++ ec_mul_gen: `62192` median cycles, `23.1985` avg usec
++ ec_simul: `200612` median cycles, `74.5372` avg usec
++ ec_simul_gen: `159464` median cycles, `59.3338` avg usec
 
 These results serve to justify the benchmarking methodology.  Notice that the
 cycle counts exactly match the laptop version.
 
 `make snowshoetest` results (TB off):
 
-+ EC-DH client: `143132` median cycles, `53.2676` avg usec
-+ EC-DH server: `142544` median cycles, `53.0599` avg usec
-+ EC-DH-FS client gen: `78216` median cycles, `29.1562` avg usec
-+ EC-DH-FS server proc: `144436` median cycles, `53.7718` avg usec
-+ EC-DH-FS client proc: `217696` median cycles, `80.9581` avg usec
-+ EdDSA sign: `68992` median cycles, `25.73` avg usec
-+ EdDSA verify: `159732` median cycles, `59.4472` avg usec
++ EC-DH client: `137148` median cycles, `51.0229` avg usec
++ EC-DH server: `136820` median cycles, `50.9074` avg usec
++ EC-DH-FS client gen: `74564` median cycles, `27.7836` avg usec
++ EC-DH-FS server proc: `138540` median cycles, `51.5416` avg usec
++ EC-DH-FS client proc: `202900` median cycles, `75.4453` avg usec
++ EdDSA sign: `65240` median cycles, `24.3178` avg usec
++ EdDSA verify: `160676` median cycles, `59.7434` avg usec
 
 `make ecmultest` results (TB on, demonstrating usual walltime):
 
-+ ec_mul: `105072` median cycles, `40.0293` avg usec
-+ ec_mul_gen: `54002` median cycles, `20.5376` avg usec
-+ ec_simul: `154556` median cycles, `59.6957` avg usec
-+ ec_simul_gen: `117918` median cycles, `45.1856` avg usec
++ ec_mul: `99892` median cycles, `37.9849` avg usec
++ ec_mul_gen: `45438` median cycles, `17.3315` avg usec
++ ec_simul: `146506` median cycles, `55.5047` avg usec
++ ec_simul_gen: `116618` median cycles, `44.5607` avg usec
 
 `make snowshoetest` results (TB on, demonstrating usual walltime):
 
-+ EC-DH client: `104440` median cycles, `40.9807` avg usec
-+ EC-DH server: `104188` median cycles, `40.845` avg usec
-+ EC-DH-FS client gen: `63638` median cycles, `24.1297` avg usec
-+ EC-DH-FS server proc: `105428` median cycles, `40.0834` avg usec
-+ EC-DH-FS client proc: `159096` median cycles, `60.4561` avg usec
-+ EdDSA sign: `56850` median cycles, `21.6322` avg usec
-+ EdDSA verify: `116632` median cycles, `43.6502` avg usec
++ EC-DH client: `100116` median cycles, `38.2195` avg usec
++ EC-DH server: `99876` median cycles, `38.1377` avg usec
++ EC-DH-FS client gen: `54506` median cycles, `20.7465` avg usec
++ EC-DH-FS server proc: `101128` median cycles, `38.4674` avg usec
++ EC-DH-FS client proc: `148114` median cycles, `56.2773` avg usec
++ EdDSA sign: `47340` median cycles, `18.2005` avg usec
++ EdDSA verify: `117502` median cycles, `44.9994` avg usec
 
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
@@ -979,9 +980,7 @@ I appreciate suggestions and criticism from Mike Hamburg on an early version of 
 
 ## TODO
 
-+ Extended Twisted Edwards Dedicated Addition Formula for key generation
 + SAB-set recoding for key generation
-+ Investigate clang vector extensions for faster constant-time table lookups
 + Remove COFACTOR flag from key generation and implement signature verification without it so that the client is validating the public keys
 + Implement Tabby and base benchmark results on that instead
 
