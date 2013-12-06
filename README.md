@@ -433,7 +433,7 @@ On 2.9 GHz i5-4570S Haswell, TB off, using SUPERCOP:
 On i7-3520M Ivy Bridge, TB off, using SUPERCOP:
 
 - ecmul_gen : (not implemented)
-- ecmul : (similar) `145kcy`
+- ecmul : (slower) `145kcy`
 - ecsimul_gen : (not implemented)
 - ecsimul : (not implemented)
 
