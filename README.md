@@ -39,7 +39,7 @@ Sandy Bridge cycle counts on my laptop and desktop matched with TB off,
 which validates the benchmarking methodology.
 
 + To disable TB on Mac, use [DisableTurboBoost](https://github.com/nanoant/DisableTurboBoost.kext) (included under ./tests)
-+ To disable TB on Windows, edit the BIOS settings.
++ To disable TB on Windows, edit the power settings to peg the processor at 100% frequency.  You may verify this with CPUz.
 
 
 ##### libsnowshoe.a on Macbook Air (1.7 GHz Core i7-4650U Haswell, June 2013):
@@ -147,17 +147,17 @@ cycle counts exactly match the laptop version.
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
 
-RDTSC instruction runs at 2.66008 GHz so no correction factor is needed.
+RDTSC instruction runs at 2.66008 GHz, CPU pegged at 3.3254 GHz implies a correction factor of 3.3254/2.66008 = 1.2501128
 
-MSVC2010 build results (TB on, demonstrating usual walltime):
+MSVC2010 build results (CPU at 100%) after applying the correction factor:
 
-+ EC-DH client: `196116` median cycles, `78.8592` avg usec
-+ EC-DH server: `196000` median cycles, `78.5831` avg usec
-+ EC-DH-FS client gen: `117535` median cycles, `46.9823` avg usec
-+ EC-DH-FS server proc: `196954` median cycles, `79.1186` avg usec
-+ EC-DH-FS client proc: `295612` median cycles, `118.62` avg usec
-+ EdDSA sign: `101751` median cycles, `40.7472` avg usec
-+ EdDSA verify: `210717` median cycles, `84.3919` avg usec
++ EC-DH client: `245137` median cycles, `77.6919` avg usec
++ EC-DH server: `245018` median cycles, `77.1183` avg usec
++ EC-DH-FS client gen: `147117` median cycles, `46.9512` avg usec
++ EC-DH-FS server proc: `246048` median cycles, `78.0583` avg usec
++ EC-DH-FS client proc: `369392` median cycles, `116.737` avg usec
++ EdDSA sign: `127270` median cycles, `40.1912` avg usec
++ EdDSA verify: `263256` median cycles, `84.1856` avg usec
 
 
 #### Usage
