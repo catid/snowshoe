@@ -209,7 +209,7 @@ Now generate the server public/private key pair:
 ~~~
 	char pp_s[64];
 	snowshoe_secret_gen(sk_s);
-	if (snowshoe_mul_gen(sk_s, MULGEN_SAFE_DEFAULTS, pp_s)) {
+	if (snowshoe_mul_gen(sk_s, pp_s)) {
 		throw "Secret key was generated wrong (developer error)";
 	}
 ~~~
@@ -223,7 +223,7 @@ Generate client public/private key pair:
 ~~~
 	char pp_c[64];
 	snowshoe_secret_gen(sk_c);
-	if (snowshoe_mul_gen(sk_c, MULGEN_SAFE_DEFAULTS, pp_c)) {
+	if (snowshoe_mul_gen(sk_c, pp_c)) {
 		throw "Secret key was generated wrong (developer error)";
 	}
 ~~~
@@ -276,7 +276,7 @@ packet.
 
 	generate_k(sk_s);
 	snowshoe_secret_gen(sk_s);
-	if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
+	if (snowshoe_mul_gen(sk_s, pp_s)) {
 		return false;
 	}
 
@@ -284,7 +284,7 @@ packet.
 
 	generate_k(sk_e);
 	snowshoe_secret_gen(sk_e);
-	if (snowshoe_mul_gen(sk_e, 0, pp_e)) {
+	if (snowshoe_mul_gen(sk_e, pp_e)) {
 		return false;
 	}
 
@@ -292,7 +292,7 @@ packet.
 
 	generate_k(sk_c);
 	snowshoe_secret_gen(sk_c);
-	if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
+	if (snowshoe_mul_gen(sk_c, pp_c)) {
 		return false;
 	}
 
@@ -367,7 +367,7 @@ Verify:
 	// Offline precomputation:
 
 	snowshoe_secret_gen(a);
-	if (snowshoe_mul_gen(a, MULGEN_VARTIME, pp_A)) {
+	if (snowshoe_mul_gen(a, pp_A)) {
 		return false;
 	}
 
@@ -375,7 +375,7 @@ Verify:
 
 	snowshoe_mod_q(h_hi_m, r);
 	snowshoe_mod_q(h_r_a_m, t);
-	if (snowshoe_mul_gen(r, MULGEN_COFACTOR, pp_R)) {
+	if (snowshoe_mul_gen(r, pp_R)) {
 		return false;
 	}
 	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
