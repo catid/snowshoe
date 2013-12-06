@@ -354,12 +354,12 @@ static bool ec_base_point_test() {
 
 	// Verify that base point and its endomorphism are on the curve
 
-	if (!ec_valid(g.x, g.y)) {
+	if (!ec_valid(g)) {
 		cout << "Generator not on curve" << endl;
 		return false;
 	}
 
-	if (!ec_valid(eg.x, eg.y)) {
+	if (!ec_valid(eg)) {
 		cout << "Generator endomorphism not on curve" << endl;
 		return false;
 	}
@@ -513,35 +513,40 @@ static bool ec_valid_test() {
 	ecpt a;
 
 	ec_set(EC_G, a);
-	if (!ec_valid(a.x, a.y)) {
+	if (!ec_valid(a)) {
 		return false;
 	}
 
 	ec_set(EC_EG, a);
-	if (!ec_valid(a.x, a.y)) {
+	if (!ec_valid(a)) {
 		return false;
 	}
 
 	ufe one;
 	fe_set_smallk(1, one);
 
-	if (ec_valid(Cnn, one)) {
+	fe_set(Cnn, a.x); fe_set(one, a.y);
+	if (ec_valid(a)) {
 		return false;
 	}
-	if (ec_valid(C0n, one)) {
+	fe_set(C0n, a.x); fe_set(one, a.y);
+	if (ec_valid(a)) {
 		return false;
 	}
-	if (ec_valid(Cn0, one)) {
+	fe_set(Cn0, a.x); fe_set(one, a.y);
+	if (ec_valid(a)) {
 		return false;
 	}
-	if (ec_valid(C00, one)) {
+	fe_set(C00, a.x); fe_set(one, a.y);
+	if (ec_valid(a)) {
 		return false;
 	}
 
-	if (ec_valid(GXn, EC_GY)) {
+	fe_set(GXn, a.x); fe_set(EC_GY, a.y);
+	if (ec_valid(a)) {
 		return false;
 	}
-	if (!ec_valid(EC_GX, EC_GY)) {
+	if (!ec_valid(EC_G)) {
 		return false;
 	}
 

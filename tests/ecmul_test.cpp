@@ -497,7 +497,7 @@ bool ec_mul_gen_test() {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ec_mul_gen(k, false, R2);
+		ec_mul_gen(k, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();

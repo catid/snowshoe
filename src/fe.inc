@@ -23,17 +23,28 @@ static void fe_save(const ufe &x, u8 *r) {
 	fp_save(x.b, r + 16);
 }
 
+// Check if r is literally zero in constant-time
+// WARNING: Call fe_complete_reduce(r) before calling this function
+static CAT_INLINE bool fe_iszero_ct(const ufe &r) {
+	u64 zero = r.a.i[0] | r.a.i[1] | r.b.i[0] | r.b.i[1];
+	u32 z = (u32)(zero | (zero >> 32));
+	return z == 0;
+}
+
 // Check if r is zero
+// WARNING: Not constant-time
 static CAT_INLINE bool fe_iszero(const ufe &r) {
 	return fp_iszero(r.a) && fp_iszero(r.b);
 }
 
 // Check if a == b
+// WARNING: Not constant-time
 static CAT_INLINE bool fe_isequal(const ufe &a, const ufe &b) {
 	return fp_isequal(a.a, b.a) && fp_isequal(a.b, b.b);
 }
 
 // Validate that r is within field
+// WARNING: Not constant-time
 static CAT_INLINE bool fe_infield(const ufe &r) {
 	return fp_infield(r.a) && fp_infield(r.b);
 }

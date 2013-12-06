@@ -342,7 +342,7 @@ static void ec_dbl(const ecpt &p, ecpt &r, const bool z_one, ufe &t2b) {
 // r = p1 + p2
 static void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, const bool in_precomp_t1, const bool out_precomp_t3, ufe &t2b) {
 	// Uses: 9M 7A 1D 2U with all flags false
-	// z2_one=true: -1M + 1A
+	// z2_one=true: -1M
 	// in_precomp_t1=true: -1M
 	// out_precomp_t1=true: +1M
 
@@ -476,7 +476,7 @@ static void ec_affine(const ecpt &a, ecpt_affine &r) {
 */
 
 // Verify that the affine point (x, y) exists on the given curve
-static bool ec_valid(const ufe &x, const ufe &y) {
+static bool ec_valid(const ecpt_affine &p) {
 	// If the platform is not little-endian,
 	if (!IsLittleEndian()) {
 		// We cannot work on this platform
@@ -484,12 +484,12 @@ static bool ec_valid(const ufe &x, const ufe &y) {
 	}
 
 	// If point is outside of field,
-	if (!fe_infield(x) || !fe_infield(y)) {
+	if (!fe_infield(p.x) || !fe_infield(p.y)) {
 		return false;
 	}
 
 	// If point is the additive identity x=0,
-	if (fe_iszero(x)) {
+	if (fe_iszero(p.x)) {
 		return false;
 	}
 
@@ -498,14 +498,14 @@ static bool ec_valid(const ufe &x, const ufe &y) {
 
 	// b <- x^2
 	ufe b;
-	fe_sqr(x, b);
+	fe_sqr(p.x, b);
 
 	// b <- u * b = u * x^2
 	fe_mul_u(b, b);
 
 	// c <- y^2
 	ufe c;
-	fe_sqr(y, c);
+	fe_sqr(p.y, c);
 
 	// Validate that:
 	// 0 = b - c + 1 + d * b * c

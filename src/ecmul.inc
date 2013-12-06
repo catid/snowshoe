@@ -5,18 +5,16 @@
 #include "recode.inc"
 
 /*
- * Multiplication by generator point using LSB-set comb method [1] with w=7,v=2
- *
- * Optionally multiplies the point by 4.
+ * Multiplication by generator point using LSB-set comb method [1] with w=6,v=7
  *
  * Preconditions:
  * 	0 < k < q
  *
- * Multiplies the point by k * [4] and stores the result in R
+ * Multiplies the point by k and stores the result in R
  */
 
-// R = k * [4] * G
-static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, ecpt_affine &R) {
+// R = k * G
+static void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 	// Recode scalar
 	u64 kp[4];
 	u32 recode_lsb = ec_recode_scalar_comb_gen(k, kp);
@@ -51,14 +49,6 @@ static void ec_mul_gen(const u64 k[4], const bool mul_cofactor, ecpt_affine &R) 
 
 	// If recode_lsb == 1, X = -X
 	ec_cond_neg(recode_lsb, X);
-
-	// If multiplication by cofactor is desired,
-	if (mul_cofactor) {
-		// Note that this does not improve security.  It is anticipated only
-		// to be useful for signing.
-		ec_dbl(X, X, false, t2b);
-		ec_dbl(X, X, false, t2b);
-	}
 
 	// Compute affine coordinates in R
 	ec_affine(X, R);

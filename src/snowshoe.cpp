@@ -145,7 +145,57 @@ void snowshoe_neg(const char P[64], char R[64]) {
 	ec_save_xy(p1, (u8*)R);
 }
 
-int snowshoe_mul_gen(const char k_raw[32], const int flags, char R[64]) {
+int snowshoe_valid(const char P[64]) {
+	// Load point
+	ecpt_affine p1;
+	ec_load_xy((const u8*)P, p1);
+
+	// Run the math routine
+	if (!ec_valid(p1)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int snowshoe_equals4(const char R[64], const char P4[64]) {
+	// Load point
+	ecpt_affine r1, p1;
+	ec_load_xy((const u8*)R, r1);
+	ec_load_xy((const u8*)P4, p1);
+
+	// Validate input point p1
+	if (!ec_valid(p1)) {
+		return -1;
+	}
+
+	// Negate input point r1
+	ec_neg_affine(r1, r1);
+
+	// Expand r1,p1 into extended coordinates
+	ecpt r2,p2;
+	ec_expand(r1, r2);
+	ec_expand(p1, p2);
+
+	// p2 = 4 * p2
+	ufe t2b;
+	ec_dbl(p2, p2, true, t2b);
+	ec_dbl(p2, p2, false, t2b);
+
+	// p2 = r2 + p2
+	ec_add(p2, r2, p2, true, false, false, t2b);
+
+	// Check if they match in constant-time:
+
+	fe_complete_reduce(p2.x);
+	if (!fe_iszero_ct(p2.x)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int snowshoe_mul_gen(const char k_raw[32], char R[64]) {
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
@@ -154,11 +204,9 @@ int snowshoe_mul_gen(const char k_raw[32], const int flags, char R[64]) {
 		return -1;
 	}
 
-	const bool mul_cofactor = (flags & MULGEN_COFACTOR) != 0;
-
 	// Run the math routine
 	ecpt_affine r;
-	ec_mul_gen(k, mul_cofactor, r);
+	ec_mul_gen(k, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -180,7 +228,7 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	ec_load_xy((const u8*)P, p1);
 
 	// Validate point
-	if (!ec_valid(p1.x, p1.y)) {
+	if (!ec_valid(p1)) {
 		return -1;
 	}
 
@@ -208,7 +256,7 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 	ec_load_xy((const u8*)Q, p2);
 
 	// Validate point
-	if (!ec_valid(p2.x, p2.y)) {
+	if (!ec_valid(p2)) {
 		return -1;
 	}
 
@@ -237,7 +285,7 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 	ec_load_xy((const u8*)Q, p2);
 
 	// Validate points
-	if (!ec_valid(p1.x, p1.y) || !ec_valid(p2.x, p2.y)) {
+	if (!ec_valid(p1) || !ec_valid(p2)) {
 		return -1;
 	}
 

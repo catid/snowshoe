@@ -112,11 +112,11 @@ bool ec_dh_test() {
 		generate_k(sk_s);
 		snowshoe_secret_gen(sk_s);
 
-		if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
+		if (snowshoe_mul_gen(sk_c, pp_c)) {
 			return false;
 		}
 
-		if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
+		if (snowshoe_mul_gen(sk_s, pp_s)) {
 			return false;
 		}
 
@@ -203,7 +203,7 @@ bool ec_dh_fs_test() {
 
 		generate_k(sk_s);
 		snowshoe_secret_gen(sk_s);
-		if (snowshoe_mul_gen(sk_s, 0, pp_s)) {
+		if (snowshoe_mul_gen(sk_s, pp_s)) {
 			return false;
 		}
 
@@ -211,7 +211,7 @@ bool ec_dh_fs_test() {
 
 		generate_k(sk_e);
 		snowshoe_secret_gen(sk_e);
-		if (snowshoe_mul_gen(sk_e, 0, pp_e)) {
+		if (snowshoe_mul_gen(sk_e, pp_e)) {
 			return false;
 		}
 
@@ -222,7 +222,7 @@ bool ec_dh_fs_test() {
 
 		generate_k(sk_c);
 		snowshoe_secret_gen(sk_c);
-		if (snowshoe_mul_gen(sk_c, 0, pp_c)) {
+		if (snowshoe_mul_gen(sk_c, pp_c)) {
 			return false;
 		}
 
@@ -306,14 +306,14 @@ bool ec_dh_fs_test() {
  * Sign message M:
  * 	r = H(hi,M) (mod q)
  * 	t = H(R,A,M) (mod q)
- * 	R = r*4*G
+ * 	R = r*G
  * 	s = r + t*a (mod q)
  * 	Produce: R, s
  *
  * Verify:
  * 	u = H(R,A,M) (mod q)
  * 	nA = -A
- *	R =?= s*G + u*nA
+ *	4*R =?= s*4*G + u*4*nA
  */
 
 bool ec_dsa_test() {
@@ -334,7 +334,7 @@ bool ec_dsa_test() {
 		// Offline precomputation:
 
 		snowshoe_secret_gen(a);
-		if (snowshoe_mul_gen(a, 0, pp_A)) {
+		if (snowshoe_mul_gen(a, pp_A)) {
 			return false;
 		}
 
@@ -345,7 +345,7 @@ bool ec_dsa_test() {
 
 		snowshoe_mod_q(h_hi_m, r);
 		snowshoe_mod_q(h_r_a_m, t);
-		if (snowshoe_mul_gen(r, MULGEN_COFACTOR, pp_R)) {
+		if (snowshoe_mul_gen(r, pp_R)) {
 			return false;
 		}
 		snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
@@ -367,10 +367,8 @@ bool ec_dsa_test() {
 			return false;
 		}
 
-		for (int ii = 0; ii < 64; ++ii) {
-			if (pp_Rtest[ii] != pp_R[ii]) {
-				return false;
-			}
+		if (snowshoe_equals4(pp_Rtest, pp_R)) {
+			return false;
 		}
 
 		t1 = Clock::cycles();
