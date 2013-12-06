@@ -1,0 +1,89 @@
+This dedicated addition formula works but is actually slower than the one
+that takes more operations due to ILP.  So I left it out.
+
+/*
+ * Extended Twisted Edwards Dedicated Point Addition [5]
+ *
+ * This specialized addition formula is useful for key generation and signing
+ * where the point multiplication does not wrap completely around the group
+ * order, so there is no risk of doubling a point.
+ *
+ * Preconditions: Z2 = 1
+ */
+
+// r = p1 + p2, p1 != p2
+static void ec_add_ded(const ecpt &p1, const ecpt &p2, ecpt &r, const bool in_precomp_t1, ufe &t2b) {
+	// Uses: 8M 7A 1U with all flags false
+	// in_precomp_t1=true: -1M
+
+	ufe w1;
+	// w1 <- z1 * t2
+	fe_mul(p1.z, p2.t, w1);
+
+	// t <- t1 * z2
+	if (!in_precomp_t1) {
+		fe_mul(p1.t, t2b, r.t);
+	} else {
+		fe_set(p1.t, r.t);
+	}
+
+	// t2b <- x1 - y1
+	fe_sub(p1.x, p1.y, t2b);
+
+	// z <- x2 + y2
+	fe_add(p2.x, p2.y, r.z);
+
+	// x <- x1 * x2
+	fe_mul(p1.x, p2.x, r.x);
+
+	// y <- y1 * y2
+	fe_mul(p1.y, p2.y, r.y);
+
+	// z <- t2b * z = (x1 - y1) * (x2 + y2) = x1*x2 - y1*x2 + x1*y2 - y1*y2
+	fe_mul(t2b, r.z, r.z);
+
+	// t2b <- t + w1 = t1*z2 + z1*t2
+	fe_add(w1, r.t, t2b);
+
+	// t <- t - w1 = t1*z2 - z1*t2
+	fe_sub(r.t, w1, r.t);
+
+	// z <- z + y = x1*x2 - y1*x2 + x1*y2
+	fe_add(r.z, r.y, r.z);
+
+	// w1 <- u * x = u*x1*x2
+	fe_mul_u(r.x, w1);
+
+	// z <- z - x = x1*y2 - y1*x2
+	fe_sub(r.z, r.x, r.z);
+
+	// w1 <- y - w1 = y1*y2 - u*x1*x2
+	fe_sub(r.y, w1, w1);
+
+	// x3 <- t2b * z = (t1*z2 + z1*t2) * (x1*y2 - y1*x2)
+	fe_mul(r.z, t2b, r.x);
+
+	// y3 <- w1 * t = (y1*y2 - u*x1*x2) * (t1*z2 - z1*t2)
+	fe_mul(r.t, w1, r.y);
+
+	// t3 <- t2b * t = (t1*z2 + z1*t2) * (t1*z2 - z1*t2)
+	//fe_mul(t2b, r.t, r.t);
+
+	// z3 <- w1 * z = (y1*y2 - u*x1*x2) * (x1*y2 - y1*x2)
+	fe_mul(w1, r.z, r.z);
+}
+
+static CAT_INLINE void ec_cond_add_ded(const s32 bit, const ecpt &a, const ecpt &b, ecpt &r, bool precomp_t1, ufe &t2b) {
+	// Generate mask = -1 when bit == 1, else 0
+	const u64 mask = (s64)(-bit);
+
+	// Set temporary point as identity or provided point
+	ecpt T;
+	ec_identity(T);
+	ec_set_mask(b, mask, T);
+
+	// Always add generated point
+	ec_add_ded(a, T, r, precomp_t1, t2b);
+}
+
+

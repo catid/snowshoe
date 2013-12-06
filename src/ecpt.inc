@@ -307,14 +307,14 @@ static void ec_dbl(const ecpt &p, ecpt &r, const bool z_one, ufe &t2b) {
  * Else:
  *	The t2b parameter will be multiplied by p1.t to recover T1.
  *
- * If out_precomp_t1 is true:
+ * If out_precomp_t3 is true:
  *	The t2b parameter is undefined.  The r.t field contains T1.
  * Else:
  *	This function generates r.t and t2b as partial products.
  */
 
-// r = a + b
-static void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, const bool in_precomp_t1, const bool out_precomp_t1, ufe &t2b) {
+// r = p1 + p2
+static void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, const bool in_precomp_t1, const bool out_precomp_t3, ufe &t2b) {
 	// Uses: 9M 7A 1D 2U with all flags false
 	// z2_one=true: -1M + 1A
 	// in_precomp_t1=true: -1M
@@ -335,10 +335,10 @@ static void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, c
 
 	// w2 <- t1 * t2
 	ufe w2;
-	if (!in_precomp_t1) {
-		fe_mul(r.t, p2.t, w2);
-	} else {
+	if (in_precomp_t1) {
 		fe_mul(p1.t, p2.t, w2);
+	} else {
+		fe_mul(r.t, p2.t, w2);
 	}
 
 	// t2b <- t2b * w1 = (x1 + y1) (x2 + y2)
@@ -374,17 +374,17 @@ static void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, c
 	fe_add(r.y, r.t, r.t);
 
 	// w1 <- z - w2 = z1 * z2 - d * u * t1 * t2
-	if (!z2_one) {
-		fe_sub(r.z, w2, w1);
-	} else {
+	if (z2_one) {
 		fe_sub(p1.z, w2, w1);
+	} else {
+		fe_sub(r.z, w2, w1);
 	}
 
 	// z <- z + w2 = z1 * z2 + d * u * t1 * t2
-	if (!z2_one) {
-		fe_add(r.z, w2, r.z);
-	} else {
+	if (z2_one) {
 		fe_add(p1.z, w2, r.z);
+	} else {
+		fe_add(r.z, w2, r.z);
 	}
 
 	// x3 <- t2b * w1 = (x1 * y2 + y1 * x2) * (z1 * z2 - d * u * t1 * t2)
@@ -394,7 +394,7 @@ static void ec_add(const ecpt &p1, const ecpt &p2, ecpt &r, const bool z2_one, c
 	fe_mul(r.z, r.t, r.y);
 
 	// t3 <- t2b * t = (x1 * y2 + y1 * x2) * (y1 * y2 + u * x1 * x2)
-	if (out_precomp_t1) {
+	if (out_precomp_t3) {
 		fe_mul(r.t, t2b, r.t);
 	}
 	// Else: Not performed here: Can be reconstructed from t3 = r.t * t2b later
