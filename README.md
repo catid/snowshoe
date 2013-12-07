@@ -196,15 +196,15 @@ This produces `libsnowshoe.a` with optimizations.
 
 #### Building: Windows
 
-Download LLVM from http://llvm.org/builds/ for Windows to C:\LLVM\.
-Download Mingw64 from http://mingw-w64.sourceforge.net/ for Windows 64-bit to C:\mingw64\.
+Download LLVM from [http://llvm.org/builds/](http://llvm.org/builds/) for Windows to C:\LLVM\.
+Download Mingw64 from [http://mingw-w64.sourceforge.net/](http://mingw-w64.sourceforge.net/) for Windows 64-bit to C:\mingw64\.
 
 ~~~
 copy Makefile.mingw64 Makefile
 c:\mingw64\bin\mingw32-make.exe release
 ~~~
 
-This produces libsnowshoe.lib with vector extensions, which can be linked to an MSVC2010 build.
+This produces `libsnowshoe.lib` with vector extensions, which can be linked to an MSVC2010 build.
 
 
 #### Example Usage: EC-DH
