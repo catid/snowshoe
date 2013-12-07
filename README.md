@@ -149,15 +149,25 @@ cycle counts exactly match the laptop version.
 
 RDTSC instruction runs at 2.66008 GHz, CPU pegged at 3.3254 GHz implies a correction factor of 3.3254/2.66008 = 1.2501128
 
+MSVC2010 build results (CPU at 100%) before applying the correction factor:
+
++ EC-DH client: `152939` median cycles, `61.2776` avg usec
++ EC-DH server: `152744` median cycles, `61.2637` avg usec
++ EC-DH-FS client gen: `81463` median cycles, `32.2964` avg usec
++ EC-DH-FS server proc: `154260` median cycles, `60.9112` avg usec
++ EC-DH-FS client proc: `233256` median cycles, `88.8928` avg usec
++ EdDSA sign: `64234` median cycles, `25.5279` avg usec
++ EdDSA verify: `183615` median cycles, `72.5732` avg usec
+
 MSVC2010 build results (CPU at 100%) after applying the correction factor:
 
-+ EC-DH client: `245137` median cycles, `77.6919` avg usec
-+ EC-DH server: `245018` median cycles, `77.1183` avg usec
-+ EC-DH-FS client gen: `147117` median cycles, `46.9512` avg usec
-+ EC-DH-FS server proc: `246048` median cycles, `78.0583` avg usec
-+ EC-DH-FS client proc: `369392` median cycles, `116.737` avg usec
-+ EdDSA sign: `127270` median cycles, `40.1912` avg usec
-+ EdDSA verify: `263256` median cycles, `84.1856` avg usec
++ EC-DH client: `191191` median cycles, `61.2776` avg usec
++ EC-DH server: `190947` median cycles, `61.2637` avg usec
++ EC-DH-FS client gen: `101838` median cycles, `32.2964` avg usec
++ EC-DH-FS server proc: `192842` median cycles, `60.9112` avg usec
++ EC-DH-FS client proc: `291596` median cycles, `88.8928` avg usec
++ EdDSA sign: `80300` median cycles, `25.5279` avg usec
++ EdDSA verify: `229539` median cycles, `72.5732` avg usec
 
 
 #### Usage
