@@ -1,15 +1,12 @@
 # Change your compiler settings here
 
 # Clang seems to produce faster code
-CCPP = C:\mingw64\bin\g++
-CC = C:\mingw64\bin\gcc
-OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
-#CCPP = clang++
-#CC = clang
-#OPTFLAGS = -O4
+CCPP = C:\LLVM\bin\clang++
+CC = C:\LLVM\bin\clang
+OPTFLAGS = -O4 -m64
 DBGFLAGS = -g -O0 -DDEBUG
 CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include
-LIBNAME = libsnowshoe.a
+LIBNAME = libsnowshoe.lib
 LIBS =
 
 
@@ -124,5 +121,5 @@ snowshoe_test.o : tests/snowshoe_test.cpp
 .PHONY : clean
 
 clean :
-	-rm fptest fetest endotest ecpttest ecmultest snowshoetest libsnowshoe.a $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
+	-del fptest fetest endotest ecpttest ecmultest snowshoetest libsnowshoe.lib $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
 
