@@ -228,9 +228,60 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
 }
 
 /*
- * LSB-Set Comb Method Scalar Recoding [1] for w=7, v=2
+ * Recode scalar to signed binary representation from [17]
  *
- * The algorithm is tuned with ECADD = 1.64 * ECDBL in cycles.
+ * A good algorithm was hinted at in the paper, which can be summarized as
+ * exploiting the group order to produce a signed encoding in the even case
+ * by representing x - p, or x - 2p in the odd case.  So the resulting
+ * encoding is the same length as the original bitstring and it does not
+ * require any corrective adds/negates after evaluation.
+ *
+ * This turns out to be simpler than the comb approach from [1]
+ * both for recoding and evaluation.
+ *
+ * Preconditions:
+ *	k < q
+ */
+
+static const u64 QK1[2] = {
+	0x18B24B8E27B0FF2DULL,
+	0x2CECF5F59F91BC16ULL
+};
+
+static const u64 QK2[2] = {
+	0x3164971C4F61FE5BULL,
+	0x59D9EBEB3F23782CULL
+};
+
+static CAT_INLINE void ec_recode_comb(const u64 k[4], u64 b[4]) {
+	// Generate 64-bit mask from low bit
+	const u64 lsb = k[0] & 1;
+	const s64 mask = -(s64)lsb;
+
+	// b = k >> 1
+	b[0] = (k[0] >> 1) | (k[1] << 63);
+	b[1] = (k[1] >> 1) | (k[2] << 63);
+	b[2] = (k[2] >> 1) | (k[3] << 63);
+	b[3] = k[3] >> 1;
+
+	// a = (k0 ? Q2 : Q1), where Q1 has an additional high bit set
+	const u64 a0 = QK1[0] ^ ((QK1[0] ^ QK2[0]) & mask);
+	const u64 a1 = QK1[1] ^ ((QK1[1] ^ QK2[1]) & mask);
+	const u64 a3 = (lsb ^ 1) << 59;
+
+	// b = b + a
+	u128 sum = (u128)b[0] + a0;
+	b[0] = (u64)sum;
+	sum = ((u128)b[1] + a1) + (u64)(sum >> 64);
+	b[1] = (u64)sum;
+	sum = (u128)b[2] + (u64)(sum >> 64);
+	b[2] = (u64)sum;
+	sum = ((u128)b[3] + a3) + (u64)(sum >> 64);
+	b[3] = (u64)sum;
+}
+
+/*
+ * LSB-Set Comb Method Scalar Recoding [1] for w=7, v=6
  *
  * t = 252 bits for input scalars
  * w = window size in bits
@@ -252,7 +303,7 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
  * ec_dbl cost 450 cycles.
  * ec_add cost 570 cycles.
  *
- * Rough cost = (e - 1) * 570 + (d - 1) * 450 + (660/64) * 2^(w-1) * v * e
+ * Rough cost = (e - 1) * 570 + (d - 1) * 450 + (1530/128)*2^(w-1)*v * d
  */
 
 /*
@@ -299,7 +350,7 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
 
 	I tested a number of configurations, neglecting v=5 or w=5 since it does
 	not evenly divide t=252.  The cost function was not entirely accurate.
-*/
+ */
 
 // Selected parameters for ec_mul_gen:
 static const int MG_t = 252;
@@ -309,50 +360,6 @@ static const int MG_e = (MG_t + MG_w*MG_v - 1) / (MG_w * MG_v); // = ceil(t/wv)
 static const int MG_d = MG_e * MG_v;
 static const int MG_l = MG_d * MG_w;
 static const int MG_width = 1 << (MG_w - 1); // subtable width
-
-static CAT_INLINE u32 ec_recode_scalar_comb_gen(const u64 k[4], u64 b[4]) {
-	// If k0 == 0, b = q - k (and return 1), else b = k (and return 0)
-
-	const u32 lsb = (u32)k[0] & 1;
-	const u64 mask = (s64)0 - lsb;
-
-	neg_mod_q(k, b);
-
-	b[0] ^= (k[0] ^ b[0]) & mask;
-	b[1] ^= (k[1] ^ b[1]) & mask;
-	b[2] ^= (k[2] ^ b[2]) & mask;
-	b[3] ^= (k[3] ^ b[3]) & mask;
-
-	// Recode scalar:
-
-	const u64 d_bit = (u64)1 << (MG_d - 1);
-	const u64 low_mask = d_bit - 1;
-
-	// For bits 0..(d-1), 1 => -1, 0 => +1
-	b[0] = (b[0] | (low_mask | d_bit)) ^ (d_bit | ((b[0] >> 1) & low_mask));
-
-	// Recode remaining bits as per [1]
-	for (int i = MG_d; i < MG_l; ++i) {
-		u32 b_imd = (u32)(b[0] >> (i % MG_d));
-		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
-		u32 bit = b_imd & b_i & 1;
-
-		const int j = i + 1;
-		u64 t[4] = {0};
-		t[j >> 6] |= (u64)bit << (j & 63);
-
-		u128 sum = (u128)b[0] + t[0];
-		b[0] = (u64)sum;
-		sum = ((u128)b[1] + t[1]) + (u64)(sum >> 64);
-		b[1] = (u64)sum;
-		sum = ((u128)b[2] + t[2]) + (u64)(sum >> 64);
-		b[2] = (u64)sum;
-		sum = ((u128)b[3] + t[3]) + (u64)(sum >> 64);
-		b[3] = (u64)sum;
-	}
-
-	return lsb ^ 1;
-}
 
 static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
 	// K(w', v', e') = b_(d * w' + e * v' + e')
@@ -376,7 +383,7 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
 		for (int jj = 1; jj < (MG_w - 1); ++jj) {
 			d |= comb_bit(b, jj+1, vp, ii) << jj;
 		}
-		const u32 s = comb_bit(b, 0, vp, ii);
+		const u32 s = comb_bit(b, 0, vp, ii) ^ 1;
 
 		ecpt &p = r[vp];
 
@@ -447,56 +454,6 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
  * about mid-way between ec_mul and ec_simul for performance.
  */
 
-static u32 ec_recode_scalar_comb_81(const u64 k[4], u64 b[4]) {
-	//const int t = 252;
-	const int w = 8;
-	const int v = 1;
-	const int e = 32; // ceil(t / wv)
-	const int d = e * v;
-	const int l = d * w;
-
-	// If k0 == 0, b = q - k (and return 1), else b = k (and return 0)
-
-	const u32 lsb = (u32)k[0] & 1;
-	const u64 mask = (s64)0 - lsb;
-
-	neg_mod_q(k, b);
-
-	b[0] ^= (k[0] ^ b[0]) & mask;
-	b[1] ^= (k[1] ^ b[1]) & mask;
-	b[2] ^= (k[2] ^ b[2]) & mask;
-	b[3] ^= (k[3] ^ b[3]) & mask;
-
-	// Recode scalar:
-
-	const u64 d_bit = (u64)1 << (d - 1);
-	const u64 low_mask = d_bit - 1;
-
-	// for bits 0..(d-1), 0 => -1, 1 => +1
-	b[0] = (b[0] | (low_mask | d_bit)) ^ (d_bit | ((b[0] >> 1) & low_mask));
-
-	for (int i = d; i < l; ++i) {
-		u32 b_imd = (u32)(b[0] >> (i & 31));
-		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
-		u32 bit = b_imd & b_i & 1;
-
-		const int j = i + 1;
-		u64 t[4] = {0};
-		t[j >> 6] |= (u64)bit << (j & 63);
-
-		u128 sum = (u128)b[0] + t[0];
-		b[0] = (u64)sum;
-		sum = ((u128)b[1] + t[1]) + (u64)(sum >> 64);
-		b[1] = (u64)sum;
-		sum = ((u128)b[2] + t[2]) + (u64)(sum >> 64);
-		b[2] = (u64)sum;
-		sum = ((u128)b[3] + t[3]) + (u64)(sum >> 64);
-		b[3] = (u64)sum;
-	}
-
-	return lsb ^ 1;
-}
-
 static CAT_INLINE u32 comb_bit_81(const u64 b[4], const int wp, const int ep) {
 	// K(w', v', e') = b_(d * w' + e * v' + e'), v' = 0
 	const u32 jj = (wp << 5) + ep;
@@ -505,7 +462,7 @@ static CAT_INLINE u32 comb_bit_81(const u64 b[4], const int wp, const int ep) {
 }
 
 // NOTE: Not constant time because it does not need to be for ec_simul_gen
-static void ec_table_select_comb_81(const u32 recode_lsb, const u64 b[4], const int ii, ecpt &p) {
+static void ec_table_select_comb_81(const u64 b[4], const int ii, ecpt &p) {
 	// D(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
 	// s(v', e') = K(0, v', e')
 
@@ -516,14 +473,14 @@ static void ec_table_select_comb_81(const u32 recode_lsb, const u64 b[4], const 
 	d |= comb_bit_81(b, 3, ii) << 2;
 	d |= comb_bit_81(b, 2, ii) << 1;
 	d |= comb_bit_81(b, 1, ii);
-	const u32 s = comb_bit_81(b, 0, ii);
+	const u32 s = comb_bit_81(b, 0, ii) ^ 1;
 
 	p.x = SIMUL_GEN_TABLE[d].x;
 	p.y = SIMUL_GEN_TABLE[d].y;
 	p.t = SIMUL_GEN_TABLE[d].t;
 
 	// Flip recode_lsb sign here rather than at the end to interleave easier
-	if (s ^ recode_lsb) {
+	if (s) {
 		ec_neg(p, p);
 	}
 }

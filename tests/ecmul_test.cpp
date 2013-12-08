@@ -772,6 +772,81 @@ static void tscTime() {
 	cout << "RDTSC instruction runs at " << (c - c0)/(t - t0)/1000.0 << " GHz" << endl;
 }
 
+static bool ec_recode_comb_test(const u64 x[4]) {
+	u64 y[4];
+	ec_recode_comb(x, y);
+
+	// Follow the recoded bits to reconstruct the original scalars
+	u64 z[4] = {0};
+
+	for (int ii = 251; ii >= 0; ii--) {
+		u32 u = (y[ii >> 6] >> (ii & 63)) & 1;
+
+		z[3] = (z[2] >> 63) | (z[3] << 1);
+		z[2] = (z[1] >> 63) | (z[2] << 1);
+		z[1] = (z[0] >> 63) | (z[1] << 1);
+		z[0] = z[0] << 1;
+
+		if (u) {
+			u128 sum = (u128)z[0] + 1;
+			z[0] = (u64)sum;
+			sum = (u128)z[1] + (u64)(sum >> 64);
+			z[1] = (u64)sum;
+			sum = (u128)z[2] + (u64)(sum >> 64);
+			z[2] = (u64)sum;
+			sum = (u128)z[3] + (u64)(sum >> 64);
+			z[3] = (u64)sum;
+		} else {
+			s128 diff = (s128)z[0] - 1;
+			z[0] = (u64)diff;
+			diff = (diff >> 64) + z[1];
+			z[1] = (u64)diff;
+			diff = (diff >> 64) + z[2];
+			z[2] = (u64)diff;
+			diff = (diff >> 64) + z[3];
+			z[3] = (u64)diff;
+		}
+	}
+
+	u128 sum = (u128)z[0] + EC_Q[0];
+	z[0] = (u64)sum;
+	sum = (u128)z[1] + EC_Q[1] + (u64)(sum >> 64);
+	z[1] = (u64)sum;
+	sum = (u128)z[2] + EC_Q[2] + (u64)(sum >> 64);
+	z[2] = (u64)sum;
+	sum = (u128)z[3] + EC_Q[3] + (u64)(sum >> 64);
+	z[3] = (u64)sum;
+
+	z[3] &= 0x0fffffffffffffffULL;
+
+	if ((x[0] & 1) == 0) {
+		if (z[0] != x[0] || z[1] != x[1] ||
+			z[2] != x[2] || z[3] != x[3]) {
+			cout << "fails in even case";
+			return false;
+		}
+		return true;
+	}
+
+	sum = (u128)z[0] + EC_Q[0];
+	z[0] = (u64)sum;
+	sum = (u128)z[1] + EC_Q[1] + (u64)(sum >> 64);
+	z[1] = (u64)sum;
+	sum = (u128)z[2] + EC_Q[2] + (u64)(sum >> 64);
+	z[2] = (u64)sum;
+	sum = (u128)z[3] + EC_Q[3] + (u64)(sum >> 64);
+	z[3] = (u64)sum;
+
+	z[3] &= 0x0fffffffffffffffULL;
+
+	if (z[0] != x[0] || z[1] != x[1] ||
+		z[2] != x[2] || z[3] != x[3]) {
+		cout << "fails in odd case";
+		return false;
+	}
+	return true;
+}
+
 int main() {
 	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
 
@@ -788,6 +863,13 @@ int main() {
 	// Verify tables have not been tampered with
 	assert(ec_gen_tables3_comb_test());
 	assert(ec_gen_tables_comb_test());
+
+	for (int ii = 0; ii < 1000; ++ii) {
+		u64 k[4];
+		random_k(k);
+		ec_mask_scalar(k);
+		assert(ec_recode_comb_test(k));
+	}
 
 	assert(mod_q_test());
 
