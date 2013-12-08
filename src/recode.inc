@@ -353,62 +353,50 @@ static CAT_INLINE void ec_recode_comb(const u64 k[4], u64 b[4]) {
  */
 
 // Selected parameters for ec_mul_gen:
-static const int MG_t = 252;
-static const int MG_w = 6;
-static const int MG_v = 7;
-static const int MG_e = (MG_t + MG_w*MG_v - 1) / (MG_w * MG_v); // = ceil(t/wv)
-static const int MG_d = MG_e * MG_v;
-static const int MG_l = MG_d * MG_w;
-static const int MG_width = 1 << (MG_w - 1); // subtable width
+static const int MG_l = 252;
+static const int MG_t = 6; // number of comb teeth
+static const int MG_n = 7; // number of combs
+static const int MG_s = MG_l / (MG_n * MG_t); // = ceil(t/wv), comb teeth spacing
+static const int MG_w = MG_s * MG_t; // width of a comb
+static const int MG_e = 1 << (MG_t - 1); // number of comb table entries
 
-static CAT_INLINE u32 comb_bit(const u64 b[4], const int wp, const int vp, const int ep) {
-	// K(w', v', e') = b_(d * w' + e * v' + e')
-	u32 jj = (wp * MG_d) + (vp * MG_e) + ep;
-
-	return (u32)(b[jj >> 6] >> (jj & 63)) & 1;
-}
-
-static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v]) {
-	// D(v', e') = K(w-1, v', e') || K(w-2, v', e') || ... || K(1, v', e')
-	// s(v', e') = K(0, v', e')
-
-	// Select table entry 
-	// p1 = s(0, ii) * tables[D(0, ii)][0]
-	// p2 = s(1, ii) * tables[D(1, ii)][1]
-	// p3 = s(2, ii) * tables[D(2, ii)][2]
-	// p4 = s(3, ii) * tables[D(3, ii)][3]
-	for (int vp = 0; vp < MG_v; ++vp) {
-		// Calculate table index
-		u32 d = comb_bit(b, 1, vp, ii);
-		for (int jj = 1; jj < (MG_w - 1); ++jj) {
-			d |= comb_bit(b, jj+1, vp, ii) << jj;
+static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_n]) {
+	// For each comb,
+	for (int comb = 0, comb_bit = ii; comb < MG_n; ++comb, comb_bit += MG_w) {
+		u32 bits = 0, offset = comb_bit;
+		for (int tooth = 0; tooth < MG_t; ++tooth) {
+			bits |= ((u32)(b[offset >> 6] >> (offset & 63)) & 1) << tooth;
+			offset += MG_s;
 		}
-		const u32 s = comb_bit(b, 0, vp, ii) ^ 1;
+		u32 sign = (u32)(b[offset >> 6] >> (offset & 63)) & 1;
+		bits = (bits ^ -(s32)sign) & (MG_e - 1);
 
-		ecpt &p = r[vp];
+		ecpt &p = r[comb];
 
 		ec_zero(p);
 
+		const ecpt_affine *table = GEN_TABLE[comb];
+
 #ifdef CAT_HAS_VECTOR_EXTENSIONS
 
-		const vec_ecpt_affine *tp = (const vec_ecpt_affine *)GEN_TABLE[vp];
+		const vec_ecpt_affine *tp = (const vec_ecpt_affine *)table;
 		vec_ecpt_affine *rp = (vec_ecpt_affine *)&p;
 
-		for (int jj = 0; jj < MG_width; ++jj) {
+		for (int jj = 0; jj < MG_e; ++jj) {
 			// Generate a mask that is -1 if jj == index, else 0
-			const u64 mask = ec_gen_mask(jj, d);
+			const u64 mask = ec_gen_mask(jj, bits);
 
 			*rp ^= tp[jj] & mask;
 		}
 	
 #else
 
-		for (int jj = 0; jj < MG_width; ++jj) {
+		for (int jj = 0; jj < MG_e; ++jj) {
 			// Generate a mask that is -1 if jj == index, else 0
-			const u64 mask = ec_gen_mask(jj, d);
+			const u64 mask = ec_gen_mask(jj, bits);
 
 			// Add in the masked table entry
-			ec_xor_mask_affine(GEN_TABLE[vp][jj], mask, p);
+			ec_xor_mask_affine(table[jj], mask, p);
 		}
 
 #endif
@@ -417,7 +405,7 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
 		fe_mul(p.x, p.y, p.t);
 
 		// Apply sign bit
-		ec_cond_neg(s, p);
+		ec_cond_neg(sign ^ 1, p);
 	}
 }
 
