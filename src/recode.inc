@@ -243,40 +243,24 @@ static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, con
  *	k < q
  */
 
-static const u64 QK1[2] = {
-	0x18B24B8E27B0FF2DULL,
-	0x2CECF5F59F91BC16ULL
-};
-
-static const u64 QK2[2] = {
-	0x3164971C4F61FE5BULL,
-	0x59D9EBEB3F23782CULL
-};
-
 static CAT_INLINE void ec_recode_comb(const u64 k[4], u64 b[4]) {
 	// Generate 64-bit mask from low bit
 	const u64 lsb = k[0] & 1;
 	const s64 mask = -(s64)lsb;
 
-	// b = k >> 1
-	b[0] = (k[0] >> 1) | (k[1] << 63);
-	b[1] = (k[1] >> 1) | (k[2] << 63);
-	b[2] = (k[2] >> 1) | (k[3] << 63);
-	b[3] = k[3] >> 1;
-
 	// a = (k0 ? Q2 : Q1), where Q1 has an additional high bit set
-	const u64 a0 = QK1[0] ^ ((QK1[0] ^ QK2[0]) & mask);
-	const u64 a1 = QK1[1] ^ ((QK1[1] ^ QK2[1]) & mask);
 	const u64 a3 = (lsb ^ 1) << 59;
+	const u64 a0 = 0x18B24B8E27B0FF2DULL ^ (0x29D6DC9268D10176ULL & mask);
+	const u64 a1 = 0x2CECF5F59F91BC16ULL ^ (0x75351E1EA0B2C43AULL & mask);
 
-	// b = b + a
-	u128 sum = (u128)b[0] + a0;
+	// b = (k >> 1) + a
+	u128 sum = (u128)((k[0] >> 1) | (k[1] << 63)) + a0;
 	b[0] = (u64)sum;
-	sum = ((u128)b[1] + a1) + (u64)(sum >> 64);
+	sum = ((u128)((k[1] >> 1) | (k[2] << 63)) + a1) + (u64)(sum >> 64);
 	b[1] = (u64)sum;
-	sum = (u128)b[2] + (u64)(sum >> 64);
+	sum = (u128)((k[2] >> 1) | (k[3] << 63)) + (u64)(sum >> 64);
 	b[2] = (u64)sum;
-	sum = ((u128)b[3] + a3) + (u64)(sum >> 64);
+	sum = ((u128)(k[3] >> 1) + a3) + (u64)(sum >> 64);
 	b[3] = (u64)sum;
 }
 
@@ -364,11 +348,11 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_n])
 	// For each comb,
 	for (int comb = 0, comb_bit = ii; comb < MG_n; ++comb, comb_bit += MG_w) {
 		u32 bits = 0, offset = comb_bit;
-		for (int tooth = 0; tooth < MG_t; ++tooth) {
+		for (int tooth = 0; tooth < (MG_t-1); ++tooth) {
 			bits |= ((u32)(b[offset >> 6] >> (offset & 63)) & 1) << tooth;
 			offset += MG_s;
 		}
-		u32 sign = (u32)(b[offset >> 6] >> (offset & 63)) & 1;
+		u32 sign = ((u32)(b[offset >> 6] >> (offset & 63)) & 1) ^ 1;
 		bits = (bits ^ -(s32)sign) & (MG_e - 1);
 
 		ecpt &p = r[comb];

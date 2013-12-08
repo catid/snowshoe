@@ -135,34 +135,72 @@ static bool ec_gen_tables_comb_test() {
 	ec_set(EC_G, base);
 
 	for (int comb = 0; comb < MG_n; ++comb) {
-		// Shift base to next table
+		ecpt teeth[MG_t];
+
+		ec_set(base, teeth[0]);
 		if (comb > 0) {
-			for (int ii = 0; ii < MG_w; ++ii) {
+			fe_mul(base.t, t2b, teeth[0].t);
+		}
+
+		for (int tooth = 1; tooth < MG_t; ++tooth) {
+			for (int space = 0; space < MG_s; ++space) {
+				ec_dbl(base, base, false, t2b);
+			}
+
+			ec_set(base, teeth[tooth]);
+			fe_mul(base.t, t2b, teeth[tooth].t);
+		}
+
+		if (comb < MG_n - 1) {
+			for (int space = 0; space < MG_s; ++space) {
 				ec_dbl(base, base, false, t2b);
 			}
 		}
 
-		ec_affine(base, table[comb][0]);
+		ecpt p[MG_e];
 
-		ecpt two;
-		ufe ignore;
-		ec_dbl(base, two, false, ignore);
-		fe_mul(t2b, two.t, two.t);
+		ec_set(teeth[0], p[0]);
+		ec_add(p[0], teeth[1], p[1], false, true, true, t2b);
+		ec_add(p[0], teeth[2], p[2], false, true, true, t2b);
+		ec_add(p[2], p[1], p[3], false, true, true, t2b);
+		ec_add(p[0], teeth[3], p[4], false, true, true, t2b);
+		ec_add(p[4], p[1], p[5], false, true, true, t2b);
+		ec_add(p[4], p[2], p[6], false, true, true, t2b);
+		ec_add(p[4], p[3], p[7], false, true, true, t2b);
+		ec_add(p[0], teeth[4], p[8], false, true, true, t2b);
+		ec_add(p[8], p[1], p[9], false, true, true, t2b);
+		ec_add(p[8], p[2], p[10], false, true, true, t2b);
+		ec_add(p[8], p[3], p[11], false, true, true, t2b);
+		ec_add(p[8], p[4], p[12], false, true, true, t2b);
+		ec_add(p[8], p[5], p[13], false, true, true, t2b);
+		ec_add(p[8], p[6], p[14], false, true, true, t2b);
+		ec_add(p[8], p[7], p[15], false, true, true, t2b);
+		ec_add(p[0], teeth[5], p[16], false, true, true, t2b);
+		ec_add(p[16], p[1], p[17], false, true, true, t2b);
+		ec_add(p[16], p[2], p[18], false, true, true, t2b);
+		ec_add(p[16], p[3], p[19], false, true, true, t2b);
+		ec_add(p[16], p[4], p[20], false, true, true, t2b);
+		ec_add(p[16], p[5], p[21], false, true, true, t2b);
+		ec_add(p[16], p[6], p[22], false, true, true, t2b);
+		ec_add(p[16], p[7], p[23], false, true, true, t2b);
+		ec_add(p[16], p[8], p[24], false, true, true, t2b);
+		ec_add(p[16], p[9], p[25], false, true, true, t2b);
+		ec_add(p[16], p[10], p[26], false, true, true, t2b);
+		ec_add(p[16], p[11], p[27], false, true, true, t2b);
+		ec_add(p[16], p[12], p[28], false, true, true, t2b);
+		ec_add(p[16], p[13], p[29], false, true, true, t2b);
+		ec_add(p[16], p[14], p[30], false, true, true, t2b);
+		ec_add(p[16], p[15], p[31], false, true, true, t2b);
 
-		ecpt q;
-		ec_set(base, q);
-
-		for (int u = 1; u < MG_e; ++u) {
-			ec_add(q, two, q, false, false, false, t2b);
-
-			ec_affine(q, table[comb][u]);
+		for (int ii = 0; ii < MG_e; ++ii) {
+			ec_affine(p[ii], table[comb][ii]);
 		}
 	}
 
 	u32 t1 = Clock::cycles();
 	double s1 = m_clock.usec();
 
-	cout << "Regenerated comb tables in " << (t1 - t0) << " cycles and " << (s1 - s0) << " usec" << endl;
+	cout << "Regenerated ec_mul_gen comb tables in " << (t1 - t0) << " cycles and " << (s1 - s0) << " usec" << endl;
 
 #ifdef EC_GEN_PRINT_TABLES
 

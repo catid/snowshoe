@@ -16,15 +16,15 @@
 // R = k * G
 static void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 	// Recode scalar
-	u64 kp[4];
-	ec_recode_comb(k, kp);
+	u64 rk[4];
+	ec_recode_comb(k, rk);
 
 	// Unroll first evaluation loop
 	ecpt T[MG_n];
-	ec_table_select_comb_gen(kp, MG_s - 1, T);
+	ec_table_select_comb_gen(rk, MG_s - 1, T);
 	fe_set_smallk(1, T[0].z);
 
-	// X = T[0] + T[1] + T[2]
+	// X = T[0] + T[1] + ...
 	ufe t2b;
 	ecpt X;
 	ec_add(T[0], T[1], X, true, true, false, t2b);
@@ -34,7 +34,7 @@ static void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 
 	// Evaluate
 	for (int ii = MG_s - 2; ii >= 0; --ii) {
-		ec_table_select_comb_gen(kp, ii, T);
+		ec_table_select_comb_gen(rk, ii, T);
 
 		ec_dbl(X, X, false, t2b);
 		for (int jj = 0; jj < MG_n; ++jj) {
