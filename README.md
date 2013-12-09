@@ -1009,9 +1009,3 @@ Explores SAB-set comb multiplication and special prime moduli
 
 I appreciate suggestions and criticism from Mike Hamburg on an early version of the software.
 
-
-## TODO
-
-+ SAB-set recoding for key generation
-+ Implement Tabby and base benchmark results on that instead
-
