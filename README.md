@@ -501,6 +501,33 @@ On 3.4 GHz i7-3770 Ivy Bridge with TB off:
 - ecsimul : (not implemented)
 
 
+##### Crypto++ Library 5.6.2
+
+On iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
+
+Using `cryptopp562/cryptest.exe`, the best 256-bit ECDSA implementation takes
+`2,040,000 cycles` for signing, and `7,750,000 cycles` for verification.
+Similarly all other operations are roughly 20x slower than Snowshoe.
+
+
+##### LibTomCrypt Library 1.17
+
+On iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
+
+After building and installing LibTomFastMath 0.12 and fixing some syntax errors
+for Mac and disabling LTC_KSEED,
+`CFLAGS="-DTFM_DESC -DUSE_TFM" EXTRALIBS=-ltfm make test timing` gave me a
+binary, which passed all tests.
+
+These results are roughly 20x slower than Snowshoe:
+
++ ECC-256 make_key    took         1738168 cycles
++ ECC-256 encrypt_key took         3464327 cycles
++ ECC-256 decrypt_key took         1785863 cycles
++ ECC-256 sign_hash took           1823073 cycles
++ ECC-256 verify_hash took         2436467 cycles
+
+
 ## Details
 
 ~~~
