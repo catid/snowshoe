@@ -545,6 +545,11 @@ it is much slower.  Kasper demonstrates that the improvements in the paper are
 roughly 3x faster than normal OpenSSL, pegging Snowshoe roughly 6x faster than
 OpenSSL 1.0.1e for the same security level.
 
+And indeed building OpenSSL 1.0.1e with `make tests`, after configuring for
+64-bit builds and enabling the timing tests macros in `crypto/ec/ectest.c` show
+that it takes roughly 4 milliseconds to perform a point multiplication, which
+is about 100x (!) slower in reality.
+
 
 ## Details
 
