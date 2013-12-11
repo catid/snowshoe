@@ -4,8 +4,8 @@
 #CCPP = g++
 #CC = gcc
 #OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
-CCPP = clang++
-CC = clang
+CCPP = clang++ -m64
+CC = clang -m64
 OPTFLAGS = -O3
 DBGFLAGS = -g -O0 -DDEBUG
 CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include
@@ -60,29 +60,33 @@ library : $(snowshoe_o)
 # tester executables
 
 fptest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-fptest : $(fp_test_o)
-	$(CCPP) $(LIBS) -o fptest $(fp_test_o)
+fptest : clean $(fp_test_o)
+	$(CCPP) $(fp_test_o) $(LIBS) -o fptest
+	./fptest
 
 fetest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-fetest : $(fe_test_o)
-	$(CCPP) $(LIBS) -o fetest $(fe_test_o)
+fetest : clean $(fe_test_o)
+	$(CCPP) $(fe_test_o) $(LIBS) -o fetest
+	./fetest
 
 endotest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-endotest : $(endo_test_o)
-	$(CCPP) $(LIBS) -o endotest $(endo_test_o)
+endotest : clean $(endo_test_o)
+	$(CCPP) $(endo_test_o) $(LIBS) -o endotest
+	./endotest
 
 ecpttest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
-ecpttest : $(ecpt_test_o)
-	$(CCPP) $(LIBS) -o ecpttest $(ecpt_test_o)
+ecpttest : clean $(ecpt_test_o)
+	$(CCPP) $(ecpt_test_o) $(LIBS) -o ecpttest
+	./ecpttest
 
 ecmultest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
 ecmultest : clean $(ecmul_test_o)
-	$(CCPP) $(LIBS) -o ecmultest $(ecmul_test_o)
+	$(CCPP) $(ecmul_test_o) $(LIBS) -o ecmultest
 	./ecmultest
 
 snowshoetest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
 snowshoetest : clean $(snowshoe_test_o) library
-	$(CCPP) $(LIBS) -L. -lsnowshoe -o snowshoetest $(snowshoe_test_o)
+	$(CCPP) $(snowshoe_test_o) $(LIBS) -L. -lsnowshoe -o snowshoetest
 	./snowshoetest
 
 
