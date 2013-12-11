@@ -4,13 +4,14 @@
 #CCPP = g++
 #CC = gcc
 #OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
-CCPP = clang++
-CC = clang
+CCPP = clang++ -flto
+CC = clang -flto
 OPTFLAGS = -O4
 DBGFLAGS = -g -O0 -DDEBUG
 CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include
 LIBNAME = libsnowshoe.a
 LIBS =
+RANLIB=/bin/true
 
 
 # Object files
