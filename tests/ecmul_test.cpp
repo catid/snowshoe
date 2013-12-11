@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <cassert>
 #include <vector>
+#include <cstdlib>
 using namespace std;
 
 #include "Clock.hpp"
