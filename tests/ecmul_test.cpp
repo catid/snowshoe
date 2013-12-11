@@ -322,10 +322,10 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 		a2.w <<= 1;
 
 		if (u) {
-			a2.w++;
+			a2.w = a2.w + 1;
 			cout << ii << " + 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 		} else {
-			a2.w--;
+			a2.w = a2.w - 1;
 			cout << ii << " - 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 		}
 
@@ -333,9 +333,9 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 
 		if (v) {
 			if (u) {
-				b2.w++;
+				b2.w = b2.w + 1;
 			} else {
-				b2.w--;
+				b2.w = b2.w - 1;
 			}
 		}
 	}
