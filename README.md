@@ -528,6 +528,18 @@ These results are roughly 20x slower than Snowshoe:
 + ECC-256 verify_hash took         2436467 cycles
 
 
+##### Kasper's OpenSSL implementation [http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/37376.pdf](http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/37376.pdf):
+
+The NIST P-224 curve point multiplication they presented in the paper ran in
+`457,813` cycles for P-224 ("112 bit" security level), which is less secure
+than this curve by about 14 "bits."  I do not have access to a Core 2 Duo to
+do a direct comparison, but SUPERCOP has Curve25519 benchmarked at `306,936`
+cycles on the same architecture, and for Sandy Bridge Curve25519 performs a
+scalar multiplication in `205,696` cycles.  So I would expect Snowshoe to run
+`ec_mul` in `204,190` cycles on the same machine.  Since Kasper does not
+mention disabling Turbo Boost, Snowshoe is anywhere from 2.24x to 3x faster.
+
+
 ## Details
 
 ~~~
