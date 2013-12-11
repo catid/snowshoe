@@ -348,9 +348,11 @@ static bool ec_curve_order_test(bool use_eg, bool z2_one) {
 }
 
 static bool ec_base_point_test() {
-	ecpt g, eg;
-	ec_set(EC_G, g);
-	ec_set(EC_EG, eg);
+	ecpt_affine g, eg;
+	fe_set(EC_GX, g.x);
+	fe_set(EC_GY, g.y);
+	fe_set(EC_EGX, eg.x);
+	fe_set(EC_EGY, eg.y);
 
 	// Verify that base point and its endomorphism are on the curve
 
@@ -366,7 +368,7 @@ static bool ec_base_point_test() {
 
 	// Verify that precomputed endomorphism for base point is correct
 
-	ecpt eg2;
+	ecpt_affine eg2;
 	gls_morph(EC_G.x, EC_G.y, eg2.x, eg2.y);
 
 	if (!fe_isequal(eg2.x, EC_EG.x)) {
@@ -384,21 +386,21 @@ static bool ec_base_point_test() {
 	fe_set_smallk(1, one);
 
 	fe_mul(g.x, g.y, r);
-	if (!fe_isequal(g.t, r)) {
+	if (!fe_isequal(EC_G.t, r)) {
 		cout << "Generator T wrong" << endl;
 		return false;
 	}
-	if (!fe_isequal(g.z, one)) {
+	if (!fe_isequal(EC_G.z, one)) {
 		cout << "Generator Z wrong" << endl;
 		return false;
 	}
 
 	fe_mul(eg.x, eg.y, r);
-	if (!fe_isequal(eg.t, r)) {
+	if (!fe_isequal(EC_EG.t, r)) {
 		cout << "Generator endo T wrong" << endl;
 		return false;
 	}
-	if (!fe_isequal(eg.z, one)) {
+	if (!fe_isequal(EC_EG.z, one)) {
 		cout << "Generator endo Z wrong" << endl;
 		return false;
 	}
@@ -510,14 +512,16 @@ static bool ec_save_load_test(const ecpt &P) {
 }
 
 static bool ec_valid_test() {
-	ecpt a;
+	ecpt_affine a;
 
-	ec_set(EC_G, a);
+	fe_set(EC_G.x, a.x);
+	fe_set(EC_G.y, a.y);
 	if (!ec_valid(a)) {
 		return false;
 	}
 
-	ec_set(EC_EG, a);
+	fe_set(EC_EG.x, a.x);
+	fe_set(EC_EG.y, a.y);
 	if (!ec_valid(a)) {
 		return false;
 	}
@@ -544,9 +548,6 @@ static bool ec_valid_test() {
 
 	fe_set(GXn, a.x); fe_set(EC_GY, a.y);
 	if (ec_valid(a)) {
-		return false;
-	}
-	if (!ec_valid(EC_G)) {
 		return false;
 	}
 
