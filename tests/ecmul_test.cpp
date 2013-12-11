@@ -305,6 +305,11 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 
 	u32 lsb = ec_recode_scalars_2(a1, b1, 128);
 
+	cout << "lsb = " << lsb << endl;
+
+	cout << "a1 = 0x" << hex << a1.i[0] << "ULL, 0x" << a1.i[1] << "ULL" << endl;
+	cout << "b1 = 0x" << hex << b1.i[0] << "ULL, 0x" << b1.i[1] << "ULL" << endl;
+
 	// Follow the recoded bits to reconstruct the original scalars
 	ufp a2, b2;
 	a2.w = 0;
@@ -336,6 +341,9 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 	if (lsb == 1) {
 		a2.w++;
 	}
+
+	cout << "a = 0x" << hex << a.i[0] << "ULL, 0x" << a.i[1] << "ULL" << endl;
+	cout << "a2 = 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 
 	if (a.w != a2.w) {
 		cout << "Recoding a failed" << endl;
