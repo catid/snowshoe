@@ -500,7 +500,6 @@ On 3.4 GHz i7-3770 Ivy Bridge with TB off:
 - ecsimul_gen : (faster) `111kcy`
 - ecsimul : (not implemented)
 
-
 ##### Crypto++ Library 5.6.2
 
 On iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
@@ -508,7 +507,6 @@ On iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
 Using `cryptopp562/cryptest.exe`, the best 256-bit ECDSA implementation takes
 `2,040,000 cycles` for signing, and `7,750,000 cycles` for verification.
 Similarly all other operations are roughly 20x slower than Snowshoe.
-
 
 ##### LibTomCrypt Library 1.17
 
@@ -527,10 +525,9 @@ These results are roughly 20x slower than Snowshoe:
 + ECC-256 sign_hash took           1823073 cycles
 + ECC-256 verify_hash took         2436467 cycles
 
-
 ##### Kasper's OpenSSL implementation [http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/37376.pdf](http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/37376.pdf):
 
-The NIST P-224 curve point multiplication they presented in the paper ran in
+The NIST P-224 curve point multiplication Kasper presents in the paper ran in
 `457,813` cycles for P-224 ("112 bit" security level), which is less secure
 than this curve by about 14 "bits."  I do not have access to a Core 2 Duo to
 do a direct comparison, but SUPERCOP has Curve25519 benchmarked at `306,936`
@@ -538,6 +535,15 @@ cycles on the same architecture, and for Sandy Bridge Curve25519 performs a
 scalar multiplication in `205,696` cycles.  So I would expect Snowshoe to run
 `ec_mul` in `204,190` cycles on the same machine.  Since Kasper does not
 mention disabling Turbo Boost, Snowshoe is anywhere from 2.24x to 3x faster.
+
+Kasper's results also make it possible to compare Snowshoe to OpenSSL.
+In OpenSSL 1.0.1e, the NIST P-256 curve math in `crypto/ec/ecp_nistp256.c` is
+similar in code complexity to Snowshoe.  However, OpenSSL does not take
+advantage of efficient endormorphisms, fast twisted Edwards group laws, nor
+fields with fast reductions or Karatsuba methods for field multiplication, so
+it is much slower.  Kasper demonstrates that the improvements in the paper are
+roughly 3x faster than normal OpenSSL, pegging Snowshoe roughly 6x faster than
+OpenSSL 1.0.1e for the same security level.
 
 
 ## Details
