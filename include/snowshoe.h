@@ -44,39 +44,39 @@ extern "C" {
  * Returns 0 on success.
  * Returns non-zero if the API level does not match.
  */
-int _snowshoe_init(int expected_version);
+extern int _snowshoe_init(int expected_version);
 #define snowshoe_init() _snowshoe_init(SNOWSHOE_VERSION)
 
 /*
  * Mask a provided 256-bit random number so that it is less than q
  * and can be used as a secret key.
  */
-void snowshoe_secret_gen(char k[32]);
+extern void snowshoe_secret_gen(char k[32]);
 
 /*
  * r = (x * y + z) (mod q)
  *
  * You may pass NULL in place of z to skip the addition.
  */
-void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
+extern void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
 
 /*
  * r = x (mod q)
  */
-void snowshoe_mod_q(const char x[64], char r[32]);
+extern void snowshoe_mod_q(const char x[64], char r[32]);
 
 /*
  * R = -P
  *
  * Negate the given input point and store it in R
  */
-void snowshoe_neg(const char P[64], char R[64]);
+extern void snowshoe_neg(const char P[64], char R[64]);
 
 /*
  * Returns 0 if the input point is valid.
  * Returns non-zero if the input point is not on the curve.
  */
-int snowshoe_valid(const char P[64]);
+extern int snowshoe_valid(const char P[64]);
 
 /*
  * R =?= 4 * P
@@ -94,7 +94,7 @@ int snowshoe_valid(const char P[64]);
  * Returns 0 if P is valid and R == 4 * P.
  * Returns non-zero if either P is invalid or they are not equivalent.
  */
-int snowshoe_equals4(const char R[64], const char P4[64]);
+extern int snowshoe_equals4(const char R[64], const char P4[64]);
 
 /*
  * R = k*G
@@ -111,7 +111,7 @@ int snowshoe_equals4(const char R[64], const char P4[64]);
  * It is important to check the return value to avoid active attacks.
  */
 
-int snowshoe_mul_gen(const char k[32], char R[64]);
+extern int snowshoe_mul_gen(const char k[32], char R[64]);
 
 /*
  * R = k*4*P
@@ -127,7 +127,7 @@ int snowshoe_mul_gen(const char k[32], char R[64]);
  * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-int snowshoe_mul(const char k[32], const char P[64], char R[64]);
+extern int snowshoe_mul(const char k[32], const char P[64], char R[64]);
 
 /*
  * R = a*4*G + b*4*Q
@@ -146,7 +146,7 @@ int snowshoe_mul(const char k[32], const char P[64], char R[64]);
  * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]);
+extern int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]);
 
 /*
  * R = a*4*P + b*4*Q
@@ -162,7 +162,7 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
  * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-int snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
+extern int snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
 
 #ifdef __cplusplus
 }
