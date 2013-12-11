@@ -547,8 +547,8 @@ OpenSSL 1.0.1e for the same security level.
 
 And indeed building OpenSSL 1.0.1e with `make tests`, after configuring for
 64-bit builds and enabling the timing tests macros in `crypto/ec/ectest.c` show
-that it takes roughly 4 milliseconds to perform a point multiplication, which
-is about 100x (!) slower in reality.
+that it takes roughly 100 usec to generate a key (4x slower) and that it takes
+roughly 400 usec for EC-DH (8x slower).
 
 
 ## Details
