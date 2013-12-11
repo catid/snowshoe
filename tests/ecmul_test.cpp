@@ -305,10 +305,12 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 
 	u32 lsb = ec_recode_scalars_2(a1, b1, 128);
 
+#ifdef VERBOSE_RECODE_TEST
 	cout << "lsb = " << lsb << endl;
 
 	cout << "a1 = 0x" << hex << a1.i[0] << "ULL, 0x" << a1.i[1] << "ULL" << endl;
 	cout << "b1 = 0x" << hex << b1.i[0] << "ULL, 0x" << b1.i[1] << "ULL" << endl;
+#endif
 
 	// Follow the recoded bits to reconstruct the original scalars
 	ufp a2, b2;
@@ -323,10 +325,16 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 
 		if (u) {
 			a2.w = a2.w + 1;
+#ifdef VERBOSE_RECODE_TEST
 			cout << ii << " + 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
+#endif
 		} else {
+			// WARNING: This works around a bug in clang where a2.w-- would cause
+			// the wrong result (!)
 			a2.w = a2.w - 1;
+#ifdef VERBOSE_RECODE_TEST
 			cout << ii << " - 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
+#endif
 		}
 
 		b2.w <<= 1;
@@ -335,6 +343,9 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 			if (u) {
 				b2.w = b2.w + 1;
 			} else {
+				// WARNING: This works around a bug in clang 3.0 where a2.w-- would produce
+				// the wrong result (!).  This seems to be fixed in clang 3.3 in Apple LLVM
+				// version 5.0
 				b2.w = b2.w - 1;
 			}
 		}
@@ -344,8 +355,10 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 		a2.w++;
 	}
 
+#ifdef VERBOSE_RECODE_TEST
 	cout << "a = 0x" << hex << a.i[0] << "ULL, 0x" << a.i[1] << "ULL" << endl;
 	cout << "a2 = 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
+#endif
 
 	if (a.w != a2.w) {
 		cout << "Recoding a failed" << endl;
