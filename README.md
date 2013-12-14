@@ -109,40 +109,40 @@ RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 
 `make ecmultest` results (TB off):
 
-+ ec_mul: `136840` median cycles, `50.8796` avg usec
-+ ec_mul_gen: `63176` median cycles, `23.5365` avg usec
-+ ec_simul: `200760` median cycles, `74.6321` avg usec
-+ ec_simul_gen: `159720` median cycles, `59.3859` avg usec
++ ec_mul: `137448` median cycles, `51.1046` avg usec
++ ec_mul_gen: `62732` median cycles, `23.3941` avg usec
++ ec_simul: `199656` median cycles, `74.1709` avg usec
++ ec_simul_gen: `158080` median cycles, `58.8016` avg usec
 
 These results serve to justify the benchmarking methodology.  Notice that the
 cycle counts exactly match the laptop version.
 
 `make snowshoetest` results (TB off):
 
-+ EC-DH client: `137492` median cycles, `51.1522` avg usec
-+ EC-DH server: `137304` median cycles, `51.0842` avg usec
-+ EC-DH-FS client gen: `73816` median cycles, `27.4923` avg usec
-+ EC-DH-FS server proc: `139088` median cycles, `51.7376` avg usec
-+ EC-DH-FS client proc: `202776` median cycles, `75.4931` avg usec
-+ EdDSA sign: `63512` median cycles, `23.6925` avg usec
-+ EdDSA verify: `161860` median cycles, `60.1984` avg usec
++ EC-DH client: `136608` median cycles, `50.8648` avg usec
++ EC-DH server: `136428` median cycles, `50.7681` avg usec
++ EC-DH-FS client gen: `74584` median cycles, `27.7514` avg usec
++ EC-DH-FS server proc: `138048` median cycles, `51.3688` avg usec
++ EC-DH-FS client proc: `201932` median cycles, `75.1432` avg usec
++ EdDSA sign: `63672` median cycles, `23.7501` avg usec
++ EdDSA verify: `161520` median cycles, `60.083` avg usec
 
 `make ecmultest` results (TB on, demonstrating usual walltime):
 
-+ ec_mul: `99902` median cycles, `37.6558` avg usec
-+ ec_mul_gen: `46120` median cycles, `17.4025` avg usec
-+ ec_simul: `146564` median cycles, `55.757` avg usec
-+ ec_simul_gen: `116838` median cycles, `44.6971` avg usec
++ ec_mul: `100484` median cycles, `38.2353` avg usec
++ ec_mul_gen: `46533` median cycles, `17.9244` avg usec
++ ec_simul: `145766` median cycles, `55.5407` avg usec
++ ec_simul_gen: `115574` median cycles, `44.0471` avg usec
 
 `make snowshoetest` results (TB on, demonstrating usual walltime):
 
-+ EC-DH client: `100336` median cycles, `37.9428` avg usec
-+ EC-DH server: `100212` median cycles, `37.891` avg usec
-+ EC-DH-FS client gen: `53876` median cycles, `20.3977` avg usec
-+ EC-DH-FS server proc: `101492` median cycles, `38.3388` avg usec
-+ EC-DH-FS client proc: `148580` median cycles, `56.0079` avg usec
-+ EdDSA sign: `46338` median cycles, `17.517` avg usec
-+ EdDSA verify: `118228` median cycles, `44.5022` avg usec
++ EC-DH client: `99710` median cycles, `38.1784` avg usec
++ EC-DH server: `99582` median cycles, `38.1185` avg usec
++ EC-DH-FS client gen: `54438` median cycles, `20.964` avg usec
++ EC-DH-FS server proc: `100756` median cycles, `38.7462` avg usec
++ EC-DH-FS client proc: `147472` median cycles, `56.6324` avg usec
++ EdDSA sign: `46838` median cycles, `17.9698` avg usec
++ EdDSA verify: `118128` median cycles, `45.1675` avg usec
 
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):

@@ -193,7 +193,7 @@ static CAT_INLINE u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d, const 
  * Constant-time table selection for m=4
  */
 
-static void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, const ufp &c, const ufp &d, const int index, ecpt &r) {
+static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const ufp &b, const ufp &c, const ufp &d, const int index, ecpt &r) {
 	int k = ((u32)(b.w >> index) & 1);
 	k |= ((u32)(c.w >> index) & 1) << 1;
 	k |= ((u32)(d.w >> index) & 1) << 2;
