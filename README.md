@@ -550,6 +550,30 @@ And indeed building OpenSSL 1.0.1e with `make tests`, after configuring for
 that it takes roughly 100 usec to generate a key (4x slower) and that it takes
 roughly 400 usec for EC-DH (8x slower).
 
+##### Nightcracker's Ed25519 implementation [https://github.com/nightcracker/ed25519](https://github.com/nightcracker/ed25519):
+
+These are the Ed25519 results from the tester:
+
+~~~
+testing seed generation performance: 6483.760800us per seed
+testing key generation performance: 107.181400us per keypair
+testing sign performance: 103.336800us per signature
+testing verify performance: 263.802000us per signature
+testing keypair scalar addition performance: 93.632100us per keypair
+testing public key scalar addition performance: 106.290500us per key
+testing key exchange performance: 229.176800us per shared secret
+~~~
+
+Compared to Snowshoe on the same computer, this version of Ed25519 is 3.8x
+slower for key generation, 4.33x slower for signing, 4.34x slower for
+signature verification, and 4.36x slower for EC-DH.
+
+This is the normal software performance for Ed25519 in most implementations
+based on the reference C code.  Note that Ed25519 and Curve25519 can be
+twice as fast when built from assembly code.  Snowshoe, on the other hand,
+is written almost entirely in portable C code and has only a few inline
+assembly code optimizations that are conditionally compiled in.
+
 
 ## Details
 
