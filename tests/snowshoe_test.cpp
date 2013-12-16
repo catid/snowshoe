@@ -306,8 +306,8 @@ bool ec_dh_fs_test() {
  *
  * Sign message M:
  * 	r = H(hi,M) (mod q)
- * 	t = H(R,A,M) (mod q)
  * 	R = r*G
+ * 	t = H(R,A,M) (mod q)
  * 	s = r + t*a (mod q)
  * 	Produce: R, s
  *
