@@ -44,6 +44,18 @@
 
 #include "ecmul.inc"
 #include "snowshoe.h"
+#include "SecureErase.hpp"
+
+#ifndef CAT_ENDIAN_LITTLE
+
+/*
+ * This file is optimized for little-endian architectures.  In this
+ * case the input bytes are already in the internal data format, so
+ * it is not necessary to unpack anything.  This is exceptionally
+ * good because we need to secure erase any temporary data.  And
+ * since no unpacking is done there is no temporary data to erase,
+ * and so it will run faster.
+ */
 
 static CAT_INLINE void ec_load_k(const char k_chars[32], u64 k[4]) {
 	const u64 *k_raw = reinterpret_cast<const u64 *>( k_chars );
@@ -62,6 +74,8 @@ static CAT_INLINE void ec_save_k(const u64 k[4], char k_chars[32]) {
 	k_raw[2] = getLE(k[2]);
 	k_raw[3] = getLE(k[3]);
 }
+
+#endif // CAT_ENDIAN_LITTLE
 
 // Check if k == 0 in constant-time
 static bool is_zero(const u64 k[4]) {
@@ -90,20 +104,35 @@ extern "C" {
 #endif
 
 int _snowshoe_init(int expected_version) {
+	// If math object is aligned oddly.
+	if (sizeof(ecpt_affine) != 64) {
+		return -1;
+	}
+
 	return (expected_version == SNOWSHOE_VERSION) ? 0 : -1;
 }
 
 void snowshoe_secret_gen(char k_chars[32]) {
-	u64 kq[4];
+	// Operate on input in-place to avoid making waste variables
+	u64 *kq = (u64 *)k_chars;
+
+#ifndef CAT_ENDIAN_LITTLE
 	ec_load_k(k_chars, kq);
+#endif // CAT_ENDIAN_LITTLE
 
 	ec_mask_scalar(kq);
 
+#ifndef CAT_ENDIAN_LITTLE
 	ec_save_k(kq, k_chars);
+#endif // CAT_ENDIAN_LITTLE
 }
 
 void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]) {
-	u64 x1[4], y1[4], z1[4];
+#ifndef CAT_ENDIAN_LITTLE
+	u64 x1[4+4+4];
+	u64 *y1 = x1 + 4;
+	u64 *z1 = x1 + 8;
+
 	ec_load_k(x, x1);
 	ec_load_k(y, y1);
 	if (z) {
@@ -113,12 +142,18 @@ void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
 	mul_mod_q(x1, y1, z ? z1 : 0, x1);
 
 	ec_save_k(x1, r);
+
+	CAT_SECURE_OBJCLR(x1);
+#else
+	mul_mod_q((const u64 *)x, (const u64 *)y, (const u64 *)z, (u64 *)r);
+#endif // CAT_ENDIAN_LITTLE
 }
 
 void snowshoe_mod_q(const char x[64], char r[32]) {
+#ifndef CAT_ENDIAN_LITTLE
 	u64 x1[8];
-	const u64 *k_raw = reinterpret_cast<const u64 *>( x );
 
+	const u64 *k_raw = reinterpret_cast<const u64 *>( x );
 	x1[0] = getLE(k_raw[0]);
 	x1[1] = getLE(k_raw[1]);
 	x1[2] = getLE(k_raw[2]);
@@ -131,34 +166,54 @@ void snowshoe_mod_q(const char x[64], char r[32]) {
 	mod_q(x1, x1);
 
 	ec_save_k(x1, r);
+
+	CAT_SECURE_OBJCLR(x1);
+#else
+	mod_q((const u64 *)x, (u64 *)r);
+#endif // CAT_ENDIAN_LITTLE
 }
 
 void snowshoe_neg(const char P[64], char R[64]) {
+#ifndef CAT_ENDIAN_LITTLE
 	// Load point
 	ecpt_affine p1;
-	ec_load_xy((const u8*)P, p1);
+	ec_load_xy((const u8 *)P, p1);
 
 	// Run the math routine
 	ec_neg_affine(p1, p1);
 
 	// Save result endian-neutral
-	ec_save_xy(p1, (u8*)R);
+	ec_save_xy(p1, (u8 *)R);
+
+	CAT_SECURE_OBJCLR(p1); // Maybe unnecessary for all use cases
+#else
+	ec_neg_affine(*(const ecpt_affine *)P, *(ecpt_affine *)R);
+#endif // CAT_ENDIAN_LITTLE
 }
 
 int snowshoe_valid(const char P[64]) {
+#ifndef CAT_ENDIAN_LITTLE
 	// Load point
 	ecpt_affine p1;
 	ec_load_xy((const u8*)P, p1);
 
-	// Run the math routine
+	// If point is invalid,
 	if (!ec_valid(p1)) {
 		return -1;
 	}
+
+	CAT_SECURE_OBJCLR(p1); // Maybe unnecessary for all use cases
+#else
+	if (!ec_valid(*(const ecpt_affine *)P)) {
+		return -1;
+	}
+#endif // CAT_ENDIAN_LITTLE
 
 	return 0;
 }
 
 int snowshoe_equals4(const char R[64], const char P4[64]) {
+#ifndef CAT_ENDIAN_LITTLE
 	// Load point
 	ecpt_affine r1, p1;
 	ec_load_xy((const u8*)R, r1);
@@ -192,10 +247,55 @@ int snowshoe_equals4(const char R[64], const char P4[64]) {
 		return -1;
 	}
 
+	// Maybe unnecessary for all use cases
+	CAT_SECURE_OBJCLR(r1);
+	CAT_SECURE_OBJCLR(p1);
+	CAT_SECURE_OBJCLR(r2);
+	CAT_SECURE_OBJCLR(p2);
+	CAT_SECURE_OBJCLR(t2b);
+#else
+	// Validate input point P4
+	if (!ec_valid(*(const ecpt_affine *)P4)) {
+		return -1;
+	}
+
+	// Negate input point R in r1
+	ecpt_affine r1;
+	ec_load_xy((const u8*)R, r1);
+	ec_neg_affine(r1, r1);
+
+	// Expand r1,P4 into extended coordinates r2,p2
+	ecpt r2,p2;
+	ec_expand(r1, r2);
+	ec_expand(*(const ecpt_affine *)P4, p2);
+
+	// p2 = 4 * p2
+	ufe t2b;
+	ec_dbl(p2, p2, true, t2b);
+	ec_dbl(p2, p2, false, t2b);
+
+	// p2 = r2 + p2
+	ec_add(p2, r2, p2, true, false, false, t2b);
+
+	// Check if they match in constant-time:
+
+	fe_complete_reduce(p2.x);
+	if (!fe_iszero_ct(p2.x)) {
+		return -1;
+	}
+
+	// Maybe unnecessary for all use cases
+	CAT_SECURE_OBJCLR(r1);
+	CAT_SECURE_OBJCLR(r2);
+	CAT_SECURE_OBJCLR(p2);
+	CAT_SECURE_OBJCLR(t2b);
+#endif // CAT_ENDIAN_LITTLE
+
 	return 0;
 }
 
 int snowshoe_mul_gen(const char k_raw[32], char R[64]) {
+#ifndef CAT_ENDIAN_LITTLE
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
@@ -211,10 +311,25 @@ int snowshoe_mul_gen(const char k_raw[32], char R[64]) {
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
 
+	CAT_SECURE_OBJCLR(k);
+	CAT_SECURE_OBJCLR(r);
+#else
+	const u64 *k = (const u64 *)k_raw;
+
+	// Validate key
+	if (invalid_key(k)) {
+		return -1;
+	}
+
+	// Run the math routine
+	ec_mul_gen(k, *(ecpt_affine *)R);
+#endif // CAT_ENDIAN_LITTLE
+
 	return 0;
 }
 
 int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
+#ifndef CAT_ENDIAN_LITTLE
 	u64 k[4];
 	ec_load_k(k_raw, k);
 
@@ -238,11 +353,32 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
 
+	CAT_SECURE_OBJCLR(k);
+	CAT_SECURE_OBJCLR(p1);
+	CAT_SECURE_OBJCLR(r);
+#else
+	const u64 *k = (const u64 *)k_raw;
+
+	// Validate key
+	if (invalid_key(k)) {
+		return -1;
+	}
+
+	// Validate point
+	if (!ec_valid(*(const ecpt_affine *)P)) {
+		return -1;
+	}
+
+	ec_mul(k, *(const ecpt_affine *)P, *(ecpt_affine *)R);
+#endif // CAT_ENDIAN_LITTLE
+
 	return 0;
 }
 
 int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], char R[64]) {
-	u64 k1[4], k2[4];
+#ifndef CAT_ENDIAN_LITTLE
+	u64 k1[4+4];
+	u64 *k2 = k1 + 4;
 	ec_load_k(a, k1);
 	ec_load_k(b, k2);
 
@@ -266,10 +402,33 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
 
+	// May not needed in all use cases
+	CAT_SECURE_OBJCLR(k1);
+	CAT_SECURE_OBJCLR(p2);
+	CAT_SECURE_OBJCLR(r);
+#else
+	const u64 *k1 = (const u64 *)a;
+	const u64 *k2 = (const u64 *)b;
+	const ecpt_affine *p2 = (const ecpt_affine *)Q;
+
+	// Validate keys
+	if (invalid_key(k1) || invalid_key(k2)) {
+		return -1;
+	}
+
+	// Validate point
+	if (!ec_valid(*p2)) {
+		return -1;
+	}
+
+	ec_simul_gen(k1, k2, *p2, *(ecpt_affine *)R);
+#endif // CAT_ENDIAN_LITTLE
+
 	return 0;
 }
 
 int snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]) {
+#ifndef CAT_ENDIAN_LITTLE
 	u64 k1[4], k2[4];
 	ec_load_k(a, k1);
 	ec_load_k(b, k2);
@@ -294,6 +453,28 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
+
+	CAT_SECURE_OBJCLR(k);
+	CAT_SECURE_OBJCLR(p1);
+	CAT_SECURE_OBJCLR(r);
+#else
+	const u64 *k1 = (const u64 *)a;
+	const u64 *k2 = (const u64 *)b;
+	const ecpt_affine *p1 = (const ecpt_affine *)P;
+	const ecpt_affine *p2 = (const ecpt_affine *)Q;
+
+	// Validate keys
+	if (invalid_key(k1) || invalid_key(k2)) {
+		return -1;
+	}
+
+	// Validate points
+	if (!ec_valid(*p1) || !ec_valid(*p2)) {
+		return -1;
+	}
+
+	ec_simul(k1, *p1, k2, *p2, *(ecpt_affine *)R);
+#endif // CAT_ENDIAN_LITTLE
 
 	return 0;
 }
