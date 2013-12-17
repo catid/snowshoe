@@ -9,16 +9,16 @@ CC = clang -m64
 OPTFLAGS = -O3
 DBGFLAGS = -g -O0 -DDEBUG
 CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include
-LIBNAME = libsnowshoe.a
+LIBNAME = bin/libsnowshoe.a
 LIBS =
 RANLIB=/bin/true
 
 
 # Object files
 
-shared_test_o = Clock.o EndianNeutral.o
+shared_test_o = Clock.o
 
-snowshoe_o = snowshoe.o
+snowshoe_o = snowshoe.o EndianNeutral.o SecureErase.o
 
 fp_test_o = fp_test.o $(shared_test_o)
 fe_test_o = fe_test.o $(shared_test_o)
@@ -86,7 +86,7 @@ ecmultest : clean $(ecmul_test_o)
 
 snowshoetest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
 snowshoetest : clean $(snowshoe_test_o) library
-	$(CCPP) $(snowshoe_test_o) $(LIBS) -L. -lsnowshoe -o snowshoetest
+	$(CCPP) $(snowshoe_test_o) $(LIBS) -L./bin -lsnowshoe -o snowshoetest
 	./snowshoetest
 
 
@@ -97,6 +97,9 @@ Clock.o : libcat/Clock.cpp
 
 EndianNeutral.o : libcat/EndianNeutral.cpp
 	$(CCPP) $(CFLAGS) -c libcat/EndianNeutral.cpp
+
+SecureErase.o : libcat/SecureErase.cpp
+	$(CCPP) $(CFLAGS) -c libcat/SecureErase.cpp
 
 
 # Library objects
