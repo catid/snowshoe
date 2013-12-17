@@ -568,12 +568,6 @@ Compared to Snowshoe on the same computer, this version of Ed25519 is 3.8x
 slower for key generation, 4.33x slower for signing, 4.34x slower for
 signature verification, and 4.36x slower for EC-DH.
 
-This is the normal software performance for Ed25519 in most implementations
-based on the reference C code.  Note that Ed25519 and Curve25519 can be
-twice as fast when built from assembly code.  Snowshoe, on the other hand,
-is written almost entirely in portable C code and has only a few inline
-assembly code optimizations that are conditionally compiled in.
-
 
 ## Details
 
