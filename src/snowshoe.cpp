@@ -44,9 +44,10 @@
 
 #include "ecmul.inc"
 #include "snowshoe.h"
-#include "SecureErase.hpp"
 
 #ifndef CAT_ENDIAN_LITTLE
+
+#include "SecureErase.hpp"
 
 /*
  * This file is optimized for little-endian architectures.  In this
@@ -212,89 +213,7 @@ int snowshoe_valid(const char P[64]) {
 	return 0;
 }
 
-int snowshoe_equals4(const char R[64], const char P4[64]) {
-#ifndef CAT_ENDIAN_LITTLE
-	// Load point
-	ecpt_affine r1, p1;
-	ec_load_xy((const u8*)R, r1);
-	ec_load_xy((const u8*)P4, p1);
-
-	// Validate input point p1
-	if (!ec_valid(p1)) {
-		return -1;
-	}
-
-	// Negate input point r1
-	ec_neg_affine(r1, r1);
-
-	// Expand r1,p1 into extended coordinates
-	ecpt r2,p2;
-	ec_expand(r1, r2);
-	ec_expand(p1, p2);
-
-	// p2 = 4 * p2
-	ufe t2b;
-	ec_dbl(p2, p2, true, t2b);
-	ec_dbl(p2, p2, false, t2b);
-
-	// p2 = r2 + p2
-	ec_add(p2, r2, p2, true, false, false, t2b);
-
-	// Check if they match in constant-time:
-
-	fe_complete_reduce(p2.x);
-	if (!fe_iszero_ct(p2.x)) {
-		return -1;
-	}
-
-	// Maybe unnecessary for all use cases
-	CAT_SECURE_OBJCLR(r1);
-	CAT_SECURE_OBJCLR(p1);
-	CAT_SECURE_OBJCLR(r2);
-	CAT_SECURE_OBJCLR(p2);
-	CAT_SECURE_OBJCLR(t2b);
-#else
-	// Validate input point P4
-	if (!ec_valid(*(const ecpt_affine *)P4)) {
-		return -1;
-	}
-
-	// Negate input point R in r1
-	ecpt_affine r1;
-	ec_load_xy((const u8*)R, r1);
-	ec_neg_affine(r1, r1);
-
-	// Expand r1,P4 into extended coordinates r2,p2
-	ecpt r2,p2;
-	ec_expand(r1, r2);
-	ec_expand(*(const ecpt_affine *)P4, p2);
-
-	// p2 = 4 * p2
-	ufe t2b;
-	ec_dbl(p2, p2, true, t2b);
-	ec_dbl(p2, p2, false, t2b);
-
-	// p2 = r2 + p2
-	ec_add(p2, r2, p2, true, false, false, t2b);
-
-	// Check if they match in constant-time:
-
-	fe_complete_reduce(p2.x);
-	if (!fe_iszero_ct(p2.x)) {
-		return -1;
-	}
-
-	// Maybe unnecessary for all use cases
-	CAT_SECURE_OBJCLR(r1);
-	CAT_SECURE_OBJCLR(r2);
-	CAT_SECURE_OBJCLR(p2);
-	CAT_SECURE_OBJCLR(t2b);
-#endif // CAT_ENDIAN_LITTLE
-
-	return 0;
-}
-
-int snowshoe_mul_gen(const char k_raw[32], char R[64]) {
+int snowshoe_mul_gen(const char k_raw[32], char R[64], char mul4) {
 #ifndef CAT_ENDIAN_LITTLE
 	u64 k[4];
 	ec_load_k(k_raw, k);
@@ -306,7 +225,7 @@ int snowshoe_mul_gen(const char k_raw[32], char R[64]) {
 
 	// Run the math routine
 	ecpt_affine r;
-	ec_mul_gen(k, r);
+	ec_mul_gen(k, r, (mul4 != 0));
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -322,7 +241,7 @@ int snowshoe_mul_gen(const char k_raw[32], char R[64]) {
 	}
 
 	// Run the math routine
-	ec_mul_gen(k, *(ecpt_affine *)R);
+	ec_mul_gen(k, *(ecpt_affine *)R, (mul4 != 0));
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;

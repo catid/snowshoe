@@ -94,13 +94,13 @@ RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 
 `make snowshoetest` results (TB on, demonstrating usual walltime):
 
-+ EC-DH client: `85974` median cycles, `50.9312` avg usec
-+ EC-DH server: `85878` median cycles, `50.859` avg usec
-+ EC-DH-FS client gen: `46424` median cycles, `27.4811` avg usec
-+ EC-DH-FS server proc: `86718` median cycles, `51.2893` avg usec
-+ EC-DH-FS client proc: `127370` median cycles, `75.2793` avg usec
-+ EdDSA sign: `39818` median cycles, `23.6585` avg usec
-+ EdDSA verify: `101658` median cycles, `60.2617` avg usec
++ EC-DH client: `86212` median cycles, `51.1257` avg usec
++ EC-DH server: `86126` median cycles, `51.0684` avg usec
++ EC-DH-FS client gen: `46312` median cycles, `27.4853` avg usec
++ EC-DH-FS server proc: `86808` median cycles, `51.4173` avg usec
++ EC-DH-FS client proc: `126934` median cycles, `75.1333` avg usec
++ EdDSA sign: `40408` median cycles, `23.9925` avg usec
++ EdDSA verify: `100882` median cycles, `59.7367` avg usec
 
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):

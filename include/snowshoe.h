@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define SNOWSHOE_VERSION 6
+#define SNOWSHOE_VERSION 7
 
 /*
  * Verify binary compatibility with the Snowshoe API on startup.
@@ -79,29 +79,14 @@ extern void snowshoe_neg(const char P[64], char R[64]);
 extern int snowshoe_valid(const char P[64]);
 
 /*
- * R =?= 4 * P
+ * R = k*[4]*G
  *
- * Validates input point P.  It is only necessary to validate one of the input
- * points since the goal is to test for equality.
- *
- * This function compares the given point R with the point P, after multiplying
- * P by 4.  This is useful for signature verification to make the math work out
- * and to simultaneously validate the input point P.
- *
- * Note that to compare two points you can directly compare the bytes without
- * any special support from this library.
- *
- * Returns 0 if P is valid and R == 4 * P.
- * Returns non-zero if either P is invalid or they are not equivalent.
- */
-extern int snowshoe_equals4(const char R[64], const char P4[64]);
-
-/*
- * R = k*G
- *
- * Multiply generator point by k
+ * Multiply generator point by k, optionally 4*k
  *
  * Validates input scalar k.
+ *
+ * Pass in non-zero mul4 to multiply k by 4.  This is mainly useful
+ * for signing and avoids having the client do this multiplication.
  *
  * Preconditions:
  *	0 < k < q (prime order of curve)
@@ -111,7 +96,7 @@ extern int snowshoe_equals4(const char R[64], const char P4[64]);
  * It is important to check the return value to avoid active attacks.
  */
 
-extern int snowshoe_mul_gen(const char k[32], char R[64]);
+extern int snowshoe_mul_gen(const char k[32], char R[64], char mul4);
 
 /*
  * R = k*4*P

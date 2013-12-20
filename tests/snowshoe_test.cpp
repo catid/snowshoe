@@ -113,11 +113,11 @@ bool ec_dh_test() {
 		generate_k(sk_s);
 		snowshoe_secret_gen(sk_s);
 
-		if (snowshoe_mul_gen(sk_c, pp_c)) {
+		if (snowshoe_mul_gen(sk_c, pp_c, 0)) {
 			return false;
 		}
 
-		if (snowshoe_mul_gen(sk_s, pp_s)) {
+		if (snowshoe_mul_gen(sk_s, pp_s, 0)) {
 			return false;
 		}
 
@@ -204,7 +204,7 @@ bool ec_dh_fs_test() {
 
 		generate_k(sk_s);
 		snowshoe_secret_gen(sk_s);
-		if (snowshoe_mul_gen(sk_s, pp_s)) {
+		if (snowshoe_mul_gen(sk_s, pp_s, 0)) {
 			return false;
 		}
 
@@ -212,7 +212,7 @@ bool ec_dh_fs_test() {
 
 		generate_k(sk_e);
 		snowshoe_secret_gen(sk_e);
-		if (snowshoe_mul_gen(sk_e, pp_e)) {
+		if (snowshoe_mul_gen(sk_e, pp_e, 0)) {
 			return false;
 		}
 
@@ -223,7 +223,7 @@ bool ec_dh_fs_test() {
 
 		generate_k(sk_c);
 		snowshoe_secret_gen(sk_c);
-		if (snowshoe_mul_gen(sk_c, pp_c)) {
+		if (snowshoe_mul_gen(sk_c, pp_c, 0)) {
 			return false;
 		}
 
@@ -335,7 +335,7 @@ bool ec_dsa_test() {
 		// Offline precomputation:
 
 		snowshoe_secret_gen(a);
-		if (snowshoe_mul_gen(a, pp_A)) {
+		if (snowshoe_mul_gen(a, pp_A, 0)) {
 			return false;
 		}
 
@@ -346,7 +346,7 @@ bool ec_dsa_test() {
 
 		snowshoe_mod_q(h_hi_m, r);
 		snowshoe_mod_q(h_r_a_m, t);
-		if (snowshoe_mul_gen(r, pp_R)) {
+		if (snowshoe_mul_gen(r, pp_R, 1)) {
 			return false;
 		}
 		snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
@@ -368,8 +368,10 @@ bool ec_dsa_test() {
 			return false;
 		}
 
-		if (snowshoe_equals4(pp_Rtest, pp_R)) {
-			return false;
+		for (int ii = 0; ii < 64; ++ii) {
+			if (pp_Rtest[ii] != pp_R[ii]) {
+				return false;
+			}
 		}
 
 		t1 = Clock::cycles();
