@@ -516,7 +516,21 @@ bool ec_mul_gen_test() {
 		random_k(k);
 		ec_mask_scalar(k);
 
+		if (jj == 0) {
+			k[0] = EC_Q[0];
+			k[1] = EC_Q[1];
+			k[2] = EC_Q[2];
+			k[3] = EC_Q[3];
+		}
+
 		ec_mul_ref(k, EC_G_AFFINE, R1);
+
+		if (jj == 0) {
+			k[0] = 0;
+			k[1] = 0;
+			k[2] = 0;
+			k[3] = 0;
+		}
 
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
@@ -672,7 +686,21 @@ bool ec_simul_gen_test() {
 		ec_mask_scalar(k1);
 		ec_mask_scalar(k2);
 
+		if (jj == 0) {
+			k1[0] = EC_Q[0];
+			k1[1] = EC_Q[1];
+			k1[2] = EC_Q[2];
+			k1[3] = EC_Q[3];
+		}
+
 		ec_simul_ref(k1, EC_G_AFFINE, k2, BP, R1);
+
+		if (jj == 0) {
+			k1[0] = 0;
+			k1[1] = 0;
+			k1[2] = 0;
+			k1[3] = 0;
+		}
 
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();

@@ -87,10 +87,10 @@ RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 
 `make ecmultest` results (TB on, demonstrating usual walltime):
 
-+ ec_mul: `86136` median cycles, `51.4702` avg usec
-+ ec_mul_gen: `39042` median cycles, `23.4446` avg usec
-+ ec_simul: `125800` median cycles, `75.6107` avg usec
-+ ec_simul_gen: `100228` median cycles, `60.2547` avg usec
++ ec_mul: `86216` median cycles, `51.1041` avg usec
++ ec_mul_gen: `38982` median cycles, `23.1696` avg usec
++ ec_simul: `124536` median cycles, `73.8478` avg usec
++ ec_simul_gen: `99698` median cycles, `59.3` avg usec
 
 `make snowshoetest` results (TB on, demonstrating usual walltime):
 
@@ -181,6 +181,8 @@ To build the project you only need to compile `src/snowshoe.cpp`, which includes
 all of the other source files.  Or link to a prebuilt static library under `bin/`
 
 To use the project you only need to include [include/snowshoe.h](https://github.com/catid/snowshoe/blob/master/include/snowshoe.h), which declares the C exports from the source files.
+
+An example project that uses Snowshoe for signatures and handshakes is [Tabby](https://github.com/catid/tabby).
 
 
 #### Building: Mac
@@ -805,6 +807,7 @@ Factorization(r') = [ <2, 2>, <3, 1>, <11, 1>, <181, 1>, <443, 1>,
 t' = TraceOfFrobenius(E') = 14241963124919847500 = p + 1 - r' (verified)
 ~~~
 
+
 ##### Formal Curve Definition
 
 Now the cryptographically interesting twist of E(Fp):
@@ -1015,6 +1018,18 @@ Z' = 1
 
 Using the provided ecpt unit tester these points are validated to be on the curve and
 of q torsion: `q * P = (0, 1)`.  See magma_generator.txt for full details.
+
+
+##### Exceptional Input Scalars
+
+Snowshoe's `ec_mul_gen` and `ec_simul_gen` generator scalars can take on the 0 value,
+which will result in `k * G = (0, 1)`.  However the `ec_mul`, `ec_simul_gen` and
+`ec_simul` input point scalars result in invalid output when the scalar is 0.
+
+To address this problem, the input scalars for all of the Snowshoe multiplication
+functions are checked to ensure they are in the expected range 0 < k < q.
+After writing the [Tabby](https://github.com/catid/tabby) library, there does not
+appear to be any reason to allow for 0 input.
 
 
 ## References

@@ -7,6 +7,9 @@
 /*
  * Multiplication by generator point using LSB-set comb method [1] with w=6,v=7
  *
+ * Note that this function actually does support k=0, and it will return
+ * the same as k=q in this case; the result is the identity element (0, 1).
+ *
  * Preconditions:
  * 	0 < k < q
  *
@@ -56,6 +59,8 @@ static void ec_mul_gen(const u64 k[4], ecpt_affine &R) {
 
 /*
  * Multiplication by variable base point using GLV-SAC method [1] with m=2
+ *
+ * Note that this function will fail if k=0.
  *
  * Preconditions:
  * 	0 < k < q
@@ -122,6 +127,10 @@ static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
  * Simultaneous multiplication by two base points,
  * where one is variable and the other is the generator point,
  * using a combination of GLV-SAC with m=2 and LSB-set comb with w=8,v=1 [1].
+ *
+ * Note that this function will fail if b=0.
+ * Note that this function actually does support a=0, and it will return
+ * the same as a=q in this case; the result = bP.
  *
  * Preconditions:
  * 	0 < a,b < q
@@ -207,6 +216,8 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 /*
  * Simultaneous multiplication by two variable base points
  * using GLV-SAC with m=4 [1].
+ *
+ * Note that this function will fail if a,b=0.
  *
  * Preconditions:
  * 	0 < a,b < q
