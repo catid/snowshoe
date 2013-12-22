@@ -234,7 +234,7 @@ Now generate the server public/private key pair:
 ~~~
 	char pp_s[64];
 	snowshoe_secret_gen(sk_s);
-	if (snowshoe_mul_gen(sk_s, pp_s)) {
+	if (snowshoe_mul_gen(sk_s, pp_s, 0)) {
 		throw "Secret key was generated wrong (developer error)";
 	}
 ~~~
@@ -248,7 +248,7 @@ Generate client public/private key pair:
 ~~~
 	char pp_c[64];
 	snowshoe_secret_gen(sk_c);
-	if (snowshoe_mul_gen(sk_c, pp_c)) {
+	if (snowshoe_mul_gen(sk_c, pp_c, 0)) {
 		throw "Secret key was generated wrong (developer error)";
 	}
 ~~~
@@ -278,148 +278,9 @@ Server and client both arrive at `sp_c == sp_s`, which is the secret key for the
 The error checking used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return non-zero for failure, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
 
 
-#### Example Usage: EC-DH-FS
+#### Other examples
 
-An improvement on EC-DH is the concept of "forward secrecy", where if the server's long-term
-secret key is revealed it is not any easier to decrypt past logged communication.
-
-This example sketches how to implement a protocol that can achieve this goal.  It requires
-that the client generate a new public key periodically to delete the past sessions, and
-the server should also regenerate an ephemeral key periodically.
-
-After the key agreement completes, the server should provide a proof that it knows the
-secret key in its response to the client.  This message can also carry the first encrypted
-packet.
-
-~~~
-	char h[32], d[32], a[32];
-	char sk_c[32], sk_s[32], sk_e[32];
-	char pp_c[64], pp_s[64], pp_e[64];
-	char sp_c[64], sp_s[64];
-
-	// Offline: Server long-term public key generation
-
-	generate_k(sk_s);
-	snowshoe_secret_gen(sk_s);
-	if (snowshoe_mul_gen(sk_s, pp_s)) {
-		return false;
-	}
-
-	// Online: Server ephemeral public key (changes periodically)
-
-	generate_k(sk_e);
-	snowshoe_secret_gen(sk_e);
-	if (snowshoe_mul_gen(sk_e, pp_e)) {
-		return false;
-	}
-
-	// Online: Client ephemeral public key (changes periodically)
-
-	generate_k(sk_c);
-	snowshoe_secret_gen(sk_c);
-	if (snowshoe_mul_gen(sk_c, pp_c)) {
-		return false;
-	}
-
-	// h = H(pp_s, pp_e, pp_c, client_nonce, server_nonce)
-	generate_k(h);
-
-	// Online: Server handles client request
-
-	// d = sk_e + h * sk_s (mod q)
-	snowshoe_mul_mod_q(h, sk_s, sk_e, d);
-	if (snowshoe_mul(d, pp_c, sp_s)) {
-		return false;
-	}
-
-	// Online: Client handles server response
-
-	// a = h * sk_c (mod q)
-	snowshoe_mul_mod_q(h, sk_c, 0, a);
-	if (snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c)) {
-		return false;
-	}
-
-	for (int ii = 0; ii < 64; ++ii) {
-		if (sp_c[ii] != sp_s[ii]) {
-			return false;
-		}
-	}
-~~~
-
-The error checking used above should be replaced with more suitable reactions to failures in production code.  It is important to check if the functions return non-zero for failure, since this indicates that the other party has provided bad input in an attempt to attack the cryptosystem.
-
-
-#### Example Usage: EdDSA
-
-Here is a sketch of how to implement [EdDSA](http://ed25519.cr.yp.to/ed25519-20110926.pdf):
-
-Note that the "key massaging" would be different for my group order.
-Instead of Ed25519 key masking, use `snowshoe_secret_gen`.
-
-Key generation:
-
-+ Generate a random number k < 2^256
-+ hi,lo = H(k)
-+ a = snowshoe_secret_gen(lo)
-+ A = a*G
-
-Sign message M:
-
-+ r = H(hi,M) (mod q)
-+ t = H(R,A,M) (mod q)
-+ R = r*G
-+ s = r + t*a (mod q)
-+ Produce: R, s
-
-Verify:
-
-+ u = H(R,A,M) (mod q)
-+ nA = -A
-+ R =?= s*G + u*nA
-
-~~~
-	char a[32], h_hi_m[64], h_r_a_m[64], r[32], t[32], s[32], u[32];
-	char pp_A[64], pp_R[64], pp_Rtest[64];
-
-	// Fake hashes to avoid implementing Skein-512 and Skein-256 just for testing
-	generate_k(a);
-	generate_k(h_hi_m);
-	generate_k(h_hi_m+32);
-	generate_k(h_r_a_m);
-	generate_k(h_r_a_m+32);
-
-	// Offline precomputation:
-
-	snowshoe_secret_gen(a);
-	if (snowshoe_mul_gen(a, pp_A)) {
-		return false;
-	}
-
-	// Sign:
-
-	snowshoe_mod_q(h_hi_m, r);
-	snowshoe_mod_q(h_r_a_m, t);
-	if (snowshoe_mul_gen(r, pp_R)) {
-		return false;
-	}
-	snowshoe_mul_mod_q(a, t, r, s); // s = a * t + r (mod q)
-
-	// Verify:
-
-	snowshoe_mod_q(h_r_a_m, u);
-	snowshoe_neg(pp_A, pp_A);
-	if (snowshoe_simul_gen(s, u, pp_A, pp_Rtest)) {
-		return false;
-	}
-
-	// Test if 4 * pp_R == pp_Rtest
-	if (snowshoe_equals4(pp_Rtest, pp_R)) {
-		return false;
-	}
-~~~
-
-Note that this library provides a number of helpful math functions for doing math modulo q.
+For examples using Snowshoe for EC-DH with forward secrecy, and for signatures, see the [Tabby library](https://github.com/catid/tabby).
 
 
 #### Comparisons
