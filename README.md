@@ -1090,5 +1090,8 @@ Explores SAB-set comb multiplication and special prime moduli
 
 ## Credits
 
+This software was written entirely by myself ( Christopher A. Taylor <mrcatid@gmail.com> ).  If you
+find it useful and would like to buy me a coffee, consider [tipping](https://www.gettip.com/catid/).
+
 I appreciate suggestions and criticism from Mike Hamburg on an early version of the software.
 
