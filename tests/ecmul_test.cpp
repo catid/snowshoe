@@ -78,6 +78,37 @@ static const ecpt_affine EC_EG_AFFINE = {
 	EC_EGX, EC_EGY
 };
 
+
+/*
+ * EC_O_AFFINE
+ *
+ * This is a point that is NOT of order q (it is of order 4q).
+ *
+ * This point is useful for testing to ensure that the multiplication
+ * routines will work as expected for invalid points.
+ */
+
+static const ufe EC_OX = {
+	{{2}}, {{0}}
+};
+
+static const ufe EC_OY = {
+	{{	// a
+		0xC19841A004EAF3F1ULL,
+		0x58073D88C4297366ULL
+	}},
+	{{	// b
+		0x91EE24901BF9ABA4ULL,
+		0x01CE57E6FCB66E96ULL
+	}}
+};
+
+static const ecpt_affine EC_O_AFFINE = {
+	EC_OX, EC_OY
+};
+
+
+
 static CAT_INLINE bool ec_isequal_xy(const ecpt_affine &a, const ecpt_affine &b) {
 	if (!fe_isequal(a.x, b.x)) {
 		return false;
@@ -568,14 +599,10 @@ bool ec_mul_gen_test() {
 	return true;
 }
 
-bool ec_mul_test() {
+bool ec_mul_test(const ecpt_affine &BP) {
 	u64 k[4] = {0};
 	ecpt_affine R1, R2;
-	ecpt_affine BP;
 	u8 a1[64], a2[64];
-
-	random_k(k);
-	ec_mul_ref(k, EC_G_AFFINE, BP);
 
 	vector<u32> t;
 	double wall = 0;
@@ -615,17 +642,11 @@ bool ec_mul_test() {
 	return true;
 }
 
-bool ec_simul_test() {
+bool ec_simul_test(const ecpt_affine &B1, const ecpt_affine &B2) {
 	u64 k1[4] = {0};
 	u64 k2[4] = {0};
-	ecpt_affine B1, B2;
 	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
-
-	random_k(k1);
-	random_k(k2);
-	ec_mul_ref(k1, EC_G_AFFINE, B1);
-	ec_mul_ref(k2, EC_G_AFFINE, B2);
 
 	vector<u32> t;
 	double wall = 0;
@@ -667,15 +688,11 @@ bool ec_simul_test() {
 	return true;
 }
 
-bool ec_simul_gen_test() {
+bool ec_simul_gen_test(const ecpt_affine &BP) {
 	u64 k1[4] = {0};
 	u64 k2[4] = {0};
 	ecpt_affine R1, R2;
-	ecpt_affine BP;
 	u8 a1[64], a2[64];
-
-	random_k(k2);
-	ec_mul_ref(k2, EC_G_AFFINE, BP);
 
 	vector<u32> t;
 	double wall = 0;
@@ -861,10 +878,22 @@ int main() {
 
 	assert(ec_table_select_2_test());
 
-	assert(ec_mul_test());
+	u64 bk1[4], bk2[4];
+	ecpt_affine bp1, bp2;
+	random_k(bk1);
+	random_k(bk2);
+	ec_mul_ref(bk1, EC_G_AFFINE, bp1);
+	ec_mul_ref(bk2, EC_G_AFFINE, bp2);
+
+	assert(ec_mul_test(bp1));
+	assert(ec_mul_test(bp2));
+	assert(ec_mul_test(EC_O_AFFINE));
 	assert(ec_mul_gen_test());
-	assert(ec_simul_test());
-	assert(ec_simul_gen_test());
+	assert(ec_simul_test(bp1, bp2));
+	assert(ec_simul_test(bp2, EC_O_AFFINE));
+	assert(ec_simul_test(EC_O_AFFINE, bp1));
+	assert(ec_simul_gen_test(bp1));
+	assert(ec_simul_gen_test(EC_O_AFFINE));
 
 	cout << "All tests passed successfully." << endl;
 
