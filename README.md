@@ -888,9 +888,21 @@ which will result in `k * G = (0, 1)`.  However the `ec_mul`, `ec_simul_gen` and
 `ec_simul` input point scalars result in invalid output when the scalar is 0.
 
 To address this problem, the input scalars for all of the Snowshoe multiplication
-functions are checked to ensure they are in the expected range 0 < k < q.
-After writing the [Tabby](https://github.com/catid/tabby) library, there does not
-appear to be any reason to allow for 0 input.
+functions are checked to ensure they are in the expected range 0 < k < q in
+constant-time.  After writing the [Tabby](https://github.com/catid/tabby) library,
+there does not appear to be any reason to allow for k = 0 or k >= q.
+
+
+##### Exceptional Input Points
+
+The input points are validated by Snowshoe to be on the curve and X != 0.
+
+The remaining points that are allowed to run through the math routines may
+not be order q.  Recall that about 3/4ths of the points on the curve are of
+order 4q rather than of order q.  Despite the use of efficient endomorphisms
+during point multiplication, these exceptional points are handled properly,
+and have the same results as a simple double-and-add reference multiplier,
+as demonstrated experimentally by the unit tester.
 
 
 ## References
