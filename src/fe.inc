@@ -139,7 +139,7 @@ static CAT_INLINE void fe_sub(const ufe &a, const ufe &b, ufe &r) {
 }
 
 // r = a * u, u = 2 + i
-static void fe_mul_u(const ufe &a, ufe &r) {
+static CAT_INLINE void fe_mul_u(const ufe &a, ufe &r) {
 	// (a0 + ia1) * (2 + i)
 	// = (a0*2 - a1) + i(a1*2 + a0)
 
@@ -189,7 +189,7 @@ static CAT_INLINE void fe_mul_smallk(const ufe &a, const u32 b, ufe &r) {
 }
 
 // r = a * a
-static void fe_sqr(const ufe &a, ufe &r) {
+static CAT_INLINE void fe_sqr(const ufe &a, ufe &r) {
 	// Uses 2M 3A
 
 	// (a + ib) * (a + ib)
