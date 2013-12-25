@@ -481,11 +481,11 @@ signature verification, and 4.36x slower for EC-DH.
 
 ## Choosing a Finite Field
 
-## Choosing an Optimal Extension Field
+#### Choosing an Optimal Extension Field
 
-This was easy.  The only real option is Fp^2.  Larger exponents provide
-diminishing returns in terms of real security, and math over Fp^2 is the same
-as grade-school complex math (a + b*i).
+The only real option is Fp^2.  Larger exponents provide diminishing returns in
+terms of real security, and math over Fp^2 is the same as grade-school complex
+math (a + b*i).
 
 Multiplication over Fp^2 takes about 66 cycles on a Sandy Bridge processor,
 whereas multiplication on well-chosen Fp of the same size takes 55 cycles. [17]
@@ -551,10 +551,10 @@ from [16], a `2`-dimensional Montgomery scalar multiplication performs
 Edwards group laws allow for a protected table-based approach that requires
 `1` double and `0.5` adds per bit with a practical window size of 2 bits.
 
-With our finite field, squares require 0.67x the time of a multiply, so the
-operation count is roughly `13.36` multiplies per bit for Montgomery curves,
-and `(5.68 + 5.68 + 9) / 2 = 10.18` multiplies per bit for Edwards curves.
-Note that the estimate of `9` multiplies above is pessimistic.
+With Snowshoe's finite field, squares require 0.67x the time of a multiply,
+so the operation count is roughly `13.36` multiplies per bit for Montgomery
+curves, and `(5.68 + 5.68 + 9) / 2 = 10.18` multiplies per bit for Edwards
+curves.  Note that the estimate of `9` multiplies above is pessimistic.
 
 This demonstrates that (X, Y) coordinates are always preferred for speed for
 all types of applications.  Furthermore (X, Y) coordinates are much more
