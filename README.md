@@ -12,10 +12,13 @@ portable, well-documented, and uses no dynamic memory allocation.
 
 It is designed for a "128-bit" security level to be used with 256-bit keys.
 
-On side-channel attack resilience: Passive timing attacks are defeated
-by regular memory access and code execution patterns.  Power analysis attacks
-are mitigated by these methods, but no blinding is in place to avoid leaking
-information in power traces.
+On side-channel attack resilience: All operations involving secret information
+(keys, points, etc) are performed in constant-time with regular execution and
+memory access patterns.  This prevents leaking the information through a time
+or [cache](https://eprint.iacr.org/2013/448.pdf) side-channel.
+Power analysis attacks are mitigated by these methods, but no blinding is in
+place to avoid leaking information in power traces from the construction of
+masks for constant-time table lookups.
 
 Additionally to speed up signature verification a variable single-base
 simultaneous function `simul_gen` is provided that is not constant-time.
