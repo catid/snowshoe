@@ -228,7 +228,7 @@ static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u64 mask, 
 /*
  * Extended Twisted Edwards Doubling
  *
- * (x2, y2, t2, z2) = 2 * (x, y, z), where t2 = x2 * x2 / z2
+ * (x2, y2, t2, z2) = 2 * (x, y, z), where t2 = x2 * y2 / z2
  *
  * This doubling formula is based on the dedicated doubling formula from [5].
  * Optimized for Instruction-Level Paralellism (ILP) and low register usage.
