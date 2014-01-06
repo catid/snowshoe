@@ -166,18 +166,18 @@ static void fe_mul(const ufe &a, const ufe &b, ufe &r) {
 	// = (a0b0 - a1b1) + i(a1b0 + a0b1)
 	// = (a0b0 - a1b1) + i( (a1 + a0) * (b1 + b0) - a1b1 - a0b0 )
 
-	ufp t0, t1;
+	ufp t0, t1, t2, t3;
 
 	// Ordered to take advantage of pipeline ILP:
 
 	fp_add(a.a, a.b, t0);
 	fp_add(b.a, b.b, t1);
-	fp_mul(a.a, b.a, r.a);
+	fp_mul(a.a, b.a, t2);
 	fp_mul(t0, t1, t1);
-	fp_mul(a.b, b.b, r.b);
-	fp_sub(t1, r.a, t0);
-	fp_sub(r.a, r.b, r.a);
-	fp_sub(t0, r.b, r.b);
+	fp_mul(a.b, b.b, t3);
+	fp_sub(t1, t2, t1);
+	fp_sub(t2, t3, r.a);
+	fp_sub(t1, t3, r.b);
 }
 
 // r = a * b(small constant)
