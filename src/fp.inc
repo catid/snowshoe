@@ -57,6 +57,14 @@ static CAT_INLINE bool fp_iszero_vartime(const ufp &x) {
 	return x.w == 0;
 }
 
+// Check if x is zero
+// WARNING: Input must be completely reduced
+static CAT_INLINE bool fp_iszero_ct(const ufp &x) {
+	u64 zero = x.i[0] | x.i[1];
+	u32 z = (u32)zero | (u32)(zero >> 32);
+	return z == 0;
+}
+
 // Verify that 0 <= r < p
 // WARNING: Not constant-time
 static CAT_INLINE bool fp_infield_vartime(const ufp &r) {

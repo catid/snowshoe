@@ -23,30 +23,40 @@ static void fe_save(const ufe &x, u8 *r) {
 	fp_save(x.b, r + 16);
 }
 
-// Check if r is literally zero in constant-time
-// WARNING: Call fe_complete_reduce(r) before calling this function
+// Check if r is zero; supports unreduced input
+// WARNING: Not constant-time
+static CAT_INLINE bool fe_iszero_vartime(const ufe &r) {
+	return fp_iszero_vartime(r.a) && fp_iszero_vartime(r.b);
+}
+
+// Check if r is zero in constant-time
+// WARNING: Input must be completely reduced
 static CAT_INLINE bool fe_iszero_ct(const ufe &r) {
 	u64 zero = r.a.i[0] | r.a.i[1] | r.b.i[0] | r.b.i[1];
 	u32 z = (u32)(zero | (zero >> 32));
 	return z == 0;
 }
 
-// Check if r is zero
+// Check if a == b
 // WARNING: Not constant-time
-static CAT_INLINE bool fe_iszero_vartime(const ufe &r) {
-	return fp_iszero(r.a) && fp_iszero(r.b);
+// WARNING: Inputs must be completely reduced
+static CAT_INLINE bool fe_isequal_vartime(const ufe &a, const ufe &b) {
+	return fp_isequal_vartime(a.a, b.a) && fp_isequal_vartime(a.b, b.b);
 }
 
 // Check if a == b
-// WARNING: Not constant-time
-static CAT_INLINE bool fe_isequal_vartime(const ufe &a, const ufe &b) {
-	return fp_isequal(a.a, b.a) && fp_isequal(a.b, b.b);
+// WARNING: Inputs must be completely reduced
+static CAT_INLINE bool fe_isequal_ct(const ufe &a, const ufe &b) {
+	u64 zero = (a.a.i[0] ^ b.a.i[0]) | (a.a.i[1] ^ b.a.i[1]) |
+			   (a.b.i[0] ^ b.b.i[0]) | (a.b.i[1] ^ b.b.i[1]);
+	u32 z = (u32)zero | (u32)(zero >> 32);
+	return z == 0;
 }
 
 // Validate that r is within field
 // WARNING: Not constant-time
 static CAT_INLINE bool fe_infield_vartime(const ufe &r) {
-	return fp_infield(r.a) && fp_infield(r.b);
+	return fp_infield_vartime(r.a) && fp_infield_vartime(r.b);
 }
 
 // Reduce r

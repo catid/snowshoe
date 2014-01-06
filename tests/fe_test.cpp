@@ -110,6 +110,15 @@ static const ufe CU = {
 	{{1, 0}}
 };
 
+static bool fe_isequal_test(const ufe &x, const ufe &y) {
+	bool ct = fe_isequal_ct(x, y);
+	bool vt = fe_isequal_vartime(x, y);
+
+	assert(ct == vt);
+
+	return ct;
+}
+
 void fe_print(const ufe &x) {
 	cout << "Real(H:L) = " << hex << x.a.i[1] << " : " << x.a.i[0] << endl;
 	cout << "Imag(H:L) = " << hex << x.b.i[1] << " : " << x.b.i[0] << endl;
@@ -133,7 +142,7 @@ bool fe_exp_test(const ufe &x, const ufp &e, const ufe &expected) {
 	}
 
 	fe_complete_reduce(r);
-	return fe_isequal(r, expected);
+	return fe_isequal_test(r, expected);
 }
 
 bool fe_inv_test(const ufe &a, const ufe &expected) {
@@ -141,14 +150,14 @@ bool fe_inv_test(const ufe &a, const ufe &expected) {
 
 	fe_set(a, x);
 	fe_inv(x, z);
-	if (!fe_isequal(z, expected)) {
+	if (!fe_isequal_test(z, expected)) {
 		return false;
 	}
 
 	fe_set(a, x);
 	fe_inv(x, x);
 	fe_complete_reduce(x);
-	if (!fe_isequal(x, expected)) {
+	if (!fe_isequal_test(x, expected)) {
 		return false;
 	}
 
@@ -162,7 +171,7 @@ bool fe_mul_sqr_test(const ufe &a) {
 	fe_mul(x, x, x);
 	fe_set(a, y);
 	fe_sqr(y, y);
-	return fe_isequal(x, y);
+	return fe_isequal_test(x, y);
 }
 
 bool fe_mul_inv_test(const ufe &a) {
@@ -174,7 +183,7 @@ bool fe_mul_inv_test(const ufe &a) {
 	fe_mul(x, y, x);
 
 	fe_complete_reduce(x);
-	return fe_isequal(x, C1);
+	return fe_isequal_test(x, C1);
 }
 
 bool fe_conj_test(const ufe &a) {
@@ -182,11 +191,11 @@ bool fe_conj_test(const ufe &a) {
 
 	fe_set(a, x);
 	fe_conj(x, x);
-	if (fe_isequal(x, a)) {
+	if (fe_isequal_test(x, a)) {
 		return false;
 	}
 	fe_conj(x, x);
-	return fe_isequal(x, a);
+	return fe_isequal_test(x, a);
 }
 
 bool fe_neg_test(const ufe &a) {
@@ -194,18 +203,18 @@ bool fe_neg_test(const ufe &a) {
 
 	fe_set(a, x);
 	fe_neg(x, x);
-	if (fe_isequal(x, a)) {
+	if (fe_isequal_test(x, a)) {
 		return false;
 	}
 	fe_neg(x, x);
-	if (!fe_isequal(x, a)) {
+	if (!fe_isequal_test(x, a)) {
 		return false;
 	}
 
 	fe_set(a, x);
 	fe_neg(x, x);
 	fe_add(a, x, x);
-	return fe_iszero(x);
+	return fe_iszero_vartime(x);
 }
 
 bool fe_save_load_test(const ufe &a) {
@@ -214,7 +223,7 @@ bool fe_save_load_test(const ufe &a) {
 	fe_set(a, x);
 	fe_save(x, buffer);
 	fe_load(buffer, y);
-	if (!fe_isequal(x, y)) {
+	if (!fe_isequal_test(x, y)) {
 		return false;
 	}
 	if (buffer[32] != 0) {
@@ -227,7 +236,7 @@ bool fe_complete_reduce_test() {
 	ufe x;
 	fe_set(COF5, x);
 	fe_complete_reduce(x);
-	return fe_isequal(x, C0);
+	return fe_isequal_test(x, C0);
 }
 
 bool fe_mulu_test(const ufe &a) {
@@ -236,7 +245,7 @@ bool fe_mulu_test(const ufe &a) {
 	fe_set(CU, y);
 	fe_mul(x, y, x);
 	fe_mul_u(a, z);
-	return fe_isequal(x, z);
+	return fe_isequal_test(x, z);
 }
 
 bool fe_set_mask_test() {
@@ -253,13 +262,13 @@ bool fe_set_mask_test() {
 
 	fe_set_mask(a, zero, r);
 
-	if (!fe_isequal(r, CSR)) {
+	if (!fe_isequal_test(r, CSR)) {
 		return false;
 	}
 
 	fe_set_mask(a, neg, r);
 
-	if (!fe_isequal(r, CXC)) {
+	if (!fe_isequal_test(r, CXC)) {
 		return false;
 	}
 
@@ -280,13 +289,13 @@ bool fe_xor_mask_test() {
 
 	fe_xor_mask(a, zero, r);
 
-	if (!fe_iszero(r)) {
+	if (!fe_iszero_vartime(r)) {
 		return false;
 	}
 
 	fe_xor_mask(a, neg, r);
 
-	if (!fe_isequal(r, CXC)) {
+	if (!fe_isequal_test(r, CXC)) {
 		return false;
 	}
 
@@ -309,23 +318,23 @@ bool fe_neg_mask_test() {
 	fe_set(CXC, a);
 	fe_neg(a, a);
 
-	if (fe_isequal(r, CXC)) {
+	if (fe_isequal_test(r, CXC)) {
 		return false;
 	}
 
-	if (!fe_isequal(r, a)) {
+	if (!fe_isequal_test(r, a)) {
 		return false;
 	}
 
 	fe_neg_mask(neg, r);
 
-	if (!fe_isequal(r, CXC)) {
+	if (!fe_isequal_test(r, CXC)) {
 		return false;
 	}
 
 	fe_neg_mask(zero, r);
 
-	if (!fe_isequal(r, CXC)) {
+	if (!fe_isequal_test(r, CXC)) {
 		return false;
 	}
 
@@ -338,7 +347,7 @@ bool fe_mul_smallk_test() {
 	fe_set(CRA, r);
 	fe_mul_smallk(r, CSK, r);
 
-	return fe_isequal(r, CKP);
+	return fe_isequal_test(r, CKP);
 }
 
 bool fe_add_set_smallk_test() {
@@ -349,10 +358,10 @@ bool fe_add_set_smallk_test() {
 	fe_add_smallk(r, CSK, b);
 	fe_add(a, r, r);
 
-	return fe_isequal(a, b) && fe_isequal(a, r);
+	return fe_isequal_test(a, b) && fe_isequal_test(a, r);
 }
 
-static bool fe_sqrt_test(const ufp &a, bool expected_valid) {
+static bool fe_sqrt_test(const ufe &a, bool expected_valid) {
 	ufe a2, a1;
 
 	fe_mul(a, a, a2);
@@ -363,7 +372,7 @@ static bool fe_sqrt_test(const ufp &a, bool expected_valid) {
 		return false;
 	}
 
-	return fe_isequal(a1, a);
+	return fe_isequal_test(a1, a);
 }
 
 
@@ -396,13 +405,13 @@ int main() {
 	assert(fe_conj_test(CI));
 	assert(fe_conj_test(CSR));
 
-	// fe_infield:
-	assert(!fe_infield(COF1));
-	assert(!fe_infield(COF2));
-	assert(!fe_infield(COF3));
-	assert(!fe_infield(COF4));
-	assert(fe_infield(CIF1));
-	assert(fe_infield(CIF2));
+	// fe_infield_vartime:
+	assert(!fe_infield_vartime(COF1));
+	assert(!fe_infield_vartime(COF2));
+	assert(!fe_infield_vartime(COF3));
+	assert(!fe_infield_vartime(COF4));
+	assert(fe_infield_vartime(CIF1));
+	assert(fe_infield_vartime(CIF2));
 
 	// fe_neg:
 	assert(fe_neg_test(CRA));
@@ -445,12 +454,12 @@ int main() {
 	assert(fe_add_set_smallk_test());
 
 	// fe_sqrt:
-	assert(fe_sqrt_test(CIF1));
-	assert(fe_sqrt_test(CIF2));
-	assert(fe_sqrt_test(CRA));
-	assert(fe_sqrt_test(CXC));
-	assert(fe_sqrt_test(CI));
-	assert(fe_sqrt_test(CSR));
+	assert(fe_sqrt_test(CIF1, true));
+	assert(fe_sqrt_test(CIF2, true));
+	assert(fe_sqrt_test(CRA, true));
+	assert(fe_sqrt_test(CXC, true));
+	assert(fe_sqrt_test(CI, true));
+	assert(fe_sqrt_test(CSR, true));
 
 	cout << "All tests passed successfully." << endl;
 
