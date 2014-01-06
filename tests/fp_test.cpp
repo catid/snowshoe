@@ -432,6 +432,75 @@ bool fp_neg_mask_test() {
 	return true;
 }
 
+bool fp_div2_test(const ufp &a) {
+	ufp a2, a1;
+
+	fp_mul(a, C2, a2);
+	fp_div2(a2, a1);
+	fp_complete_reduce(a1);
+
+	return fp_isequal(a1, a);
+}
+
+bool fp_chi_test() {
+	ufp a;
+
+	fp_set(CN1, a);
+	if (fp_chi(a) != -1) {
+		cout << "chi failed -1" << endl;
+		return false;
+	}
+	fp_set(C0, a);
+	if (fp_chi(a) != 0) {
+		cout << "chi failed 0" << endl;
+		return false;
+	}
+	fp_set(C1, a);
+	if (fp_chi(a) != 1) {
+		cout << "chi failed 1" << endl;
+		return false;
+	}
+	fp_set(C2, a);
+	if (fp_chi(a) != 1) {
+		cout << "chi failed 2" << endl;
+		return false;
+	}
+	fp_set(CR1, a);
+	if (fp_chi(a) != 1) {
+		cout << "chi failed CR1" << endl;
+		return false;
+	}
+	fp_set(CR2, a);
+	if (fp_chi(a) != -1) {
+		cout << "chi failed CR2" << endl;
+		return false;
+	}
+	fp_set(CX3, a);
+	if (fp_chi(a) != 1) {
+		cout << "chi failed CX3" << endl;
+		return false;
+	}
+
+	return true;
+}
+
+bool fp_sqrt_test(const ufp &a) {
+	ufp a2, a1;
+
+	int chi = fp_chi(a);
+
+	fp_mul(a, a, a2);
+	fp_sqrt(a2, a1);
+
+	if (chi == -1) {
+		fp_neg(a1, a1);
+	}
+
+	fp_complete_reduce(a1);
+
+	return fp_isequal(a1, a);
+}
+
 
 //// Entrypoint
 
@@ -594,6 +663,33 @@ int main() {
 
 	// fp_neg_mask:
 	assert(fp_neg_mask_test());
+
+	// fp_div2:
+	assert(fp_div2_test(C0));
+	assert(fp_div2_test(C1));
+	assert(fp_div2_test(C2));
+	assert(fp_div2_test(CN1));
+	assert(fp_div2_test(C64));
+	assert(fp_div2_test(C65));
+	assert(fp_div2_test(C0F));
+	assert(fp_div2_test(CR1));
+	assert(fp_div2_test(CR2));
+	assert(fp_div2_test(CX3));
+
+	// fp_chi:
+	assert(fp_chi_test());
+
+	// fp_sqrt:
+	assert(fp_sqrt_test(C0));
+	assert(fp_sqrt_test(C1));
+	assert(fp_sqrt_test(C2));
+	assert(fp_sqrt_test(CN1));
+	assert(fp_sqrt_test(C64));
+	assert(fp_sqrt_test(C65));
+	assert(fp_sqrt_test(C0F));
+	assert(fp_sqrt_test(CR1));
+	assert(fp_sqrt_test(CR2));
+	assert(fp_sqrt_test(CX3));
 
 	cout << "All tests passed successfully." << endl;
 

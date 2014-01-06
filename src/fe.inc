@@ -226,56 +226,63 @@ static void fe_inv(const ufe &a, ufe &r) {
 	fp_mul(t1, t0, r.b);
 }
 
-static bool fe_sqrt(const ufe &a, ufe &r) {
-	// If a.b is zero,
-	if (fp_is_zero(a.b)) {
-		// r.a = sqrt(a.a)
-		fp_sqrt(a.a, r.a);
+// r = sqrt(x)
+static bool fe_sqrt(const ufe &x, ufe &r, bool check_input) {
+	// Requires 2 FpSqrt 1 FpInv 1FpChi ~= 500 fp_sqr, in constant-time
 
-		// r.b = 0
-		fp_zero(r.b);
+	// Uses a well-known algorithm, which is well stated in
+	// "Square root computation over even extension fields" (Adj Henriquez 2012)
+	// http://eprint.iacr.org/2012/685.pdf
+	// They call it the "Complex method"; it's the fastest one in the paper.
 
-		return;
-	}
+	// Yes, Fp^2 is fucking terrible for square roots.
+	// Fortunately it is only needed for Elligator.
 
-	// alpha = a.a^2 + a.b^2
-	ufp alpha, t;
-	fp_sqr(a.a, alpha);
-	fp_sqr(a.b, t);
+	ufp alpha, delta, delta2, t;
+
+	// Note that most of these operations can be skipped if
+	// x.b == 0.  However that would make this variable-time.
+
+	// alpha = x.a^2 + x.b^2
+	fp_sqr(x.a, alpha);
+	fp_sqr(x.b, t);
 	fp_add(alpha, t, alpha);
 
-	// x = chi(alpha)
-	ufp x;
-	fp_chi(alpha, x);
-
-	// if x = -1,
-	if (x.b) {
-		return false;
+	// If validating input,
+	if (check_input) {
+		// chi = chi(alpha) [expensive!]
+		if (fp_chi(alpha) == -1) {
+			return false;
+		}
 	}
+	// Otherwise this is constant-time.
 
 	// alpha = sqrt(alpha)
 	fp_sqrt(alpha, alpha);
 
-	// delta = (a.a + alpha) / 2
-	fp_add(a.a, alpha, delta);
-	fp_mul(delta, inv2, delta);
+	// delta = (x.a + alpha) / 2
+	fp_add(x.a, alpha, delta);
+	fp_div2(delta, delta);
 
-	// x = chi(delta)
-	fp_chi(delta, x);
+	// chi = chi(delta)
+	s32 chi = fp_chi(delta);
 
-	// if x = -1,
-	if (x.b) {
-		// delta = (a.a - alpha) / 2
-		fp_sub(a.a, alpha, delta);
-		fp_mul(delta, inv2, delta);
-	}
+	// delta2 = (a.a - alpha) / 2
+	fp_sub(x.a, alpha, delta2);
+	fp_div2(delta2, delta2);
 
-	// x0 = sqrt(delta)
+	// If chi == -1, use delta2 instead
+	u64 mask = (s64)(chi[1] >> 1);
+	fp_set_mask(delta2, mask, delta);
+
+	// r.a = sqrt(delta)
 	fp_sqrt(delta, r.a);
 
-	// x1 = a.b / x0 / 2
-	ufp s;
-	fp_inv(x0, s);
-	fp_mul(a.b, s, r.b);
-	fp_mul(r.b, inv2, r.b);
+	// r.b = x.b / r.a / 2
+	fp_inv(r.a, t);
+	fp_mul(x.b, t, r.b);
+	fp_div2(r.b, r.b);
+
+	return true;
 }
+

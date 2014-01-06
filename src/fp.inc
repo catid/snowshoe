@@ -322,11 +322,11 @@ static CAT_INLINE void fp_mul(const ufp &a, const ufp &b, ufp &r) {
 	//         = 2^128 - 3 * 2^64 + 2
 	//        <= 2^128 - 1
 	// Sum fits within 128 bits
-	register ufp middle;
+	ufp middle;
 	middle.w = (u128)a.i[0] * b.i[1] + (u128)a.i[1] * b.i[0];
 
 	// low = A0*B0 <= (2^128-1)
-	register ufp low;
+	ufp low;
 	low.w = (u128)a.i[0] * b.i[0];
 
 	// Incorporate high half of low product into the middle
@@ -344,7 +344,7 @@ static CAT_INLINE void fp_mul(const ufp &a, const ufp &b, ufp &r) {
 	//       = 2^126 - 2 * 2^63 + 1
 	//       = 2^126 - 2^64 + 1
 	// Product is completely reduced
-	register ufp high;
+	ufp high;
 	high.w = (u128)a.i[1] * b.i[1];
 
 	// Incorporate the high half of middle product into the
@@ -404,12 +404,12 @@ static CAT_INLINE void fp_mul_smallk(const ufp &a, const u32 b, ufp &r) {
 	// Eliminate multiplications by high part of b, which are 0 in this
 	// special case:
 
-	register ufp middle;
+	ufp middle;
 	middle.w = (u128)a.i[1] * b;
 	// middle <= (2^63-1)(2^32-1)
 	//         = 2^95 - 2^63 - 2^32 + 1
 
-	register ufp low;
+	ufp low;
 	low.w = (u128)a.i[0] * b;
 	// low <= (2^64-1)(2^32-1)
 	//      = 2^96 - 2^64 - 2^32 + 1
@@ -420,7 +420,7 @@ static CAT_INLINE void fp_mul_smallk(const ufp &a, const u32 b, ufp &r) {
 
 	// Only calculate a 64-bit sum for high in this special case:
 
-	register ufp high;
+	ufp high;
 	high.i[0] = middle.i[1] << 1;
 	high.i[0] |= (u32)(middle.i[0] >> 63);
 	// high <= 2^32
@@ -439,18 +439,18 @@ static CAT_INLINE void fp_sqr(const ufp &a, ufp &r) {
 	// In this special case the cross terms are equal, so
 	// trade one multiplication for a shift:
 
-	register ufp middle;
+	ufp middle;
 	middle.w = (u128)a.i[0] * a.i[1];
 	middle.w <<= 1;
 
 	// The rest is the same as fp_mul:
 
-	register ufp low;
+	ufp low;
 	low.w = (u128)a.i[0] * a.i[0];
 
 	middle.w += low.i[1];
 
-	register ufp high;
+	ufp high;
 	high.w = (u128)a.i[1] * a.i[1];
 
 	high.w += middle.i[1];
@@ -459,6 +459,30 @@ static CAT_INLINE void fp_sqr(const ufp &a, ufp &r) {
 	high.w |= (u32)(middle.i[0] >> 63);
 
 	r.i[0] = low.i[0];
+	r.i[1] = middle.i[0] & 0x7fffffffffffffffULL;
+
+	fp_add(high, r, r);
+}
+
+// r = a / 2
+static CAT_INLINE void fp_div2(const ufp &a, ufp &r) {
+	// Uses 5a 1r
+
+	// This is derived from fp_mul, with 0x4000...00,
+	// which is (1/2) in Fp.
+
+	ufp middle;
+	middle.w = (u128)a.i[0] << 62;
+
+	ufp high;
+	high.w = (u128)a.i[1] << 62;
+
+	high.w += middle.i[1];
+
+	high.w <<= 1;
+	high.w |= (u32)(middle.i[0] >> 63);
+
+	r.i[0] = 0;
 	r.i[1] = middle.i[0] & 0x7fffffffffffffffULL;
 
 	fp_add(high, r, r);
@@ -482,7 +506,7 @@ static void fp_inv(const ufp &x, ufp &r) {
 	ufp n1, n2, n3, n4, n5, n6;
 
 	fp_sqr(x, n2);
-	fp_mul(a, n2, n2);
+	fp_mul(x, n2, n2);
 	fp_sqr(n2, n3);
 	fp_sqr(n3, n3);
 	fp_mul(n3, n2, n3);
@@ -526,10 +550,10 @@ static void fp_inv(const ufp &x, ufp &r) {
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_mul(n1, n3, n1);
 	fp_sqr(n1, n1);
-	fp_mul(n1, a, n1);
+	fp_mul(n1, x, n1);
 	fp_sqr(n1, n1);
 	fp_sqr(n1, n1);
-	fp_mul(n1, a, r);
+	fp_mul(n1, x, r);
 }
 
 // r = sqrt(x)
@@ -549,7 +573,7 @@ static void fp_sqrt(const ufp &x, ufp &r) {
 // -1 if 'x' does not have a square root.
 //  0 is 'x' is zero.
 // +1 if 'x' has a square root.
-static void fp_inv(const ufp &x, ufp &r) {
+static int fp_chi(const ufp &x) {
 	// Uses 126S 12M
 
 	/*
@@ -557,8 +581,8 @@ static void fp_inv(const ufp &x, ufp &r) {
 	 */
 	ufp n1, n2, n3, n4, n5, n6;
 
-	fp_sqr(a, n2);
-	fp_mul(a, n2, n2);
+	fp_sqr(x, n2);
+	fp_mul(x, n2, n2);
 	fp_sqr(n2, n3);
 	fp_sqr(n3, n3);
 	fp_mul(n3, n2, n3);
@@ -581,7 +605,7 @@ static void fp_inv(const ufp &x, ufp &r) {
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
-	fp_mul(n1, n6, n1);
+	fp_mul(n1, n6, n1); // n1 = 2^64 - 1
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
@@ -590,19 +614,27 @@ static void fp_inv(const ufp &x, ufp &r) {
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
-	fp_mul(n1, n6, n1);
+	fp_mul(n1, n6, n1); // n1 = 2^96 - 1
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
-	fp_mul(n1, n5, n1);
+	fp_mul(n1, n5, n1); // n1 = 2^112 - 1
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
-	fp_mul(n1, n4, n1);
+	fp_mul(n1, n4, n1); // n1 = 2^120 - 1
 	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
-	fp_mul(n1, n3, n1);
-	fp_mul(n1, a, n1);
+	fp_mul(n1, n3, n1); // n1 = 2^124 - 1
 	fp_sqr(n1, n1);
 	fp_sqr(n1, n1);
-	fp_mul(n1, a, r);
+	fp_mul(n1, n2, n1); // n1 = 2^126 - 1
+
+	// Note that now n1 =
+	// "-1" is 7fff.fffe
+	// "0" is 0
+	// "1" is 1
+
+	// Convert to standard integer -1
+	return (s32)(n1.i[0] >> 1) | (s32)(n1.i[0]);
 }
+
