@@ -464,13 +464,13 @@ static CAT_INLINE void fp_sqr(const ufp &a, ufp &r) {
 	fp_add(high, r, r);
 }
 
-// r = 1/a
-static void fp_inv(const ufp &a, ufp &r) {
+// r = 1/x
+static void fp_inv(const ufp &x, ufp &r) {
 	// Uses 126S 12M
 
 	/*
 	 * Euler's totient function:
-	 * 1/a = a ^ (2^127 - 1 - 2)
+	 * 1/x = x ^ (2^127 - 1 - 2)
 	 *
 	 * Evaluating a potential alternative: Use a short addition chain?
 	 *
@@ -481,7 +481,7 @@ static void fp_inv(const ufp &a, ufp &r) {
 	 */
 	ufp n1, n2, n3, n4, n5, n6;
 
-	fp_sqr(a, n2);
+	fp_sqr(x, n2);
 	fp_mul(a, n2, n2);
 	fp_sqr(n2, n3);
 	fp_sqr(n3, n3);
@@ -532,3 +532,77 @@ static void fp_inv(const ufp &a, ufp &r) {
 	fp_mul(n1, a, r);
 }
 
+// r = sqrt(x)
+static void fp_sqrt(const ufp &x, ufp &r) {
+	// Uses 125S
+
+	// sqrt(x) = x ^ ((p+1)/4) = x ^ (2^125)
+	ufp t;
+	fp_sqr(x, t);
+	for (int ii = 1; ii < 124; ++ii) {
+		fp_sqr(t, t);
+	}
+	fp_sqr(t, r);
+}
+
+// r = chi(x)
+// -1 if 'x' does not have a square root.
+//  0 is 'x' is zero.
+// +1 if 'x' has a square root.
+static void fp_inv(const ufp &x, ufp &r) {
+	// Uses 126S 12M
+
+	/*
+	 * chi(x) = x ^ ((p-1)/2) = x ^ (2^126 - 1)
+	 */
+	ufp n1, n2, n3, n4, n5, n6;
+
+	fp_sqr(a, n2);
+	fp_mul(a, n2, n2);
+	fp_sqr(n2, n3);
+	fp_sqr(n3, n3);
+	fp_mul(n3, n2, n3);
+	fp_sqr(n3, n4); fp_sqr(n4, n4);
+	fp_sqr(n4, n4); fp_sqr(n4, n4);
+	fp_mul(n3, n4, n4);
+	fp_sqr(n4, n5); fp_sqr(n5, n5); fp_sqr(n5, n5); fp_sqr(n5, n5);
+	fp_sqr(n5, n5); fp_sqr(n5, n5); fp_sqr(n5, n5); fp_sqr(n5, n5);
+	fp_mul(n5, n4, n5);
+	fp_sqr(n5, n6); fp_sqr(n6, n6); fp_sqr(n6, n6); fp_sqr(n6, n6);
+	fp_sqr(n6, n6); fp_sqr(n6, n6); fp_sqr(n6, n6); fp_sqr(n6, n6);
+	fp_sqr(n6, n6); fp_sqr(n6, n6); fp_sqr(n6, n6); fp_sqr(n6, n6);
+	fp_sqr(n6, n6); fp_sqr(n6, n6); fp_sqr(n6, n6); fp_sqr(n6, n6);
+	fp_mul(n5, n6, n6);
+	fp_sqr(n6, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_mul(n1, n6, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_mul(n1, n6, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_mul(n1, n5, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_mul(n1, n4, n1);
+	fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1); fp_sqr(n1, n1);
+	fp_mul(n1, n3, n1);
+	fp_mul(n1, a, n1);
+	fp_sqr(n1, n1);
+	fp_sqr(n1, n1);
+	fp_mul(n1, a, r);
+}

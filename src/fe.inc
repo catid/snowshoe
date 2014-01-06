@@ -226,3 +226,56 @@ static void fe_inv(const ufe &a, ufe &r) {
 	fp_mul(t1, t0, r.b);
 }
 
+static bool fe_sqrt(const ufe &a, ufe &r) {
+	// If a.b is zero,
+	if (fp_is_zero(a.b)) {
+		// r.a = sqrt(a.a)
+		fp_sqrt(a.a, r.a);
+
+		// r.b = 0
+		fp_zero(r.b);
+
+		return;
+	}
+
+	// alpha = a.a^2 + a.b^2
+	ufp alpha, t;
+	fp_sqr(a.a, alpha);
+	fp_sqr(a.b, t);
+	fp_add(alpha, t, alpha);
+
+	// x = chi(alpha)
+	ufp x;
+	fp_chi(alpha, x);
+
+	// if x = -1,
+	if (x.b) {
+		return false;
+	}
+
+	// alpha = sqrt(alpha)
+	fp_sqrt(alpha, alpha);
+
+	// delta = (a.a + alpha) / 2
+	fp_add(a.a, alpha, delta);
+	fp_mul(delta, inv2, delta);
+
+	// x = chi(delta)
+	fp_chi(delta, x);
+
+	// if x = -1,
+	if (x.b) {
+		// delta = (a.a - alpha) / 2
+		fp_sub(a.a, alpha, delta);
+		fp_mul(delta, inv2, delta);
+	}
+
+	// x0 = sqrt(delta)
+	fp_sqrt(delta, r.a);
+
+	// x1 = a.b / x0 / 2
+	ufp s;
+	fp_inv(x0, s);
+	fp_mul(a.b, s, r.b);
+	fp_mul(r.b, inv2, r.b);
+}
