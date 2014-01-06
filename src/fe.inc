@@ -238,7 +238,7 @@ static void fe_inv(const ufe &a, ufe &r) {
 
 // r = sqrt(x)
 static bool fe_sqrt(const ufe &x, ufe &r, bool check_input_vartime) {
-	// Requires 2 FpSqrt 1 FpInv 1FpChi ~= 500 fp_sqr, in constant-time
+	// Requires 2FpSqrt 1FpInv 1FpChi, in constant-time
 
 	// Uses a well-known algorithm, which is well stated in
 	// "Square root computation over even extension fields" (Adj Henriquez 2012)
