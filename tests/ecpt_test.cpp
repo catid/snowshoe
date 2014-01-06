@@ -88,16 +88,16 @@ static const ufe GXn = {
 };
 
 static CAT_INLINE bool ec_isequal(const ecpt &a, const ecpt &b) {
-	if (!fe_isequal(a.x, b.x)) {
+	if (!fe_isequal_vartime(a.x, b.x)) {
 		return false;
 	}
-	if (!fe_isequal(a.y, b.y)) {
+	if (!fe_isequal_vartime(a.y, b.y)) {
 		return false;
 	}
-	if (!fe_isequal(a.t, b.t)) {
+	if (!fe_isequal_vartime(a.t, b.t)) {
 		return false;
 	}
-	if (!fe_isequal(a.z, b.z)) {
+	if (!fe_isequal_vartime(a.z, b.z)) {
 		return false;
 	}
 
@@ -105,10 +105,10 @@ static CAT_INLINE bool ec_isequal(const ecpt &a, const ecpt &b) {
 }
 
 static CAT_INLINE bool ec_isequal_xy(const ecpt_affine &a, const ecpt_affine &b) {
-	if (!fe_isequal(a.x, b.x)) {
+	if (!fe_isequal_vartime(a.x, b.x)) {
 		return false;
 	}
-	if (!fe_isequal(a.y, b.y)) {
+	if (!fe_isequal_vartime(a.y, b.y)) {
 		return false;
 	}
 
@@ -233,7 +233,7 @@ static bool ec_dbl_add_ref_test(const u64 *scalar, int mode) {
 
 	for (int ii = 255; ii >= 0; --ii) {
 		if (seen) {
-			if (fe_iszero(p.x)) {
+			if (fe_iszero_vartime(p.x)) {
 				cout << "Zero at dbl " << ii << endl;
 				return false;
 			}
@@ -259,7 +259,7 @@ static bool ec_dbl_add_ref_test(const u64 *scalar, int mode) {
 		}
 
 		if ((scalar[ii / 64] >> (ii % 64)) & 1) {
-			if (seen && fe_iszero(p.x)) {
+			if (seen && fe_iszero_vartime(p.x)) {
 				cout << "Zero at add " << ii << endl;
 				return false;
 			}
@@ -304,7 +304,7 @@ static bool ec_curve_order_test(bool use_eg, bool z2_one) {
 
 	for (int ii = 255; ii >= 0; --ii) {
 		if (seen) {
-			if (fe_iszero(p.x)) {
+			if (fe_iszero_vartime(p.x)) {
 				cout << "Zero at dbl " << ii << endl;
 				return false;
 			}
@@ -312,7 +312,7 @@ static bool ec_curve_order_test(bool use_eg, bool z2_one) {
 		}
 
 		if ((PRIME_ORDER[ii / 64] >> (ii % 64)) & 1) {
-			if (seen && fe_iszero(p.x)) {
+			if (seen && fe_iszero_vartime(p.x)) {
 				cout << "Zero at add " << ii << endl;
 				return false;
 			}
@@ -331,7 +331,7 @@ static bool ec_curve_order_test(bool use_eg, bool z2_one) {
 
 	// Verifies base points are in q torsion group
 
-	if (!fe_iszero(p.x) || !fe_isequal(p.y, one)) {
+	if (!fe_iszero_vartime(p.x) || !fe_isequal_vartime(p.y, one)) {
 		return false;
 	}
 
@@ -344,7 +344,7 @@ static bool ec_curve_order_test(bool use_eg, bool z2_one) {
 	ec_expand(pa, p);
 	//ec_print(p);
 
-	return fe_iszero(p.x) && fe_isequal(p.y, one);
+	return fe_iszero_vartime(p.x) && fe_isequal_vartime(p.y, one);
 }
 
 static bool ec_base_point_test() {
@@ -356,12 +356,12 @@ static bool ec_base_point_test() {
 
 	// Verify that base point and its endomorphism are on the curve
 
-	if (!ec_valid(g)) {
+	if (!ec_valid_vartime(g)) {
 		cout << "Generator not on curve" << endl;
 		return false;
 	}
 
-	if (!ec_valid(eg)) {
+	if (!ec_valid_vartime(eg)) {
 		cout << "Generator endomorphism not on curve" << endl;
 		return false;
 	}
@@ -371,11 +371,11 @@ static bool ec_base_point_test() {
 	ecpt_affine eg2;
 	gls_morph(EC_G.x, EC_G.y, eg2.x, eg2.y);
 
-	if (!fe_isequal(eg2.x, EC_EG.x)) {
+	if (!fe_isequal_vartime(eg2.x, EC_EG.x)) {
 		return false;
 	}
 
-	if (!fe_isequal(eg2.y, EC_EG.y)) {
+	if (!fe_isequal_vartime(eg2.y, EC_EG.y)) {
 		return false;
 	}
 
@@ -386,21 +386,21 @@ static bool ec_base_point_test() {
 	fe_set_smallk(1, one);
 
 	fe_mul(g.x, g.y, r);
-	if (!fe_isequal(EC_G.t, r)) {
+	if (!fe_isequal_vartime(EC_G.t, r)) {
 		cout << "Generator T wrong" << endl;
 		return false;
 	}
-	if (!fe_isequal(EC_G.z, one)) {
+	if (!fe_isequal_vartime(EC_G.z, one)) {
 		cout << "Generator Z wrong" << endl;
 		return false;
 	}
 
 	fe_mul(eg.x, eg.y, r);
-	if (!fe_isequal(EC_EG.t, r)) {
+	if (!fe_isequal_vartime(EC_EG.t, r)) {
 		cout << "Generator endo T wrong" << endl;
 		return false;
 	}
-	if (!fe_isequal(EC_EG.z, one)) {
+	if (!fe_isequal_vartime(EC_EG.z, one)) {
 		cout << "Generator endo Z wrong" << endl;
 		return false;
 	}
@@ -413,31 +413,31 @@ static bool ec_zero_test() {
 
 	ec_set(EC_G, r);
 
-	if (fe_iszero(r.x)) {
+	if (fe_iszero_vartime(r.x)) {
 		return false;
 	}
-	if (fe_iszero(r.y)) {
+	if (fe_iszero_vartime(r.y)) {
 		return false;
 	}
-	if (fe_iszero(r.t)) {
+	if (fe_iszero_vartime(r.t)) {
 		return false;
 	}
-	if (fe_iszero(r.z)) {
+	if (fe_iszero_vartime(r.z)) {
 		return false;
 	}
 
 	ec_zero(r);
 
-	if (!fe_iszero(r.x)) {
+	if (!fe_iszero_vartime(r.x)) {
 		return false;
 	}
-	if (!fe_iszero(r.y)) {
+	if (!fe_iszero_vartime(r.y)) {
 		return false;
 	}
-	if (!fe_iszero(r.t)) {
+	if (!fe_iszero_vartime(r.t)) {
 		return false;
 	}
-	if (!fe_iszero(r.z)) {
+	if (!fe_iszero_vartime(r.z)) {
 		return false;
 	}
 
@@ -516,13 +516,13 @@ static bool ec_valid_test() {
 
 	fe_set(EC_G.x, a.x);
 	fe_set(EC_G.y, a.y);
-	if (!ec_valid(a)) {
+	if (!ec_valid_vartime(a)) {
 		return false;
 	}
 
 	fe_set(EC_EG.x, a.x);
 	fe_set(EC_EG.y, a.y);
-	if (!ec_valid(a)) {
+	if (!ec_valid_vartime(a)) {
 		return false;
 	}
 
@@ -530,24 +530,24 @@ static bool ec_valid_test() {
 	fe_set_smallk(1, one);
 
 	fe_set(Cnn, a.x); fe_set(one, a.y);
-	if (ec_valid(a)) {
+	if (ec_valid_vartime(a)) {
 		return false;
 	}
 	fe_set(C0n, a.x); fe_set(one, a.y);
-	if (ec_valid(a)) {
+	if (ec_valid_vartime(a)) {
 		return false;
 	}
 	fe_set(Cn0, a.x); fe_set(one, a.y);
-	if (ec_valid(a)) {
+	if (ec_valid_vartime(a)) {
 		return false;
 	}
 	fe_set(C00, a.x); fe_set(one, a.y);
-	if (ec_valid(a)) {
+	if (ec_valid_vartime(a)) {
 		return false;
 	}
 
 	fe_set(GXn, a.x); fe_set(EC_GY, a.y);
-	if (ec_valid(a)) {
+	if (ec_valid_vartime(a)) {
 		return false;
 	}
 

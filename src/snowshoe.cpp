@@ -199,13 +199,13 @@ int snowshoe_valid(const char P[64]) {
 	ec_load_xy((const u8*)P, p1);
 
 	// If point is invalid,
-	if (!ec_valid(p1)) {
+	if (!ec_valid_vartime(p1)) {
 		return -1;
 	}
 
 	CAT_SECURE_OBJCLR(p1); // Maybe unnecessary for all use cases
 #else
-	if (!ec_valid(*(const ecpt_affine *)P)) {
+	if (!ec_valid_vartime(*(const ecpt_affine *)P)) {
 		return -1;
 	}
 #endif // CAT_ENDIAN_LITTLE
@@ -262,7 +262,7 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	ec_load_xy((const u8*)P, p1);
 
 	// Validate point
-	if (!ec_valid(p1)) {
+	if (!ec_valid_vartime(p1)) {
 		return -1;
 	}
 
@@ -284,7 +284,7 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	}
 
 	// Validate point
-	if (!ec_valid(*(const ecpt_affine *)P)) {
+	if (!ec_valid_vartime(*(const ecpt_affine *)P)) {
 		return -1;
 	}
 
@@ -311,7 +311,7 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 	ec_load_xy((const u8*)Q, p2);
 
 	// Validate point
-	if (!ec_valid(p2)) {
+	if (!ec_valid_vartime(p2)) {
 		return -1;
 	}
 
@@ -336,7 +336,7 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 	}
 
 	// Validate point
-	if (!ec_valid(*p2)) {
+	if (!ec_valid_vartime(*p2)) {
 		return -1;
 	}
 
@@ -363,7 +363,7 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 	ec_load_xy((const u8*)Q, p2);
 
 	// Validate points
-	if (!ec_valid(p1) || !ec_valid(p2)) {
+	if (!ec_valid_vartime(p1) || !ec_valid_vartime(p2)) {
 		return -1;
 	}
 
@@ -388,7 +388,7 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 	}
 
 	// Validate points
-	if (!ec_valid(*p1) || !ec_valid(*p2)) {
+	if (!ec_valid_vartime(*p1) || !ec_valid_vartime(*p2)) {
 		return -1;
 	}
 

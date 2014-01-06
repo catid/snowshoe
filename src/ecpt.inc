@@ -476,7 +476,8 @@ static void ec_affine(const ecpt &a, ecpt_affine &r) {
 */
 
 // Verify that the affine point (x, y) exists on the given curve
-static bool ec_valid(const ecpt_affine &p) {
+// WARNING: Not constant time
+static bool ec_valid_vartime(const ecpt_affine &p) {
 	// If the platform is not little-endian,
 	if (!IsLittleEndian()) {
 		// We cannot work on this platform
@@ -484,12 +485,12 @@ static bool ec_valid(const ecpt_affine &p) {
 	}
 
 	// If point is outside of field,
-	if (!fe_infield(p.x) || !fe_infield(p.y)) {
+	if (!fe_infield_vartime(p.x) || !fe_infield_vartime(p.y)) {
 		return false;
 	}
 
 	// If point is the additive identity x=0,
-	if (fe_iszero(p.x)) {
+	if (fe_iszero_vartime(p.x)) {
 		return false;
 	}
 
@@ -527,7 +528,7 @@ static bool ec_valid(const ecpt_affine &p) {
 	fe_add(r, b, r);
 
 	// If the result is zero, it is on the curve
-	return fe_iszero(r);
+	return fe_iszero_vartime(r); // supports unreduced input
 }
 
 /*

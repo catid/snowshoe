@@ -110,10 +110,10 @@ static const ecpt_affine EC_O_AFFINE = {
 
 
 static CAT_INLINE bool ec_isequal_xy(const ecpt_affine &a, const ecpt_affine &b) {
-	if (!fe_isequal(a.x, b.x)) {
+	if (!fe_isequal_vartime(a.x, b.x)) {
 		return false;
 	}
-	if (!fe_isequal(a.y, b.y)) {
+	if (!fe_isequal_vartime(a.y, b.y)) {
 		return false;
 	}
 
@@ -321,7 +321,7 @@ static bool ec_gen_table_2_test() {
 	ufe one;
 	fe_set_smallk(1, one);
 
-	if (!fe_iszero(a1.x) || !fe_isequal(a1.y, one)) {
+	if (!fe_iszero_vartime(a1.x) || !fe_isequal_vartime(a1.y, one)) {
 		return false;
 	}
 
@@ -405,16 +405,16 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 }
 
 static CAT_INLINE bool ec_isequal(const ecpt &a, const ecpt &b) {
-	if (!fe_isequal(a.x, b.x)) {
+	if (!fe_isequal_vartime(a.x, b.x)) {
 		return false;
 	}
-	if (!fe_isequal(a.y, b.y)) {
+	if (!fe_isequal_vartime(a.y, b.y)) {
 		return false;
 	}
-	if (!fe_isequal(a.t, b.t)) {
+	if (!fe_isequal_vartime(a.t, b.t)) {
 		return false;
 	}
-	if (!fe_isequal(a.z, b.z)) {
+	if (!fe_isequal_vartime(a.z, b.z)) {
 		return false;
 	}
 
@@ -484,7 +484,7 @@ static bool ec_mul_ref(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 
 	for (int ii = 255; ii >= 0; --ii) {
 		if (seen) {
-			if (fe_iszero(p.x)) {
+			if (fe_iszero_vartime(p.x)) {
 				cout << "Zero at dbl " << ii << endl;
 				return false;
 			}
@@ -492,7 +492,7 @@ static bool ec_mul_ref(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 		}
 
 		if ((k[ii / 64] >> (ii % 64)) & 1) {
-			if (seen && fe_iszero(p.x)) {
+			if (seen && fe_iszero_vartime(p.x)) {
 				cout << "Zero at add " << ii << endl;
 				return false;
 			}
