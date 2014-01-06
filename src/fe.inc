@@ -265,14 +265,14 @@ static bool fe_sqrt(const ufe &x, ufe &r, bool check_input) {
 	fp_div2(delta, delta);
 
 	// chi = chi(delta)
-	s32 chi = fp_chi(delta);
+	int chi = fp_chi(delta);
 
 	// delta2 = (a.a - alpha) / 2
 	fp_sub(x.a, alpha, delta2);
 	fp_div2(delta2, delta2);
 
 	// If chi == -1, use delta2 instead
-	u64 mask = (s64)(chi[1] >> 1);
+	u64 mask = (s64)(chi >> 1);
 	fp_set_mask(delta2, mask, delta);
 
 	// r.a = sqrt(delta)
