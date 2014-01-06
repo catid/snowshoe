@@ -33,19 +33,19 @@ static CAT_INLINE bool fe_iszero_ct(const ufe &r) {
 
 // Check if r is zero
 // WARNING: Not constant-time
-static CAT_INLINE bool fe_iszero(const ufe &r) {
+static CAT_INLINE bool fe_iszero_vartime(const ufe &r) {
 	return fp_iszero(r.a) && fp_iszero(r.b);
 }
 
 // Check if a == b
 // WARNING: Not constant-time
-static CAT_INLINE bool fe_isequal(const ufe &a, const ufe &b) {
+static CAT_INLINE bool fe_isequal_vartime(const ufe &a, const ufe &b) {
 	return fp_isequal(a.a, b.a) && fp_isequal(a.b, b.b);
 }
 
 // Validate that r is within field
 // WARNING: Not constant-time
-static CAT_INLINE bool fe_infield(const ufe &r) {
+static CAT_INLINE bool fe_infield_vartime(const ufe &r) {
 	return fp_infield(r.a) && fp_infield(r.b);
 }
 
@@ -188,7 +188,7 @@ static CAT_INLINE void fe_mul_smallk(const ufe &a, const u32 b, ufe &r) {
 	fp_mul_smallk(a.b, b, r.b);
 }
 
-// r = a * a
+// r = a ^ 2
 static CAT_INLINE void fe_sqr(const ufe &a, ufe &r) {
 	// Uses 2M 3A
 
@@ -227,7 +227,7 @@ static void fe_inv(const ufe &a, ufe &r) {
 }
 
 // r = sqrt(x)
-static bool fe_sqrt(const ufe &x, ufe &r, bool check_input) {
+static bool fe_sqrt(const ufe &x, ufe &r, bool check_input_vartime) {
 	// Requires 2 FpSqrt 1 FpInv 1FpChi ~= 500 fp_sqr, in constant-time
 
 	// Uses a well-known algorithm, which is well stated in
@@ -249,7 +249,7 @@ static bool fe_sqrt(const ufe &x, ufe &r, bool check_input) {
 	fp_add(alpha, t, alpha);
 
 	// If validating input,
-	if (check_input) {
+	if (check_input_vartime) {
 		// chi = chi(alpha) [expensive!]
 		if (fp_chi(alpha) == -1) {
 			return false;

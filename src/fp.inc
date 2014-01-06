@@ -32,13 +32,22 @@ static void fp_save(const ufp &x, u8 *r) {
 
 // Check if a == b
 // WARNING: Not constant-time
-static CAT_INLINE bool fp_isequal(const ufp &a, const ufp &b) {
+// WARNING: Inputs must be completely reduced
+static CAT_INLINE bool fp_isequal_vartime(const ufp &a, const ufp &b) {
 	return a.w == b.w;
 }
 
-// Check if x is zero
+// Check if a == b in constant-time
+// WARNING: Inputs must be completely reduced
+static CAT_INLINE bool fp_isequal_ct(const ufp &a, const ufp &b) {
+	u64 zero = (a.i[0] ^ b.i[0]) | (a.i[1] ^ b.i[1]);
+	u32 z = (u32)zero | (u32)(zero >> 32);
+	return z == 0;
+}
+
+// Check if x is zero; supports unreduced input
 // WARNING: Not constant-time
-static CAT_INLINE bool fp_iszero(const ufp &x) {
+static CAT_INLINE bool fp_iszero_vartime(const ufp &x) {
 	// If x == 2^127-1,
 	if (x.i[0] == 0xffffffffffffffffULL &&
 		x.i[1] == 0x7fffffffffffffffULL) {
@@ -50,7 +59,7 @@ static CAT_INLINE bool fp_iszero(const ufp &x) {
 
 // Verify that 0 <= r < p
 // WARNING: Not constant-time
-static CAT_INLINE bool fp_infield(const ufp &r) {
+static CAT_INLINE bool fp_infield_vartime(const ufp &r) {
 	// If high bit is set,
 	if ((r.i[1] >> 63) != 0) {
 		// Not in field

@@ -72,11 +72,20 @@ void fp_print(const ufp &x) {
 	cout << "Value(H:L) = " << hex << x.i[1] << " : " << x.i[0] << endl;
 }
 
+static bool fp_isequal_test(const ufp &a, const ufp &b) {
+	bool ct = fp_isequal_ct(a, b);
+	bool vt = fp_isequal_vartime(a, b);
+
+	assert(ct == vt);
+
+	return ct;
+}
+
 bool fp_complete_reduce_test(const ufp &a, const ufp &expected) {
 	ufp x;
 	fp_set(a, x);
 	fp_complete_reduce(x);
-	return fp_isequal(x, expected);
+	return fp_isequal_test(x, expected);
 }
 
 bool fp_add_test(const ufp &a, const ufp &b, const ufp &expected) {
@@ -86,7 +95,7 @@ bool fp_add_test(const ufp &a, const ufp &b, const ufp &expected) {
 	fp_set(b, y);
 	fp_add(x, y, z);
 	fp_complete_reduce(z);
-	if (!fp_isequal(z, expected)) {
+	if (!fp_isequal_test(z, expected)) {
 		return false;
 	}
 
@@ -94,7 +103,7 @@ bool fp_add_test(const ufp &a, const ufp &b, const ufp &expected) {
 	fp_set(b, y);
 	fp_add(x, y, x);
 	fp_complete_reduce(x);
-	if (!fp_isequal(x, expected)) {
+	if (!fp_isequal_test(x, expected)) {
 		return false;
 	}
 
@@ -102,7 +111,7 @@ bool fp_add_test(const ufp &a, const ufp &b, const ufp &expected) {
 	fp_set(b, y);
 	fp_add(x, y, y);
 	fp_complete_reduce(y);
-	if (!fp_isequal(y, expected)) {
+	if (!fp_isequal_test(y, expected)) {
 		return false;
 	}
 
@@ -115,14 +124,14 @@ bool fp_add_smallk_test(const ufp &a, const u32 b, const ufp &expected) {
 	fp_set(a, x);
 	fp_add_smallk(x, b, z);
 	fp_complete_reduce(z);
-	if (!fp_isequal(z, expected)) {
+	if (!fp_isequal_test(z, expected)) {
 		return false;
 	}
 
 	fp_set(a, x);
 	fp_add_smallk(x, b, x);
 	fp_complete_reduce(x);
-	if (!fp_isequal(x, expected)) {
+	if (!fp_isequal_test(x, expected)) {
 		return false;
 	}
 
@@ -136,7 +145,7 @@ bool fp_sub_test(const ufp &a, const ufp &b, const ufp &expected) {
 	fp_set(b, y);
 	fp_sub(x, y, z);
 	fp_complete_reduce(z);
-	if (!fp_isequal(z, expected)) {
+	if (!fp_isequal_test(z, expected)) {
 		return false;
 	}
 
@@ -144,7 +153,7 @@ bool fp_sub_test(const ufp &a, const ufp &b, const ufp &expected) {
 	fp_set(b, y);
 	fp_sub(x, y, x);
 	fp_complete_reduce(x);
-	if (!fp_isequal(x, expected)) {
+	if (!fp_isequal_test(x, expected)) {
 		return false;
 	}
 
@@ -152,7 +161,7 @@ bool fp_sub_test(const ufp &a, const ufp &b, const ufp &expected) {
 	fp_set(b, y);
 	fp_sub(x, y, y);
 	fp_complete_reduce(y);
-	if (!fp_isequal(y, expected)) {
+	if (!fp_isequal_test(y, expected)) {
 		return false;
 	}
 
@@ -164,13 +173,13 @@ bool fp_neg_test(const ufp &a, const ufp &expected) {
 
 	fp_set(a, x);
 	fp_neg(x, z);
-	if (!fp_isequal(z, expected)) {
+	if (!fp_isequal_test(z, expected)) {
 		return false;
 	}
 
 	fp_set(a, x);
 	fp_neg(x, x);
-	if (!fp_isequal(x, expected)) {
+	if (!fp_isequal_test(x, expected)) {
 		return false;
 	}
 
@@ -180,7 +189,7 @@ bool fp_neg_test(const ufp &a, const ufp &expected) {
 bool fp_set_smallk_test(const u32 a, const ufp &expected) {
 	ufp x;
 	fp_set_smallk(a, x);
-	return fp_isequal(x, expected);
+	return fp_isequal_test(x, expected);
 }
 
 bool fp_mul_small_test(const ufp &a, const u32 b) {
@@ -192,7 +201,7 @@ bool fp_mul_small_test(const ufp &a, const u32 b) {
 	fp_mul_smallk(x, b, w);
 	fp_complete_reduce(z);
 	fp_complete_reduce(w);
-	if (!fp_isequal(z, w)) {
+	if (!fp_isequal_test(z, w)) {
 		return false;
 	}
 
@@ -202,7 +211,7 @@ bool fp_mul_small_test(const ufp &a, const u32 b) {
 	fp_mul(x, y, x);
 	fp_complete_reduce(x);
 	fp_complete_reduce(w);
-	if (!fp_isequal(x, w)) {
+	if (!fp_isequal_test(x, w)) {
 		return false;
 	}
 
@@ -212,7 +221,7 @@ bool fp_mul_small_test(const ufp &a, const u32 b) {
 	fp_mul(x, y, y);
 	fp_complete_reduce(y);
 	fp_complete_reduce(w);
-	if (!fp_isequal(y, w)) {
+	if (!fp_isequal_test(y, w)) {
 		return false;
 	}
 
@@ -228,7 +237,7 @@ bool fp_mul_sqr_test(const ufp &a) {
 	fp_sqr(x, w);
 	fp_complete_reduce(z);
 	fp_complete_reduce(w);
-	if (!fp_isequal(z, w)) {
+	if (!fp_isequal_test(z, w)) {
 		return false;
 	}
 
@@ -238,7 +247,7 @@ bool fp_mul_sqr_test(const ufp &a) {
 	fp_mul(x, y, x);
 	fp_complete_reduce(x);
 	fp_complete_reduce(w);
-	if (!fp_isequal(x, w)) {
+	if (!fp_isequal_test(x, w)) {
 		return false;
 	}
 
@@ -248,7 +257,7 @@ bool fp_mul_sqr_test(const ufp &a) {
 	fp_mul(x, y, y);
 	fp_complete_reduce(y);
 	fp_complete_reduce(w);
-	if (!fp_isequal(y, w)) {
+	if (!fp_isequal_test(y, w)) {
 		return false;
 	}
 
@@ -258,7 +267,7 @@ bool fp_mul_sqr_test(const ufp &a) {
 	fp_sqr(x, x);
 	fp_complete_reduce(z);
 	fp_complete_reduce(x);
-	if (!fp_isequal(z, x)) {
+	if (!fp_isequal_test(z, x)) {
 		return false;
 	}
 
@@ -271,7 +280,7 @@ bool fp_mul_inv_test(const ufp &a, const ufp &expected) {
 	fp_set(a, x);
 	fp_inv(x, y);
 	fp_mul(x, y, z);
-	if (!fp_isequal(z, expected)) {
+	if (!fp_isequal_test(z, expected)) {
 		return false;
 	}
 
@@ -279,7 +288,7 @@ bool fp_mul_inv_test(const ufp &a, const ufp &expected) {
 	fp_inv(x, x);
 	fp_set(a, y);
 	fp_mul(x, y, z);
-	if (!fp_isequal(z, expected)) {
+	if (!fp_isequal_test(z, expected)) {
 		return false;
 	}
 
@@ -292,7 +301,7 @@ bool fp_save_load_test(const ufp &a) {
 	fp_set(a, x);
 	fp_save(x, buffer);
 	fp_load(buffer, y);
-	if (!fp_isequal(x, y)) {
+	if (!fp_isequal_test(x, y)) {
 		return false;
 	}
 	if (buffer[16] != 0) {
@@ -318,7 +327,7 @@ bool fp_exp_test(const ufp &x, const ufp &e, const ufp &expected) {
 		}
 	}
 
-	return fp_isequal(r, expected);
+	return fp_isequal_test(r, expected);
 }
 
 bool fp_exp_inv_test(const ufp &a) {
@@ -336,7 +345,7 @@ bool fp_mul_test(const ufp &a, const ufp &b, const ufp &expected) {
 	fp_set(b, y);
 	fp_mul(x, y, z);
 
-	return fp_isequal(z, expected);
+	return fp_isequal_test(z, expected);
 }
 
 bool fp_set_mask_test() {
@@ -353,13 +362,13 @@ bool fp_set_mask_test() {
 
 	fp_set_mask(a, zero, r);
 
-	if (!fp_isequal(r, CR2)) {
+	if (!fp_isequal_test(r, CR2)) {
 		return false;
 	}
 
 	fp_set_mask(a, neg, r);
 
-	if (!fp_isequal(r, CR1)) {
+	if (!fp_isequal_test(r, CR1)) {
 		return false;
 	}
 
@@ -380,13 +389,13 @@ bool fp_xor_mask_test() {
 
 	fp_xor_mask(a, zero, r);
 
-	if (!fp_iszero(r)) {
+	if (!fp_iszero_vartime(r)) {
 		return false;
 	}
 
 	fp_xor_mask(a, neg, r);
 
-	if (!fp_isequal(r, CR1)) {
+	if (!fp_isequal_test(r, CR1)) {
 		return false;
 	}
 
@@ -409,23 +418,23 @@ bool fp_neg_mask_test() {
 	fp_set(CR1, a);
 	fp_neg(a, a);
 
-	if (fp_isequal(r, CR1)) {
+	if (fp_isequal_test(r, CR1)) {
 		return false;
 	}
 
-	if (!fp_isequal(r, a)) {
+	if (!fp_isequal_test(r, a)) {
 		return false;
 	}
 
 	fp_neg_mask(neg, r);
 
-	if (!fp_isequal(r, CR1)) {
+	if (!fp_isequal_test(r, CR1)) {
 		return false;
 	}
 
 	fp_neg_mask(zero, r);
 
-	if (!fp_isequal(r, CR1)) {
+	if (!fp_isequal_test(r, CR1)) {
 		return false;
 	}
 
@@ -439,7 +448,7 @@ bool fp_div2_test(const ufp &a) {
 	fp_div2(a2, a1);
 	fp_complete_reduce(a1);
 
-	return fp_isequal(a1, a);
+	return fp_isequal_test(a1, a);
 }
 
 bool fp_chi_test() {
@@ -498,7 +507,7 @@ bool fp_sqrt_test(const ufp &a) {
 
 	fp_complete_reduce(a1);
 
-	return fp_isequal(a1, a);
+	return fp_isequal_test(a1, a);
 }
 
 
@@ -507,23 +516,23 @@ bool fp_sqrt_test(const ufp &a) {
 int main() {
 	cout << "Snowshoe Unit Tester: Fp base finite field arithmetic" << endl;
 
-	// fp_iszero:
-	assert(fp_iszero(C0));
-	assert(fp_iszero(CP));
-	assert(!fp_iszero(CP1));
-	assert(!fp_iszero(CN1));
-	assert(!fp_iszero(CFF));
+	// fp_iszero_vartime:
+	assert(fp_iszero_vartime(C0));
+	assert(fp_iszero_vartime(CP));
+	assert(!fp_iszero_vartime(CP1));
+	assert(!fp_iszero_vartime(CN1));
+	assert(!fp_iszero_vartime(CFF));
 
-	// fp_infield:
-	assert(!fp_infield(CFF));
-	assert(!fp_infield(CF0));
-	assert(!fp_infield(CP1));
-	assert(!fp_infield(CP));
-	assert(fp_infield(CN1));
-	assert(fp_infield(C64));
-	assert(fp_infield(C65));
-	assert(fp_infield(C0F));
-	assert(fp_infield(C0));
+	// fp_infield_vartime:
+	assert(!fp_infield_vartime(CFF));
+	assert(!fp_infield_vartime(CF0));
+	assert(!fp_infield_vartime(CP1));
+	assert(!fp_infield_vartime(CP));
+	assert(fp_infield_vartime(CN1));
+	assert(fp_infield_vartime(C64));
+	assert(fp_infield_vartime(C65));
+	assert(fp_infield_vartime(C0F));
+	assert(fp_infield_vartime(C0));
 
 	// fp_set, fp_neg:
 	assert(fp_neg_test(C0, C0));
@@ -550,8 +559,8 @@ int main() {
 	ufp x;
 	fp_set(CFF, x);
 	fp_zero(x);
-	assert(fp_isequal(x, C0));
-	assert(fp_iszero(x));
+	assert(fp_isequal_test(x, C0));
+	assert(fp_iszero_vartime(x));
 
 	// fp_set, fp_complete_reduce:
 	assert(fp_complete_reduce_test(C0, C0));

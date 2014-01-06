@@ -352,6 +352,20 @@ bool fe_add_set_smallk_test() {
 	return fe_isequal(a, b) && fe_isequal(a, r);
 }
 
+static bool fe_sqrt_test(const ufp &a, bool expected_valid) {
+	ufe a2, a1;
+
+	fe_mul(a, a, a2);
+	bool valid = fe_sqrt(a2, a1, true);
+	fe_complete_reduce(a1);
+
+	if (expected_valid != valid) {
+		return false;
+	}
+
+	return fe_isequal(a1, a);
+}
+
 
 //// Entrypoint
 
@@ -429,6 +443,14 @@ int main() {
 
 	// fe_set_smallk <-> fe_add_smallk:
 	assert(fe_add_set_smallk_test());
+
+	// fe_sqrt:
+	assert(fe_sqrt_test(CIF1));
+	assert(fe_sqrt_test(CIF2));
+	assert(fe_sqrt_test(CRA));
+	assert(fe_sqrt_test(CXC));
+	assert(fe_sqrt_test(CI));
+	assert(fe_sqrt_test(CSR));
 
 	cout << "All tests passed successfully." << endl;
 
