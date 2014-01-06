@@ -277,7 +277,7 @@ static bool fe_sqrt(const ufe &x, ufe &r, bool check_input_vartime) {
 	// chi = chi(delta)
 	int chi = fp_chi(delta);
 
-	// delta2 = (a.a - alpha) / 2
+	// delta2 = (x.a - alpha) / 2
 	fp_sub(x.a, alpha, delta2);
 	fp_div2(delta2, delta2);
 
@@ -288,10 +288,10 @@ static bool fe_sqrt(const ufe &x, ufe &r, bool check_input_vartime) {
 	// r.a = sqrt(delta)
 	fp_sqrt(delta, r.a);
 
-	// r.b = x.b / r.a / 2
-	fp_inv(r.a, t);
+	// r.b = x.b / (2*r.a)
+	fp_add(r.a, r.a, t);
+	fp_inv(t, t);
 	fp_mul(x.b, t, r.b);
-	fp_div2(r.b, r.b);
 
 	return true;
 }
