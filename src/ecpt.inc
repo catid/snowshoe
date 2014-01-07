@@ -652,15 +652,15 @@ static void ec_elligator_decode(const ufe &a, ecpt_affine &r) {
 
 	// s = e*z - (1 - e)*A/2 = z
 	ufe s;
-	if (chi == 1) {
-		// s = z
-		fe_set(z, s);
-	} else {
-		// s = -z + 108u
-		fe_set_smallk(108, s);
-		fe_mul_u(s, s);
-		fe_sub(s, z, s);
-	}
+
+	// s = -z + 108u
+	fe_set_smallk(108, s);
+	fe_mul_u(s, s);
+	fe_sub(s, z, s);
+
+	// If chi == 1, s = z (constant-time)
+	u64 mask = ~(s64)(chi >> 1);
+	fe_set_mask(z, mask, s);
 
 	// s2 = s^2
 	ufe s2;
