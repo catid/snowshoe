@@ -148,6 +148,14 @@ static CAT_INLINE void fe_sub(const ufe &a, const ufe &b, ufe &r) {
 	fp_sub(a.b, b.b, r.b);
 }
 
+// r = r - (k + 0i)
+static CAT_INLINE void fe_sub_smallk(const ufe &a, const u32 k, ufe &r) {
+	// Uses 1A
+
+	fp_sub_smallk(a.a, k, r.a);
+	fp_set(a.b, r.b);
+}
+
 // r = a * u, u = 2 + i
 static CAT_INLINE void fe_mul_u(const ufe &a, ufe &r) {
 	// (a0 + ia1) * (2 + i)

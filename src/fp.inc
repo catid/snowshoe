@@ -298,6 +298,14 @@ static CAT_INLINE void fp_sub(const ufp &a, const ufp &b, ufp &r) {
 	fp_sub_reduce(r);
 }
 
+
+// r = a - (u32)k
+static CAT_INLINE void fp_sub_smallk(const ufp &a, const u32 k, ufp &r) {
+	// Uses 1a 1r
+	r.w = a.w - k;
+	fp_sub_reduce(r);
+}
+
 /*
  * Multiplication of two partially-reduced inputs:
  *

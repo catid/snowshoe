@@ -598,3 +598,62 @@ static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, 
 	ec_add(a, T, r, z2_one, precomp_t1, false, t2b);
 }
 
+/*
+ * Elligator point decoding
+ *
+ * A = 2(a+d) = 216u
+ * B = (a-d)^2 = 12100*u*u
+ * v = -A / (1 + u*a^2)
+ * e = chi(v^3 + A*v^2 + B*v)
+ * x = e*v - (1-e)*A/2
+ *
+ * Ey = (x - (a-d)) / (x + (a-d))
+ * Ex = sqrt((Ey^2 - 1) / (d*Ey^2 - a))
+ */
+static void ec_elligator_decode(const ufe &a, ecpt_affine &r) {
+	// v = 1 + u * a^2
+	ufe v;
+	fe_sqr(a, v);
+	fe_mul_u(v, v);
+	fe_add_smallk(v, 1, v);
+
+	// v = -216*u / v
+	fe_inv(v, v);
+	fe_mul_smallk(v, 216, v);
+	fe_mul_u(v, v);
+	fe_neg(v);
+
+	// x = e*v - (1 - e)*A/2 = v
+
+	// 1 / (x + (a-d))
+	ufe y;
+	fe_set_smallk(110, y);
+	fe_mul_u(y, y);
+	fe_neg(y, y);
+	fe_add(v, y, y);
+	fe_inv(y, y);
+
+	ufe u;
+	fe_set_smallk(110, u);
+	fe_mul_u(u, u);
+	fe_add(v, u, u);
+
+	// Ey
+	fe_mul(u, y, r.y);
+
+	// u = y^2
+	fe_sqr(r.y, u);
+
+	// x = 1 / (d * y^2 - a)
+	ufe x;
+	fe_mul_smallk(u, 109, x);
+	fe_add_smallk(x, 1, x);
+	fe_mul_u(x, x);
+	fe_inv(x, x);
+
+	// x = sqrt((y^2 - 1) * x)
+	fe_sub_smallk(u, 1, u);
+	fe_mul(u, x, x);
+	fe_sqrt(x, r.x);
+}
+
