@@ -797,6 +797,27 @@ static bool ec_cond_add_test(const ecpt &P) {
 	return true;
 }
 
+static bool ec_elligator_test() {
+	ufe x;
+	ecpt_affine r;
+
+	for (int ii = 0; ii < 100000; ++ii) {
+		x.a.i[0] = ii;
+		x.a.i[1] = 2;
+		x.b.i[0] = 3;
+		x.b.i[1] = 4;
+
+		ec_elligator_decode(x, r);
+
+		if (!ec_valid_vartime(r)) {
+			cout << "elligator fails ii = " << ii << endl;
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 //// Entrypoint
 
@@ -866,6 +887,9 @@ int main() {
 	// ec_cond_add:
 	assert(ec_cond_add_test(EC_G));
 	assert(ec_cond_add_test(EC_EG));
+
+	// ec_elligator_decode:
+	assert(ec_elligator_test());
 
 	cout << "All tests passed successfully." << endl;
 

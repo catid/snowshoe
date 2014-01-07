@@ -599,10 +599,13 @@ static void fp_sqrt(const ufp &x, ufp &r) {
 //  0 is 'x' is zero.
 // +1 if 'x' has a square root.
 static int fp_chi(const ufp &x) {
-	// Uses 126S 12M
+	// Uses 126S 11M
 
 	/*
 	 * chi(x) = x ^ ((p-1)/2) = x ^ (2^126 - 1)
+	 *
+	 * This could also be done with the GCD but then it would not
+	 * be constant-time.
 	 */
 	ufp n1, n2, n3, n4, n5, n6;
 

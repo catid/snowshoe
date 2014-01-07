@@ -223,25 +223,45 @@ static CAT_INLINE void fe_sqr(const ufe &a, ufe &r) {
 	fp_mul(t2, a.b, r.b);
 }
 
-// r = 1 / a
-static void fe_inv(const ufe &a, ufe &r) {
-	// Uses 2S 2M 2A 1I
+// r = 1 / x
+static void fe_inv(const ufe &x, ufe &r) {
+	// Uses 2S 2M 2A 1FpInv
 
-	// 1/a = z'/(a*a + b*b)
+	// 1/x = x'/|x|
 	// NOTE: The inversion only needs to be done over a 2^^127 field instead of 2^^256
 
 	ufp t0, t1, t2;
 
-	fp_sqr(a.a, t0);
-	fp_sqr(a.b, t1);
+	fp_sqr(x.a, t0);
+	fp_sqr(x.b, t1);
 	fp_add(t0, t1, t2);
 
 	fp_inv(t2, t0);
 
-	fp_neg(a.b, t1);
+	fp_neg(x.b, t1);
 
-	fp_mul(a.a, t0, r.a);
+	fp_mul(x.a, t0, r.a);
 	fp_mul(t1, t0, r.b);
+}
+
+// r = chi(x)
+static int fe_chi(const ufe &x) {
+	// Uses 2S 1A 1FpChi
+
+	// chi(x) = x ^ ((p^2-1)/2)
+	//        = x ^ ( (p-1)/2 * (1+p) )
+	//        = |x| ^ ((p-1)/2)
+	// This uses the identity x^(1+p) = |x|.
+	// NOTE: The heavy lifting is done over a 2^127 field instead of 2^256
+
+	// t0 = |x|
+	ufp t0, t1;
+	fp_sqr(x.a, t0);
+	fp_sqr(x.b, t1);
+	fp_add(t0, t1, t0);
+
+	// chi(t0)
+	return fp_chi(t0);
 }
 
 // r = sqrt(x)

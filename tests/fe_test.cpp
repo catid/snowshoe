@@ -362,20 +362,26 @@ bool fe_add_set_smallk_test() {
 }
 
 static bool fe_sqrt_test(const ufe &a, bool expected_valid) {
-	ufe a2, a1, a1n;
+	ufe a2, a1;
 
 	fe_mul(a, a, a2);
 	bool valid = fe_sqrt(a2, a1, true);
-	fe_neg(a1, a1n);
+
+	int chi = fe_chi(a2);
+	cout << chi << endl;
+
+	if (chi == -1) {
+		fe_neg(a1, a1);
+	}
+
 	fe_complete_reduce(a1);
-	fe_complete_reduce(a1n);
 
 	if (expected_valid != valid) {
 		cout << "fe_sqrt failed validation test" << endl;
 		return false;
 	}
 
-	return fe_isequal_test(a1, a) || fe_isequal_test(a1n, a);
+	return fe_isequal_test(a1, a);
 }
 
 

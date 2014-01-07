@@ -601,59 +601,116 @@ static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, 
 /*
  * Elligator point decoding
  *
- * A = 2(a+d) = 216u
- * B = (a-d)^2 = 12100*u*u
- * v = -A / (1 + u*a^2)
- * e = chi(v^3 + A*v^2 + B*v)
- * x = e*v - (1-e)*A/2
+ * a*x^2 + y^2 = 1 + d*x^2*y^2
+ * a = -u
+ * d = 109*u
+ * 
+ * t^2 = s^3 + A*s^2 + B*s
+ * A = -(a + d) = -(-1+109)u = -108u
+ * B = ad = -109u
  *
- * Ey = (x - (a-d)) / (x + (a-d))
+ * z = -A / (1 + u*a^2)
+ * e = chi(z^3 + A*z^2 + B*z)
+ * s = e*z - (1-e)*A/2
+ * t^2 = s^3 + A*s^2 + B*s
+ *
+ * Ey = (t^2 - (a-d)*s^2) / (t^2 + (a-d)*s^2)
  * Ex = sqrt((Ey^2 - 1) / (d*Ey^2 - a))
  */
 static void ec_elligator_decode(const ufe &a, ecpt_affine &r) {
-	// v = 1 + u * a^2
-	ufe v;
-	fe_sqr(a, v);
-	fe_mul_u(v, v);
-	fe_add_smallk(v, 1, v);
+	// z = -A / (1 + u * a^2)
+	ufe z;
+	fe_sqr(a, z);
+	fe_mul_u(z, z);
+	fe_add_smallk(z, 1, z);
+	fe_inv(z, z);
+	fe_mul_u(z, z);
+	fe_mul_smallk(z, 108, z);
 
-	// v = -216*u / v
-	fe_inv(v, v);
-	fe_mul_smallk(v, 216, v);
-	fe_mul_u(v, v);
-	fe_neg(v);
+	// z2 = z^2
+	ufe z2;
+	fe_sqr(z, z2);
 
-	// x = e*v - (1 - e)*A/2 = v
+	// w1 = 108 * u * z^2
+	ufe w1;
+	fe_mul_u(z2, w1);
+	fe_mul_smallk(w1, 108, w1);
 
-	// 1 / (x + (a-d))
+	// z = 109 * u * z
+	ufe w3;
+	fe_mul_u(z, w3);
+	fe_mul_smallk(w3, 109, w3);
+
+	// e = z^3 - 108 * u * z^2 - 109 * u * z
+	ufe e;
+	fe_mul(z2, z, e);
+	fe_sub(e, w1, e);
+	fe_sub(e, w3, e);
+
+	// e = chi(z^3 + A*z^2 + B*z)
+	int chi = fe_chi(e);
+
+	// s = e*z - (1 - e)*A/2 = z
+	ufe s;
+	if (chi == 1) {
+		// s = z
+		fe_set(z, s);
+	} else {
+		// s = -z + 108u
+		fe_set_smallk(108, s);
+		fe_mul_u(s, s);
+		fe_sub(s, z, s);
+	}
+
+	// s2 = s^2
+	ufe s2;
+	fe_sqr(s, s2);
+
+	// w2 = 108 * u * s^2
+	ufe w2;
+	fe_mul_u(s2, w2);
+	fe_mul_smallk(w2, 108, w2);
+
+	// s = 109 * u * s
+	fe_mul_u(s, s);
+	fe_mul_smallk(s, 109, s);
+
+	// t^2 = s^3 - 108 * u * s^2 - 109 * u * s
+	ufe t2;
+	fe_mul(s2, s, t2);
+	fe_sub(t2, w2, t2);
+	fe_sub(t2, s, t2);
+
+	// s2 = 110 * u * s^2
+	fe_mul_u(s2, s2);
+	fe_mul_smallk(s2, 110, s2);
+
+	// d = 1 / (t^2 - 110 * u * s^2)
+	ufe d;
+	fe_sub(t2, s2, d);
+	fe_inv(d, d);
+
+	// r.y = (t^2 + 110 * u * s^2) / (t^2 - 110 * u * s^2)
 	ufe y;
-	fe_set_smallk(110, y);
-	fe_mul_u(y, y);
-	fe_neg(y, y);
-	fe_add(v, y, y);
-	fe_inv(y, y);
+	fe_add(t2, s2, y);
+	fe_mul(y, d, y);
+	fe_set(y, r.y);
 
-	ufe u;
-	fe_set_smallk(110, u);
-	fe_mul_u(u, u);
-	fe_add(v, u, u);
+	// y2 = y^2
+	ufe y2;
+	fe_sqr(y, y2);
 
-	// Ey
-	fe_mul(u, y, r.y);
-
-	// u = y^2
-	fe_sqr(r.y, u);
-
-	// x = 1 / (d * y^2 - a)
+	// x = 1 / ((109 * y^2 + 1) * u)
 	ufe x;
-	fe_mul_smallk(u, 109, x);
+	fe_mul_smallk(y2, 109, x);
 	fe_add_smallk(x, 1, x);
 	fe_mul_u(x, x);
 	fe_inv(x, x);
 
-	// x = sqrt((y^2 - 1) * x)
-	fe_sub_smallk(u, 1, u);
-	fe_mul(u, x, x);
-	fe_sqrt(x, r.x);
+	// r.x = sqrt((y^2 - 1) / ((109 * y^2 + 1) * u))
+	ufe f;
+	fe_sub_smallk(y2, 1, f);
+	fe_mul(f, x, x);
+	fe_sqrt(x, r.x, false);
 }
 
