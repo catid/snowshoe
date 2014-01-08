@@ -822,6 +822,41 @@ bool mul_mod_q_test() {
 	return true;
 }
 
+static bool ec_elligator_test() {
+	ecpt_affine r;
+
+	vector<u32> t;
+	double wall = 0;
+
+	for (int ii = 0; ii < 10000; ++ii) {
+		char n[32];
+		random_k((u64*)n);
+
+		double s0 = m_clock.usec();
+		u32 t0 = Clock::cycles();
+
+		ec_elligator_decode(n, r);
+
+		u32 t1 = Clock::cycles();
+		double s1 = m_clock.usec();
+
+		t.push_back(t1 - t0);
+		wall += s1 - s0;
+
+		if (!ec_valid_vartime(r)) {
+			cout << "elligator fails ii = " << ii << endl;
+			return false;
+		}
+	}
+
+	u32 median = quick_select(&t[0], (int)t.size());
+	wall /= t.size();
+
+	cout << "+ ec_elligator: `" << dec << median << "` median cycles, `" << wall << "` avg usec" << endl;
+
+	return true;
+}
+
 
 //// Entrypoint
 
@@ -885,6 +920,7 @@ int main() {
 	ec_mul_ref(bk1, EC_G_AFFINE, bp1);
 	ec_mul_ref(bk2, EC_G_AFFINE, bp2);
 
+	assert(ec_elligator_test());
 	assert(ec_mul_test(bp1));
 	assert(ec_mul_test(bp2));
 	assert(ec_mul_test(EC_O_AFFINE));
