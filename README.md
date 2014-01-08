@@ -23,6 +23,9 @@ masks for constant-time table lookups.
 Additionally to speed up signature verification a variable single-base
 simultaneous function `simul_gen` is provided that is not constant-time.
 
+Primitive operations for zero-knowledge proofs based on EKE and Elligator [18]
+are offered by the Snowshoe API.
+
 It is intended to be a reliable and robust library that provides the fastest
 low-complexity, open-source implementation of these math routines available,
 which should be considered wherever you would use e.g. Curve25519/Ed25519.

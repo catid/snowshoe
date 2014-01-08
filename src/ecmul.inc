@@ -10,14 +10,16 @@
  * Note that this function actually does support k=0, and it will return
  * the same as k=q in this case; the result is the identity element (0, 1).
  *
+ * Optionally adds point 4E.  Pass null to skip that step.
+ *
  * Preconditions:
  * 	0 < k < q
  *
  * Multiplies the point by k and stores the result in R
  */
 
-// R = k * G
-static void ec_mul_gen(const u64 k[4], ecpt_affine &R, bool mul_cofactor) {
+// R = k * G [+ 4E]
+static void ec_mul_gen(const u64 k[4], ecpt_affine &R, bool mul_cofactor, const ecpt_affine *E) {
 	// Recode scalar
 	u64 kp[4];
 	u32 recode_lsb = ec_recode_scalar_comb_gen(k, kp);
@@ -59,6 +61,24 @@ static void ec_mul_gen(const u64 k[4], ecpt_affine &R, bool mul_cofactor) {
 		// useful for making the math work out for signatures.
 		ec_dbl(X, X, false, t2b);
 		ec_dbl(X, X, false, t2b);
+	}
+
+	// If requested to add 4E,
+	if (E) {
+		// Unpack E into extended coordinates in K
+		ufe t3b;
+		ecpt K;
+		ec_expand(*E, K);
+
+		// K = 4K, and complete calculating T coordinate
+		ec_dbl(K, K, true, t3b);
+		ec_dbl(K, K, false, t3b);
+		fe_mul(K.t, t3b, K.t);
+
+		// K is now guaranteed to be a point of order q
+
+		// Add completed K to X
+		ec_add(X, K, X, false, false, false, t2b);
 	}
 
 	// Compute affine coordinates in R
