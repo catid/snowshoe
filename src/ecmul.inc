@@ -50,10 +50,10 @@ static void ec_mul_gen(const u64 k[4], ecpt &R, ufe &r2b) {
 	// NOTE: Do conditional addition here rather than after the ec_cond_neg
 	// (this is an error in the paper)
 	// If carry bit is set, add 2^(w*d)
-	ec_cond_add((kp[3] >> 60) & 1, X, *GEN_FIX, R, true, false, t2b);
+	ec_cond_add((kp[3] >> 60) & 1, X, *GEN_FIX, X, true, false, t2b);
 
 	// If recode_lsb == 1, R = -R
-	ec_cond_neg(recode_lsb, R);
+	ec_cond_neg(recode_lsb, X, R);
 
 	// Copy t2b out
 	fe_set(t2b, r2b);
@@ -67,7 +67,7 @@ static void ec_mul_gen(const u64 k[4], ecpt &R, ufe &r2b) {
  * Preconditions:
  * 	0 < k < q
  *
- * Multiplies the point by k and stores the result in R
+ * Multiplies the point by k and stores the result in R, r2b
  */
 
 // R = kP
@@ -126,30 +126,23 @@ static void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R, ufe &r2b) {
  * Preconditions:
  * 	0 < a,b < q
  *
- * Multiplies the result of aG + bP by 4 and stores it in R
+ * Performs aG + bP and stores it in R, r2b
  */
 
-// R = a*4*G + b*4*P
-static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, ecpt_affine &R) {
+// R = aG + bP
+static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, ecpt &R, ufe &r2b) {
 	// Decompose scalar into subscalars
 	ufp b1, b2;
 	s32 b1sign, b2sign;
 	gls_decompose(b, b1sign, b1, b2sign, b2);
 
-	// Q0 = endomorphism of P0
-	ecpt_affine Q0;
-	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
-
-	// Set base point sign
-	ec_cond_neg_affine(b2sign, Q0);
-
-	// Expand base points to extended coordinates
+	// Q = endomorphism(P)
 	ecpt P, Q;
-	ec_expand(P0, P);
-	ec_expand(Q0, Q);
+	gls_morph_ext(P0, Q);
 
-	// Set base point sign
-	ec_cond_neg(b1sign, P);
+	// Set base point signs
+	ec_cond_neg(b1sign, P0, P);
+	ec_cond_neg(b2sign, Q, Q);
 
 	// Precompute multiplication table
 	ecpt qtable[8];
@@ -191,10 +184,11 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 		ec_add(X, T, X, false, false, false, t2b);
 	}
 
-	// If bit == 1, X <- X + P1 (inverted logic from [1])
-	if (recode_bit != 0) {
-		ec_add(X, P, X, true, false, false, t2b);
-	}
+	// If bit == 1, X <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, R, true, false, t2b);
+
+	// Copy t2b out
+	fe_set(t2b, r2b);
 }
 
 /*
@@ -206,40 +200,31 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
  * Preconditions:
  * 	0 < a,b < q
  *
- * Multiplies the result of aP + bQ by 4 and stores it in R
+ * Performs aP + bQ and stores the result in R
  */
 
-// R = a*4*P + b*4*Q
-static void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
+// R = aP + bQ
+static void ec_simul(const u64 a[4], const ecpt &P0, const u64 b[4], const ecpt &Q0, ecpt &R, ufe &r2b) {
 	// Decompose scalar into subscalars
 	ufp a0, a1, b0, b1;
 	s32 a0sign, a1sign, b0sign, b1sign;
 	gls_decompose(a, a0sign, a0, a1sign, a1);
 	gls_decompose(b, b0sign, b0, b1sign, b1);
 
-	// Compute endomorphism of base points
-	ecpt_affine Pe, Qe;
-	gls_morph(P.x, P.y, Pe.x, Pe.y);
-	gls_morph(Q.x, Q.y, Qe.x, Qe.y);
+	// Q = endomorphism(P)
+	ecpt P, Pe, Q, Qe;
+	gls_morph_ext(P0, Pe);
+	gls_morph_ext(Q0, Qe);
 
 	// Set base point signs
-	ec_cond_neg_affine(a1sign, Pe);
-	ec_cond_neg_affine(b1sign, Qe);
-
-	// Expand base points
-	ecpt P0, P1, Q0, Q1;
-	ec_expand(P, P0);
-	ec_expand(Pe, P1);
-	ec_expand(Q, Q0);
-	ec_expand(Qe, Q1);
-
-	// Set base point signs
-	ec_cond_neg(a0sign, P0);
-	ec_cond_neg(b0sign, Q0);
+	ec_cond_neg(a0sign, P0, P);
+	ec_cond_neg(a1sign, Pe, Pe);
+	ec_cond_neg(b0sign, Q0, Q);
+	ec_cond_neg(b1sign, Qe, Qe);
 
 	// Precompute multiplication table
 	ecpt table[8];
-	ec_gen_table_4(P0, P1, Q0, Q1, table);
+	ec_gen_table_4(P, Pe, Q, Qe, table);
 
 	// Recode scalar
 	u32 recode_bit = ec_recode_scalars_4(a0, a1, b0, b1, 127);
@@ -260,5 +245,8 @@ static void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const
 
 	// If bit == 1, X <- X + P (inverted logic from [1])
 	ec_cond_add(recode_bit, X, P0, X, true, false, t2b);
+
+	// Copy t2b out
+	fe_set(t2b, r2b);
 }
 

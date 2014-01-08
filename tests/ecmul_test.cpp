@@ -616,7 +616,13 @@ bool ec_mul_test(const ecpt_affine &BP) {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ec_mul(k, BP, R2);
+		ecpt BPx, p;
+		ufe p2b;
+		ec_expand(BP, BPx);
+		ec_mul(k, BPx, p, p2b);
+		ec_dbl(p, p, false, p2b);
+		ec_dbl(p, p, false, p2b);
+		ec_affine(p, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
@@ -662,7 +668,14 @@ bool ec_simul_test(const ecpt_affine &B1, const ecpt_affine &B2) {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ec_simul(k1, B1, k2, B2, R2);
+		ecpt B1x, B2x, p;
+		ufe p2b;
+		ec_expand(B1, B1x);
+		ec_expand(B2, B2x);
+		ec_simul(k1, B1x, k2, B2x, p, p2b);
+		ec_dbl(p, p, false, p2b);
+		ec_dbl(p, p, false, p2b);
+		ec_affine(p, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
@@ -722,7 +735,13 @@ bool ec_simul_gen_test(const ecpt_affine &BP) {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ec_simul_gen(k1, k2, BP, R2);
+		ecpt BPx, p;
+		ufe p2b;
+		ec_expand(BP, BPx);
+		ec_simul_gen(k1, k2, BPx, p, p2b);
+		ec_dbl(p, p, false, p2b);
+		ec_dbl(p, p, false, p2b);
+		ec_affine(p, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
@@ -920,16 +939,20 @@ int main() {
 	ec_mul_ref(bk1, EC_G_AFFINE, bp1);
 	ec_mul_ref(bk2, EC_G_AFFINE, bp2);
 
-	assert(ec_elligator_test());
-	assert(ec_mul_test(bp1));
-	assert(ec_mul_test(bp2));
-	assert(ec_mul_test(EC_O_AFFINE));
+	//assert(ec_elligator_test());
 	assert(ec_mul_gen_test());
+	assert(ec_mul_test(bp1));
 	assert(ec_simul_test(bp1, bp2));
+	assert(ec_simul_gen_test(bp1));
+
+	cout << "Extra tests with exceptional points:" << endl;
+
+	// Extra tests:
 	assert(ec_simul_test(bp2, EC_O_AFFINE));
 	assert(ec_simul_test(EC_O_AFFINE, bp1));
-	assert(ec_simul_gen_test(bp1));
 	assert(ec_simul_gen_test(EC_O_AFFINE));
+	assert(ec_mul_test(bp2));
+	assert(ec_mul_test(EC_O_AFFINE));
 
 	cout << "All tests passed successfully." << endl;
 

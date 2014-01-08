@@ -235,8 +235,8 @@ static CAT_INLINE void fp_neg_mask(const u64 mask, const ufp &p, ufp &r) {
 	s.w = 0 - p.w;
 
 	// If mask is set, take 's', else take 'p'
-	r.i[0] = p.i[0] ^ (s.i[0] ^ p.i[0]) & mask;
-	r.i[1] = p.i[1] ^ (s.i[1] ^ p.i[1]) & mask;
+	r.i[0] = p.i[0] ^ ((s.i[0] ^ p.i[0]) & mask);
+	r.i[1] = p.i[1] ^ ((s.i[1] ^ p.i[1]) & mask);
 
 	// Note that fp_sub_reduce does nothing for the case of mask==0, since the
 	// high bit will not be set in this case.
