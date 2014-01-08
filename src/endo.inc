@@ -1,5 +1,6 @@
 // Optimal extension field Fp^2
 #include "fe.inc"
+#include "ecpt.hpp"
 
 /*
  * GLS Endomorphism [12]
@@ -405,14 +406,39 @@ static void gls_decompose(const u64 k[4], s32 &k1sign, ufp &k1, s32 &k2sign, ufp
 
 // (x2, y2) = endomorphism(x1, y1)
 static CAT_INLINE void gls_morph(const ufe &x1, const ufe &y1, ufe &x2, ufe &y2) {
-	// t1 <- conj(x1) = x1^p
-	ufe t1;
-	fe_conj(x1, t1);
+	// w1 <- conj(x1) = x1^p
+	ufe w1;
+	fe_conj(x1, w1);
 
 	// x2 <- wx * x1^p
-	fe_mul(t1, ENDO_WX, x2);
+	fe_mul(w1, ENDO_WX, x2);
 
 	// y2 <- y1^p
 	fe_conj(y1, y2);
+}
+
+// R = endomorphism(P), for extended coordinates
+static CAT_INLINE void gls_morph_ext(const ecpt &P, ecpt &R) {
+	// w1 <- conj(x1) = x1^p
+	ufe w1;
+	fe_conj(P.x, w1);
+
+	// x2 <- wx * x1^p
+	fe_mul(w1, ENDO_WX, R.x);
+
+	// y2 <- y1^p
+	fe_conj(P.y, R.y);
+
+	// For the T coordinate:
+	// t = xy/z
+	// Z can be neglected.  X and Y are being conjugated, so what is T?
+	// t = (a + ib)(c + id)
+	// = (ac - bd) + i(bc + ad)
+	// t2 = (a - ib)(c - id)
+	// = (ac - bd) - i(bc + ad)
+	// So t2 = conj(t).
+
+	// t2 <- t1^p
+	fe_conj(P.t, R.t);
 }
 

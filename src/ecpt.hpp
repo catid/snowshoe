@@ -21,7 +21,12 @@ namespace cat {
  * (0, -1) is of order 2
  * This codebase avoids x=0 entirely.
  *
- * -(x,y) = (-x, y)
+ * -(x, y) = (-x, y)
+ * -(x, y, t, z) = (-x, y, -t, z)
+ * t = xy/z
+ *
+ * In this library, the T coordinate is often split into two pieces, T0 and T1,
+ * where T = T0 * T1.
  */
 
 struct ecpt {

@@ -148,15 +148,15 @@ static CAT_INLINE void ec_neg_affine(const ecpt_affine &a, ecpt_affine &r) {
 	fe_set(a.y, r.y);
 }
 
-// r = (mask==-1 ? r : -r)
-static CAT_INLINE void ec_neg_mask(const u64 mask, ecpt &r) {
-	fe_neg_mask(mask, r.x);
-	fe_neg_mask(mask, r.t);
+// r = (mask==-1 ? p : -p)
+static CAT_INLINE void ec_neg_mask(const u64 mask, const ecpt &p, ecpt &r) {
+	fe_neg_mask(mask, p.x, r.x);
+	fe_neg_mask(mask, p.t, r.t);
 }
 
 // r = (mask==-1 ? r : -r)
 static CAT_INLINE void ec_neg_mask_affine(const u64 mask, ecpt_affine &r) {
-	fe_neg_mask(mask, r.x);
+	fe_neg_mask(mask, r.x, r.x);
 }
 
 // r = a
@@ -538,6 +538,7 @@ static bool ec_valid_vartime(const ecpt_affine &p) {
  * Else: return 0
  */
 
+// x =?= y
 static CAT_INLINE s64 ec_gen_mask(const int x, const int y) {
 	// Produce a 32-bit mask:
 	// if x == y => -1
@@ -560,14 +561,16 @@ static CAT_INLINE s64 ec_gen_mask(const int x, const int y) {
  * Preconditions: bit is {0, 1}
  */
 
-static CAT_INLINE void ec_cond_neg(const s32 bit, ecpt &r) {
+// r = [-]p
+static CAT_INLINE void ec_cond_neg(const s32 bit, const ecpt &p, ecpt &r) {
 	// Generate mask = -1 when bit == 1, else 0
 	const u64 mask = (s64)(-bit);
 
 	// Effectively negate when bit == 1
-	ec_neg_mask(mask, r);
+	ec_neg_mask(mask, p, r);
 }
 
+// r = [-]r
 static CAT_INLINE void ec_cond_neg_affine(const s32 bit, ecpt_affine &r) {
 	// Generate mask = -1 when bit == 1, else 0
 	const u64 mask = (s64)(-bit);
@@ -584,7 +587,6 @@ static CAT_INLINE void ec_cond_neg_affine(const s32 bit, ecpt_affine &r) {
  *
  * Preconditions: bit is {0, 1}
  */
-
 static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, ecpt &r, bool z2_one, bool precomp_t1, ufe &t2b) {
 	// Generate mask = -1 when bit == 1, else 0
 	const u64 mask = (s64)(-bit);
@@ -740,9 +742,9 @@ static void ec_elligator_decode(const char a0[32], ecpt_affine &r) {
 	ufe f;
 	fe_sub_smallk(y2, 1, f);
 	fe_mul(f, x, x);
-	fe_sqrt(x, r.x, false);
+	fe_sqrt(x, x, false);
 
 	// r.x = [-]r.x, based on one of the random input bits
-	fe_neg_mask(high_mask, r.x);
+	fe_neg_mask(high_mask, x, r.x);
 }
 

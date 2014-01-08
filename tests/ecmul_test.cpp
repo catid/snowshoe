@@ -566,7 +566,10 @@ bool ec_mul_gen_test() {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ec_mul_gen(k, R2, false, 0);
+		ecpt p;
+		ufe p2b;
+		ec_mul_gen(k, p, p2b);
+		ec_affine(p, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
@@ -574,12 +577,9 @@ bool ec_mul_gen_test() {
 		t.push_back(t1 - t0);
 		wall += s1 - s0;
 
-		ecpt temp;
-		ec_expand(R2, temp);
-		ufe t2b;
-		ec_dbl(temp, temp, true, t2b);
-		ec_dbl(temp, temp, false, t2b);
-		ec_affine(temp, R2);
+		ec_dbl(p, p, false, p2b);
+		ec_dbl(p, p, false, p2b);
+		ec_affine(p, R2);
 
 		ec_save_xy(R1, a1);
 		ec_save_xy(R2, a2);

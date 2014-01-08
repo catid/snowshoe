@@ -18,8 +18,8 @@
  * Multiplies the point by k and stores the result in R
  */
 
-// R = k * G [+ 4E]
-static void ec_mul_gen(const u64 k[4], ecpt_affine &R, bool mul_cofactor, const ecpt_affine *E) {
+// R = kG
+static void ec_mul_gen(const u64 k[4], ecpt &R, ufe &r2b) {
 	// Recode scalar
 	u64 kp[4];
 	u32 recode_lsb = ec_recode_scalar_comb_gen(k, kp);
@@ -50,39 +50,13 @@ static void ec_mul_gen(const u64 k[4], ecpt_affine &R, bool mul_cofactor, const 
 	// NOTE: Do conditional addition here rather than after the ec_cond_neg
 	// (this is an error in the paper)
 	// If carry bit is set, add 2^(w*d)
-	ec_cond_add((kp[3] >> 60) & 1, X, *GEN_FIX, X, true, false, t2b);
+	ec_cond_add((kp[3] >> 60) & 1, X, *GEN_FIX, R, true, false, t2b);
 
-	// If recode_lsb == 1, X = -X
-	ec_cond_neg(recode_lsb, X);
+	// If recode_lsb == 1, R = -R
+	ec_cond_neg(recode_lsb, R);
 
-	// If requested to multiply by the cofactor,
-	if (mul_cofactor) {
-		// Multiply by 4.  Note this does not add any security; it is mainly
-		// useful for making the math work out for signatures.
-		ec_dbl(X, X, false, t2b);
-		ec_dbl(X, X, false, t2b);
-	}
-
-	// If requested to add 4E,
-	if (E) {
-		// Unpack E into extended coordinates in K
-		ufe t3b;
-		ecpt K;
-		ec_expand(*E, K);
-
-		// K = 4K, and complete calculating T coordinate
-		ec_dbl(K, K, true, t3b);
-		ec_dbl(K, K, false, t3b);
-		fe_mul(K.t, t3b, K.t);
-
-		// K is now guaranteed to be a point of order q
-
-		// Add completed K to X
-		ec_add(X, K, X, false, false, false, t2b);
-	}
-
-	// Compute affine coordinates in R
-	ec_affine(X, R);
+	// Copy t2b out
+	fe_set(t2b, r2b);
 }
 
 /*
@@ -93,30 +67,23 @@ static void ec_mul_gen(const u64 k[4], ecpt_affine &R, bool mul_cofactor, const 
  * Preconditions:
  * 	0 < k < q
  *
- * Multiplies the point by k * 4 and stores the result in R
+ * Multiplies the point by k and stores the result in R
  */
 
-// R = k*4*P
-static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
+// R = kP
+static void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R, ufe &r2b) {
 	// Decompose scalar into subscalars
 	ufp a, b;
 	s32 asign, bsign;
 	gls_decompose(k, asign, a, bsign, b);
 
-	// Q0 = endomorphism of P0
-	ecpt_affine Q0;
-	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
-
-	// Set base point sign
-	ec_cond_neg_affine(bsign, Q0);
-
-	// Expand P, Q to extended coordinates
+	// Q = endomorphism(P)
 	ecpt P, Q;
-	ec_expand(P0, P);
-	ec_expand(Q0, Q);
+	gls_morph_ext(P0, Q);
 
-	// Set base point sign
-	ec_cond_neg(asign, P);
+	// Set base point signs
+	ec_cond_neg(asign, P0, P);
+	ec_cond_neg(bsign, Q, Q);
 
 	// Precompute multiplication table
 	ecpt table[8];
@@ -141,14 +108,10 @@ static void ec_mul(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	}
 
 	// If bit == 1, X <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
+	ec_cond_add(recode_bit, X, P, R, true, false, t2b);
 
-	// Multiply by 4 to avoid small subgroup attack
-	ec_dbl(X, X, false, t2b);
-	ec_dbl(X, X, false, t2b);
-
-	// Compute affine coordinates in R
-	ec_affine(X, R);
+	// Copy t2b out
+	fe_set(t2b, r2b);
 }
 
 /*
@@ -232,13 +195,6 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt_affine &P0, 
 	if (recode_bit != 0) {
 		ec_add(X, P, X, true, false, false, t2b);
 	}
-
-	// Multiply by 4 to avoid small subgroup attack
-	ec_dbl(X, X, false, t2b);
-	ec_dbl(X, X, false, t2b);
-
-	// Compute affine coordinates in R
-	ec_affine(X, R);
 }
 
 /*
@@ -304,12 +260,5 @@ static void ec_simul(const u64 a[4], const ecpt_affine &P, const u64 b[4], const
 
 	// If bit == 1, X <- X + P (inverted logic from [1])
 	ec_cond_add(recode_bit, X, P0, X, true, false, t2b);
-
-	// Multiply by 4 to avoid small subgroup attack
-	ec_dbl(X, X, false, t2b);
-	ec_dbl(X, X, false, t2b);
-
-	// Compute affine coordinates in R
-	ec_affine(X, R);
 }
 
