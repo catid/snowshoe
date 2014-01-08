@@ -321,6 +321,8 @@ static bool fe_sqrt(const ufe &x, ufe &r, bool check_input_vartime) {
 	fp_inv(t, t);
 	fp_mul(x.b, t, r.b);
 
+	// TODO: The sign of the result is randomly wrong
+
 	return true;
 }
 
