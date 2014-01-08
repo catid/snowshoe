@@ -963,6 +963,9 @@ Demonstrates several new techniques including Q-curve endomorphisms
 ##### [17] ["Fast and compact elliptic-curve cryptography" (Hamburg 2012)](http://eprint.iacr.org/2012/309.pdf)
 Explores SAB-set comb multiplication and special prime moduli
 
+##### [18] ["Elligator: Elliptic-curve points indistinguishable from uniform random strings" (Bernstein Hamburg Krasnova Lange 2013)](http://elligator.cr.yp.to/elligator-20130828.pdf)
+Introduces the Elligator-2 point unpacking algorithm, which is implemented by Snowshoe
+
 
 ## Credits
 

@@ -599,7 +599,7 @@ static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, 
 }
 
 /*
- * Elligator point decoding
+ * Elligator point decoding [18]
  *
  * a*x^2 + y^2 = 1 + d*x^2*y^2
  * a = -u
@@ -607,7 +607,7 @@ static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, 
  * 
  * t^2 = s^3 + A*s^2 + B*s
  * A = -(a + d) = -(-1+109)u = -108u
- * B = ad = -109u
+ * B = ad = -109u^2
  *
  * z = -A / (1 + u*a^2)
  * e = chi(z^3 + A*z^2 + B*z)
@@ -617,7 +617,34 @@ static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, 
  * Ey = (t^2 - (a-d)*s^2) / (t^2 + (a-d)*s^2)
  * Ex = sqrt((Ey^2 - 1) / (d*Ey^2 - a))
  */
-static void ec_elligator_decode(const ufe &a, ecpt_affine &r) {
+static void ec_elligator_decode(const char a0[32], ecpt_affine &r) {
+	// Unpack random bytes into endian-neutral words
+	ufe a;
+	const u64 *words = reinterpret_cast<const u64 *>( a0 );
+	a.a.i[0] = getLE(words[0]);
+	a.a.i[1] = getLE(words[1]) >> 1;
+	a.b.i[0] = getLE(words[2]);
+
+	// Store final low bit of high word as a -1 or 0 mask
+	u64 high_mask = getLE(words[3]);
+	a.b.i[1] = high_mask >> 1;
+	high_mask = -(s64)high_mask;
+
+	// Note that one bit is ignored from the input.
+
+	// There is a rare case where the random input will be 7FF..FFF,
+	// which is the same as 0 in the base finite field Fp.
+	// This rare case causes a slight acceptable bias towards (0,0).
+
+	// Otherwise the input is uniformly distributed, and since
+	// p = 1 mod 4, all input values in the field will map to curve
+	// points according to [18].
+
+	// It may be possible for the generated curve point to be invalid
+	// as input for Snowshoe functions in rare cases, so it would be
+	// a good idea to validate the output point before using it, and
+	// generating new random input in this case.
+
 	// z = -A / (1 + u * a^2)
 	ufe z;
 	fe_sqr(a, z);
@@ -639,9 +666,10 @@ static void ec_elligator_decode(const ufe &a, ecpt_affine &r) {
 	// z = 109 * u * z
 	ufe w3;
 	fe_mul_u(z, w3);
+	fe_mul_u(w3, w3);
 	fe_mul_smallk(w3, 109, w3);
 
-	// e = z^3 - 108 * u * z^2 - 109 * u * z
+	// e = z^3 - 108 * u * z^2 - 109 * u * u * z
 	ufe e;
 	fe_mul(z2, z, e);
 	fe_sub(e, w1, e);
@@ -671,15 +699,16 @@ static void ec_elligator_decode(const ufe &a, ecpt_affine &r) {
 	fe_mul_u(s2, w2);
 	fe_mul_smallk(w2, 108, w2);
 
-	// s = 109 * u * s
-	fe_mul_u(s, s);
-	fe_mul_smallk(s, 109, s);
+	// s = 109 * u * u * s
+	fe_mul_u(s, w3);
+	fe_mul_u(w3, w3);
+	fe_mul_smallk(w3, 109, w3);
 
-	// t^2 = s^3 - 108 * u * s^2 - 109 * u * s
+	// t^2 = s^3 - 108 * u * s^2 - 109 * u * u * s
 	ufe t2;
 	fe_mul(s2, s, t2);
 	fe_sub(t2, w2, t2);
-	fe_sub(t2, s, t2);
+	fe_sub(t2, w3, t2);
 
 	// s2 = 110 * u * s^2
 	fe_mul_u(s2, s2);
@@ -712,5 +741,8 @@ static void ec_elligator_decode(const ufe &a, ecpt_affine &r) {
 	fe_sub_smallk(y2, 1, f);
 	fe_mul(f, x, x);
 	fe_sqrt(x, r.x, false);
+
+	// r.x = [-]r.x, based on one of the random input bits
+	fe_neg_mask(high_mask, r.x);
 }
 

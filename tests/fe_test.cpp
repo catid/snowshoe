@@ -364,11 +364,11 @@ bool fe_add_set_smallk_test() {
 static bool fe_sqrt_test(const ufe &a, bool expected_valid) {
 	ufe a2, a1;
 
+	int chi = fe_chi(a);
+	cout << chi << endl;
+
 	fe_mul(a, a, a2);
 	bool valid = fe_sqrt(a2, a1, true);
-
-	int chi = fe_chi(a2);
-	cout << chi << endl;
 
 	if (chi == -1) {
 		fe_neg(a1, a1);

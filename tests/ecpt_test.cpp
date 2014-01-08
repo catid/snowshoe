@@ -801,13 +801,13 @@ static bool ec_elligator_test() {
 	ufe x;
 	ecpt_affine r;
 
-	for (int ii = 0; ii < 100000; ++ii) {
-		x.a.i[0] = ii;
-		x.a.i[1] = 2;
-		x.b.i[0] = 3;
-		x.b.i[1] = 4;
+	for (int ii = 0; ii < 1000000; ++ii) {
+		char n[32];
+		for (int jj = 0; jj < 32; ++jj) {
+			n[jj] = (char)rand();
+		}
 
-		ec_elligator_decode(x, r);
+		ec_elligator_decode(n, r);
 
 		if (!ec_valid_vartime(r)) {
 			cout << "elligator fails ii = " << ii << endl;
