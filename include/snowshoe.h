@@ -149,6 +149,61 @@ extern int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[6
  */
 extern int snowshoe_simul(const char a[32], const char P[64], const char b[32], const char Q[64], char R[64]);
 
+/*
+ * E = Elligator(key)
+ *
+ * This generates a point on the curve deterministically based on the key
+ *
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
+ */
+extern int snowshoe_elligator(const char key[32], char E[128]);
+
+/*
+ * C = kG + E
+ *
+ * Use Elligator to encrypt a point
+ *
+ * Encrypt a new point with private key k using Elligator key E and store the
+ * result in point C.
+ *
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
+ */
+extern int snowshoe_elligator_encrypt(const char k[32], const char E[128], char C[64]);
+
+/*
+ * R = C - E
+ *
+ * Use Elligator to decrypt a point
+ *
+ * Decrypt an encrypted point C using Elligator key E and store the result in
+ * point R.
+ *
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
+ */
+extern int snowshoe_elligator_decrypt(const char C[64], const char E[128], char R[64]);
+
+/*
+ * R = k*4*(P + Q)
+ *
+ * Multiply sum of two points by k
+ *
+ * Validates input scalar k.  Validates input point P.
+ *
+ * Preconditions:
+ * 	0 < k < q (prime order of curve)
+ *
+ * Returns 0 on success.
+ * Returns non-zero if one of the input parameters is invalid.
+ * It is important to check the return value to avoid active attacks.
+ */
+extern int snowshoe_mul_sum(const char k[32], const char P[64], const char Q[64], char R[64]);
+
 #ifdef __cplusplus
 }
 #endif
