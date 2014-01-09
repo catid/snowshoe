@@ -939,11 +939,11 @@ int main() {
 	ec_mul_ref(bk1, EC_G_AFFINE, bp1);
 	ec_mul_ref(bk2, EC_G_AFFINE, bp2);
 
-	//assert(ec_elligator_test());
-	assert(ec_mul_gen_test());
 	assert(ec_mul_test(bp1));
+	assert(ec_mul_gen_test());
 	assert(ec_simul_gen_test(bp1));
 	assert(ec_simul_test(bp1, bp2));
+	assert(ec_elligator_test());
 
 	cout << "Extra tests with exceptional points:" << endl;
 

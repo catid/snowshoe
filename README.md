@@ -76,37 +76,45 @@ RDTSC instruction runs at 1.70004 GHz so no correction factor is needed.
 
 `make ecmultest` results (TB off):
 
-+ ec_mul: `130196` median cycles, `76.9951` avg usec
-+ ec_mul_gen: `59700` median cycles, `35.2946` avg usec
-+ ec_simul: `189176` median cycles, `111.897` avg usec
-+ ec_simul_gen: `150108` median cycles, `88.5848` avg usec
++ ec_mul: `132216` median cycles, `81.9633` avg usec
++ ec_mul_gen: `59820` median cycles, `37.1524` avg usec
++ ec_simul_gen: `151632` median cycles, `93.9236` avg usec
++ ec_simul: `193060` median cycles, `118.352` avg usec
++ ec_elligator: `26408` median cycles, `16.5431` avg usec
 
 `make snowshoetest` results (TB off):
 
-+ EC-DH client: `132184` median cycles, `78.0366` avg usec
-+ EC-DH server: `132100` median cycles, `77.9645` avg usec
-+ EC-DH-FS client gen: `71316` median cycles, `42.4957` avg usec
-+ EC-DH-FS server proc: `133464` median cycles, `79.5193` avg usec
-+ EC-DH-FS client proc: `192920` median cycles, `114.889` avg usec
-+ EdDSA sign: `62032` median cycles, `36.7072` avg usec
-+ EdDSA verify: `152220` median cycles, `89.8745` avg usec
++ Elligator key: `28064` median cycles, `17.4261` avg usec
++ Elligator encrypt: `60680` median cycles, `37.9023` avg usec
++ Elligator secret: `136604` median cycles, `85.3026` avg usec
++ EC-DH client: `131020` median cycles, `83.4958` avg usec
++ EC-DH server: `130872` median cycles, `83.3605` avg usec
++ EC-DH-FS client gen: `71364` median cycles, `44.6148` avg usec
++ EC-DH-FS server proc: `132512` median cycles, `83.5078` avg usec
++ EC-DH-FS client proc: `193596` median cycles, `121.965` avg usec
++ EdDSA sign: `62264` median cycles, `38.9439` avg usec
++ EdDSA verify: `152988` median cycles, `95.8431` avg usec
 
 `make ecmultest` results (TB on, demonstrating usual walltime):
 
-+ ec_mul: `81968` median cycles, `48.6797` avg usec
-+ ec_mul_gen: `38160` median cycles, `22.6815` avg usec
-+ ec_simul: `119110` median cycles, `71.1844` avg usec
-+ ec_simul_gen: `94536` median cycles, `56.3874` avg usec
++ ec_mul: `83138` median cycles, `49.8092` avg usec
++ ec_mul_gen: `37640` median cycles, `22.4995` avg usec
++ ec_simul_gen: `95382` median cycles, `56.8227` avg usec
++ ec_simul: `121424` median cycles, `72.3684` avg usec
++ ec_elligator: `16618` median cycles, `10.119` avg usec
 
 `make snowshoetest` results (TB on, demonstrating usual walltime):
 
-+ EC-DH client: `83242` median cycles, `49.5524` avg usec
-+ EC-DH server: `83174` median cycles, `49.5148` avg usec
-+ EC-DH-FS client gen: `44894` median cycles, `26.608` avg usec
-+ EC-DH-FS server proc: `84002` median cycles, `49.7043` avg usec
-+ EC-DH-FS client proc: `121428` median cycles, `71.7875` avg usec
-+ EdDSA sign: `39044` median cycles, `23.1813` avg usec
-+ EdDSA verify: `95866` median cycles, `56.722` avg usec
++ Elligator key: `17658` median cycles, `10.8116` avg usec
++ Elligator encrypt: `38198` median cycles, `23.4046` avg usec
++ Elligator secret: `85998` median cycles, `52.7537` avg usec
++ EC-DH client: `82440` median cycles, `49.0811` avg usec
++ EC-DH server: `82350` median cycles, `49.0256` avg usec
++ EC-DH-FS client gen: `44926` median cycles, `26.7164` avg usec
++ EC-DH-FS server proc: `83400` median cycles, `49.4517` avg usec
++ EC-DH-FS client proc: `121830` median cycles, `72.2221` avg usec
++ EdDSA sign: `39124` median cycles, `23.366` avg usec
++ EdDSA verify: `96190` median cycles, `57.3035` avg usec
 
 
 ##### libsnowshoe.a on iMac (2.7 GHz Core i5-2500S Sandy Bridge, June 2011):
