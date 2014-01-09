@@ -528,6 +528,7 @@ int snowshoe_elligator_secret(const char k[32], const char C[64],
 		ec_add(p, q, p, true, true, true, t2b);
 	}
 
+	// FIXME: This should work without this.
 	ecpt_affine temp;
 	ec_affine(p, temp);
 	ec_expand(temp, p);
