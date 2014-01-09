@@ -308,12 +308,10 @@ bool fe_neg_mask_test() {
 	u128 zero = 0;
 	u128 neg = ~(u128)0;
 
-	fe_set(CXC, r);
-
 	// Verify that passing a -1 mask will leave r unaffected,
 	// and passing 0 will negate r in place
 
-	fe_neg_mask(neg, r);
+	fe_neg_mask(neg, CXC, r);
 
 	fe_set(CXC, a);
 	fe_neg(a, a);
@@ -326,13 +324,13 @@ bool fe_neg_mask_test() {
 		return false;
 	}
 
-	fe_neg_mask(neg, r);
+	fe_neg_mask(neg, r, r);
 
 	if (!fe_isequal_test(r, CXC)) {
 		return false;
 	}
 
-	fe_neg_mask(zero, r);
+	fe_neg_mask(zero, r, r);
 
 	if (!fe_isequal_test(r, CXC)) {
 		return false;

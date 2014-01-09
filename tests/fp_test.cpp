@@ -408,12 +408,10 @@ bool fp_neg_mask_test() {
 	u128 zero = 0;
 	u128 neg = ~(u128)0;
 
-	fp_set(CR1, r);
-
 	// Verify that passing a -1 mask will leave r unaffected,
 	// and passing 0 will negate r in place
 
-	fp_neg_mask(neg, r);
+	fp_neg_mask(neg, CR1, r);
 
 	fp_set(CR1, a);
 	fp_neg(a, a);
@@ -426,13 +424,13 @@ bool fp_neg_mask_test() {
 		return false;
 	}
 
-	fp_neg_mask(neg, r);
+	fp_neg_mask(neg, r, r);
 
 	if (!fp_isequal_test(r, CR1)) {
 		return false;
 	}
 
-	fp_neg_mask(zero, r);
+	fp_neg_mask(zero, r, r);
 
 	if (!fp_isequal_test(r, CR1)) {
 		return false;
