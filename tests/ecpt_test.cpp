@@ -705,25 +705,25 @@ static bool ec_neg_mask_test(const ecpt &P) {
 	u128 mask;
   
 	mask = ec_gen_mask(1, 3);
-	ec_neg_mask(mask, p);
+	ec_neg_mask(mask, p, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
 
 	mask = ec_gen_mask(3, 3);
-	ec_neg_mask(mask, p);
+	ec_neg_mask(mask, p, p);
 	if (!ec_isequal(n, p)) {
 		return false;
 	}
 
 	mask = ec_gen_mask(4, 4);
-	ec_neg_mask(mask, p);
+	ec_neg_mask(mask, p, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
 
 	mask = ec_gen_mask(3, 10);
-	ec_neg_mask(mask, p);
+	ec_neg_mask(mask, p, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
@@ -737,22 +737,22 @@ static bool ec_cond_neg_test(const ecpt &P) {
 	ec_set(P, p);
 	ec_neg(p, n);
 
-	ec_cond_neg(0, p);
+	ec_cond_neg(0, p, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
 
-	ec_cond_neg(1, p);
+	ec_cond_neg(1, p, p);
 	if (!ec_isequal(n, p)) {
 		return false;
 	}
 
-	ec_cond_neg(1, p);
+	ec_cond_neg(1, p, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
 
-	ec_cond_neg(0, p);
+	ec_cond_neg(0, p, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}

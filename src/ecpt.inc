@@ -632,7 +632,7 @@ static void ec_elligator_decode(const char a0[32], ecpt_affine &r) {
 	// Store final low bit of high word as a -1 or 0 mask
 	u64 high_mask = getLE(words[3]);
 	a.b.i[1] = high_mask >> 1;
-	high_mask = -(s64)high_mask;
+	high_mask = -(s64)(high_mask & 1);
 
 	// Note that one bit is ignored from the input.
 
@@ -746,7 +746,7 @@ static void ec_elligator_decode(const char a0[32], ecpt_affine &r) {
 	fe_mul(f, x, x);
 	fe_sqrt(x, x, false);
 
-	// r.x = [-]r.x, based on one of the random input bits
+	// r.x = [-]x, based on one of the random input bits
 	fe_neg_mask(high_mask, x, r.x);
 }
 
