@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define SNOWSHOE_VERSION 7
+#define SNOWSHOE_VERSION 8
 
 /*
  * Verify binary compatibility with the Snowshoe API on startup.
@@ -152,7 +152,7 @@ extern int snowshoe_simul(const char a[32], const char P[64], const char b[32], 
 /*
  * E = Elligator(key)
  *
- * This generates a point on the curve deterministically based on the key
+ * This generates a point on the curve deterministically based on the key.
  *
  * Returns 0 on success.
  * Returns non-zero if one of the input parameters is invalid.
@@ -163,10 +163,7 @@ extern int snowshoe_elligator(const char key[32], char E[128]);
 /*
  * C = kG + E
  *
- * Use Elligator to encrypt a point
- *
- * Encrypt a new point with private key k using Elligator key E and store the
- * result in point C.
+ * Encrypt a new point with private key k using Elligator key E.
  *
  * Returns 0 on success.
  * Returns non-zero if one of the input parameters is invalid.
@@ -175,34 +172,16 @@ extern int snowshoe_elligator(const char key[32], char E[128]);
 extern int snowshoe_elligator_encrypt(const char k[32], const char E[128], char C[64]);
 
 /*
- * R = C - E
+ * R = k(C - E [+ V])
  *
- * Use Elligator to decrypt a point
- *
- * Decrypt an encrypted point C using Elligator key E and store the result in
- * point R.
+ * Use Elligator point E to decrypt a point, optionally add a second point,
+ * and multiply by a private key k.
  *
  * Returns 0 on success.
  * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-extern int snowshoe_elligator_decrypt(const char C[64], const char E[128], char R[64]);
-
-/*
- * R = k*4*(P + Q)
- *
- * Multiply sum of two points by k
- *
- * Validates input scalar k.  Validates input point P.
- *
- * Preconditions:
- * 	0 < k < q (prime order of curve)
- *
- * Returns 0 on success.
- * Returns non-zero if one of the input parameters is invalid.
- * It is important to check the return value to avoid active attacks.
- */
-extern int snowshoe_mul_sum(const char k[32], const char P[64], const char Q[64], char R[64]);
+extern int snowshoe_elligator_secret(const char k[32], const char C[64], const char E[128], const char V[64], char R[64]);
 
 #ifdef __cplusplus
 }

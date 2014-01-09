@@ -392,6 +392,102 @@ bool ec_dsa_test() {
 	return true;
 }
 
+static bool ec_elligator_test() {
+	vector<u32> tc, te, ts;
+	double wc = 0, we = 0, ws = 0;
+
+	for (int iteration = 0; iteration < 10000; ++iteration) {
+		char key[32];
+		char E[64];
+
+		generate_k(key);
+
+		double s0 = m_clock.usec();
+		u32 t0 = Clock::cycles();
+
+		if (snowshoe_elligator(key, E)) {
+			cout << "elligator failed" << endl;
+			return false;
+		}
+
+		u32 t1 = Clock::cycles();
+		double s1 = m_clock.usec();
+
+		tc.push_back(t1 - t0);
+		wc += s1 - s0;
+
+		char x[32], X[64];
+
+		generate_k(x);
+		snowshoe_secret_gen(x);
+
+		s0 = m_clock.usec();
+		t0 = Clock::cycles();
+
+		if (snowshoe_elligator_encrypt(x, E, X)) {
+			cout << "elligator encrypt x failed" << endl;
+			return false;
+		}
+
+		t1 = Clock::cycles();
+		s1 = m_clock.usec();
+
+		te.push_back(t1 - t0);
+		we += s1 - s0;
+
+		char y[32], Y[64];
+
+		generate_k(y);
+		snowshoe_secret_gen(y);
+
+		if (snowshoe_elligator_encrypt(y, E, Y)) {
+			cout << "elligator encrypt y failed" << endl;
+			return false;
+		}
+
+		char Z1[64], Z2[64];
+
+		s0 = m_clock.usec();
+		t0 = Clock::cycles();
+
+		if (snowshoe_elligator_secret(y, X, E, 0, Z1)) {
+			cout << "elligator secret y failed" << endl;
+			return false;
+		}
+
+		t1 = Clock::cycles();
+		s1 = m_clock.usec();
+
+		ts.push_back(t1 - t0);
+		ws += s1 - s0;
+
+		if (snowshoe_elligator_secret(x, Y, E, 0, Z2)) {
+			cout << "elligator secret x failed" << endl;
+			return false;
+		}
+
+		for (int ii = 0; ii < 64; ++ii) {
+			if (Z1[ii] != Z2[ii]) {
+				cout << "elligator result points do not match failed " << ii << endl;
+				return false;
+			}
+		}
+	}
+
+	u32 mc = quick_select(&tc[0], (int)tc.size());
+	wc /= tc.size();
+	u32 me = quick_select(&te[0], (int)te.size());
+	we /= te.size();
+	u32 ms = quick_select(&ts[0], (int)ts.size());
+	ws /= ts.size();
+
+	cout << "+ Elligator key: `" << dec << mc << "` median cycles, `" << wc << "` avg usec" << endl;
+	cout << "+ Elligator encrypt: `" << dec << me << "` median cycles, `" << we << "` avg usec" << endl;
+	cout << "+ Elligator secret: `" << dec << ms << "` median cycles, `" << ws << "` avg usec" << endl;
+
+	return true;
+}
+
 
 //// Entrypoint
 
@@ -432,6 +528,7 @@ int main() {
 		throw "Wrong snowshoe static library is linked";
 	}
 
+	assert(ec_elligator_test());
 	assert(ec_dh_test());
 	assert(ec_dh_fs_test());
 	assert(ec_dsa_test());

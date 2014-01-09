@@ -453,6 +453,103 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 	return 0;
 }
 
+// E = Elligator(key)
+int snowshoe_elligator(const char key[32], char E[128]) {
+	// Calculate Elligator point from key
+	ecpt_affine p;
+	ec_elligator_decode(key, p);
+
+	// Validate the resulting point (ie. 0 -> invalid point)
+	if (!ec_valid_vartime(p)) {
+		return -1;
+	}
+
+	// q = 4E
+	ecpt q;
+	ec_expand(p, q);
+	ufe t2b;
+	ec_dbl(q, q, true, t2b);
+	ec_dbl(q, q, false, t2b);
+
+	// Fix T coordinate
+	fe_mul(q.t, t2b, q.t);
+
+	// Copy result
+	ecpt *e = (ecpt *)E;
+	ec_set(q, *e);
+
+	return 0;
+}
+
+// C = kG + E
+int snowshoe_elligator_encrypt(const char k[32], const char E[128], char C[64]) {
+	// K = kG
+	ecpt K;
+	const u64 *key = (const u64 *)k;
+	if (invalid_key(key)) {
+		return -1;
+	}
+	ufe t2b;
+	ec_mul_gen(key, K, t2b);
+
+	// K = K + E
+	const ecpt *e = (const ecpt *)E;
+	ec_add(K, *e, K, false, false, false, t2b);
+
+	// Affine point
+	ecpt_affine *c = (ecpt_affine *)C;
+	ec_affine(K, *c);
+
+	return 0;
+}
+
+// R = k(C - E [+ V])
+int snowshoe_elligator_secret(const char k[32], const char C[64],
+							  const char E[128], const char V[64], char R[64]) {
+	// p = C - E
+	ecpt p, q;
+	const ecpt_affine *c = (const ecpt_affine *)C;
+	if (!ec_valid_vartime(*c)) {
+		return -1;
+	}
+	ec_expand(*c, p);
+	const ecpt *e = (const ecpt *)E;
+	ec_neg(*e, q);
+	ufe t2b;
+	ec_add(q, p, p, true, true, true, t2b);
+
+	// p = p + V
+	const ecpt_affine *v = (const ecpt_affine *)V;
+	if (v) {
+		if (!ec_valid_vartime(*v)) {
+			return -1;
+		}
+		ec_expand(*v, q);
+		ec_add(p, q, p, true, true, true, t2b);
+	}
+
+	ecpt_affine temp;
+	ec_affine(p, temp);
+	ec_expand(temp, p);
+
+	// p = k * p
+	const u64 *key = (const u64 *)k;
+	if (invalid_key(key)) {
+		return -1;
+	}
+	ec_mul(key, p, false, p, t2b);
+
+	// Fix subgroup attack
+	ec_dbl(p, p, false, t2b);
+	ec_dbl(p, p, false, t2b);
+
+	// Affine point
+	ecpt_affine *r = (ecpt_affine *)R;
+	ec_affine(p, *r);
+
+	return 0;
+}
+
 #ifdef __cplusplus
 }
 #endif
