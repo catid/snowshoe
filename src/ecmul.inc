@@ -71,7 +71,7 @@ static void ec_mul_gen(const u64 k[4], ecpt &R, ufe &r2b) {
  */
 
 // R = kP
-static void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R, ufe &r2b) {
+static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
 	// Decompose scalar into subscalars
 	ufp a, b;
 	s32 asign, bsign;
@@ -87,7 +87,7 @@ static void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R, ufe &r2b) {
 
 	// Precompute multiplication table
 	ecpt table[8];
-	ec_gen_table_2(P, Q, table);
+	ec_gen_table_2(P, Q, z1, table);
 
 	// Recode subscalars
 	u32 recode_bit = ec_recode_scalars_2(a, b, 128);
@@ -107,8 +107,8 @@ static void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R, ufe &r2b) {
 		ec_add(X, T, X, false, false, false, t2b);
 	}
 
-	// If bit == 1, X <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, R, true, false, t2b);
+	// If bit == 1, R <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, R, z1, false, t2b);
 
 	// Copy t2b out
 	fe_set(t2b, r2b);
@@ -130,7 +130,7 @@ static void ec_mul(const u64 k[4], const ecpt &P0, ecpt &R, ufe &r2b) {
  */
 
 // R = aG + bP
-static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, ecpt &R, ufe &r2b) {
+static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
 	// Decompose scalar into subscalars
 	ufp b1, b2;
 	s32 b1sign, b2sign;
@@ -146,7 +146,7 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, ecpt &R
 
 	// Precompute multiplication table
 	ecpt qtable[8];
-	ec_gen_table_2(P, Q, qtable);
+	ec_gen_table_2(P, Q, z1, qtable);
 
 	// Recode subscalars
 	u64 a1[4];
@@ -184,8 +184,8 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, ecpt &R
 		ec_add(X, T, X, false, false, false, t2b);
 	}
 
-	// If bit == 1, X <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, R, true, false, t2b);
+	// If bit == 1, R <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, R, z1, false, t2b);
 
 	// Copy t2b out
 	fe_set(t2b, r2b);
@@ -204,7 +204,7 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, ecpt &R
  */
 
 // R = aP + bQ
-static void ec_simul(const u64 a[4], const ecpt &P0, const u64 b[4], const ecpt &Q0, ecpt &R, ufe &r2b) {
+static void ec_simul(const u64 a[4], const ecpt &P0, bool pz1, const u64 b[4], const ecpt &Q0, bool qz1, ecpt &R, ufe &r2b) {
 	// Decompose scalar into subscalars
 	ufp a0, a1, b0, b1;
 	s32 a0sign, a1sign, b0sign, b1sign;
@@ -224,7 +224,7 @@ static void ec_simul(const u64 a[4], const ecpt &P0, const u64 b[4], const ecpt 
 
 	// Precompute multiplication table
 	ecpt table[8];
-	ec_gen_table_4(P, Pe, Q, Qe, table);
+	ec_gen_table_4(P, Pe, pz1, Q, Qe, qz1, table);
 
 	// Recode scalar
 	u32 recode_bit = ec_recode_scalars_4(a0, a1, b0, b1, 127);
@@ -243,8 +243,8 @@ static void ec_simul(const u64 a[4], const ecpt &P0, const u64 b[4], const ecpt 
 		ec_add(X, T, X, false, false, false, t2b);
 	}
 
-	// If bit == 1, X <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P0, X, true, false, t2b);
+	// If bit == 1, R <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, R, pz1, false, t2b);
 
 	// Copy t2b out
 	fe_set(t2b, r2b);

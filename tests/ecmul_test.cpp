@@ -286,7 +286,7 @@ static bool ec_gen_table_2_test() {
 
 	ecpt table[8];
 
-	ec_gen_table_2(a, b, table);
+	ec_gen_table_2(a, b, true, table);
 
 	ufe t2b;
 
@@ -448,7 +448,7 @@ static bool ec_table_select_2_test() {
 	ec_set(EC_EG, p2);
 
 	ecpt table[8];
-	ec_gen_table_2(p1, p2, table);
+	ec_gen_table_2(p1, p2, true, table);
 
 	bool test = !ec_table_select_2_test_try(table, 0, 0, 0);
 	test |= !ec_table_select_2_test_try(table, 0, 1, 1);
@@ -619,7 +619,7 @@ bool ec_mul_test(const ecpt_affine &BP) {
 		ecpt BPx, p;
 		ufe p2b;
 		ec_expand(BP, BPx);
-		ec_mul(k, BPx, p, p2b);
+		ec_mul(k, BPx, true, p, p2b);
 		ec_dbl(p, p, false, p2b);
 		ec_dbl(p, p, false, p2b);
 		ec_affine(p, R2);
@@ -672,7 +672,7 @@ bool ec_simul_test(const ecpt_affine &B1, const ecpt_affine &B2) {
 		ufe p2b;
 		ec_expand(B1, B1x);
 		ec_expand(B2, B2x);
-		ec_simul(k1, B1x, k2, B2x, p, p2b);
+		ec_simul(k1, B1x, true, k2, B2x, true, p, p2b);
 		ec_dbl(p, p, false, p2b);
 		ec_dbl(p, p, false, p2b);
 		ec_affine(p, R2);
@@ -738,7 +738,7 @@ bool ec_simul_gen_test(const ecpt_affine &BP) {
 		ecpt BPx, p;
 		ufe p2b;
 		ec_expand(BP, BPx);
-		ec_simul_gen(k1, k2, BPx, p, p2b);
+		ec_simul_gen(k1, k2, BPx, true, p, p2b);
 		ec_dbl(p, p, false, p2b);
 		ec_dbl(p, p, false, p2b);
 		ec_affine(p, R2);
@@ -942,8 +942,8 @@ int main() {
 	//assert(ec_elligator_test());
 	assert(ec_mul_gen_test());
 	assert(ec_mul_test(bp1));
-	assert(ec_simul_test(bp1, bp2));
 	assert(ec_simul_gen_test(bp1));
+	assert(ec_simul_test(bp1, bp2));
 
 	cout << "Extra tests with exceptional points:" << endl;
 

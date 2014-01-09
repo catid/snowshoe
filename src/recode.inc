@@ -33,7 +33,7 @@
  * and they make the code easier to analyze.
  */
 
-static CAT_INLINE void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
+static CAT_INLINE void ec_gen_table_2(const ecpt &a, const ecpt &b, bool z1, ecpt TABLE[8]) {
 	ecpt bn;
 	ec_neg(b, bn);
 
@@ -42,28 +42,28 @@ static CAT_INLINE void ec_gen_table_2(const ecpt &a, const ecpt &b, ecpt TABLE[8
 
 	// P[5] = a - b
 	ufe t2b;
-	ec_add(a, bn, TABLE[5], false, true, true, t2b);
+	ec_add(a, bn, TABLE[5], z1, true, true, t2b);
 
 	// P[7] = a + b
-	ec_add(a, b, TABLE[7], false, true, true, t2b);
+	ec_add(a, b, TABLE[7], z1, true, true, t2b);
 
 	// P[6] = a + 2b
-	ec_add(TABLE[7], b, TABLE[6], false, true, true, t2b);
+	ec_add(TABLE[7], b, TABLE[6], z1, true, true, t2b);
 
 	ecpt a2;
-	ec_dbl(a, a2, false, t2b);
+	ec_dbl(a, a2, z1, t2b);
 
 	// P[0] = 3a
-	ec_add(a2, a, TABLE[0], false, false, true, t2b);
+	ec_add(a2, a, TABLE[0], z1, false, true, t2b);
 
 	// P[1] = 3a + b
-	ec_add(TABLE[0], b, TABLE[1], false, true, true, t2b);
+	ec_add(TABLE[0], b, TABLE[1], z1, true, true, t2b);
 
 	// P[2] = 3a + 2b
-	ec_add(TABLE[1], b, TABLE[2], false, true, true, t2b);
+	ec_add(TABLE[1], b, TABLE[2], z1, true, true, t2b);
 
 	// P[3] = 3a + 3b
-	ec_add(TABLE[2], b, TABLE[3], false, true, true, t2b);
+	ec_add(TABLE[2], b, TABLE[3], z1, true, true, t2b);
 }
 
 /*
@@ -137,31 +137,31 @@ static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, con
  * Using GLV-SAC Precomputation with m=4 [1], assuming window size of 1 bit
  */
 
-static void ec_gen_table_4(const ecpt &a, const ecpt &b, const ecpt &c, const ecpt &d, ecpt TABLE[8]) {
+static void ec_gen_table_4(const ecpt &a, const ecpt &b, bool pz1, const ecpt &c, const ecpt &d, bool qz1, ecpt TABLE[8]) {
 	// P[0] = a
 	ec_set(a, TABLE[0]);
 
 	// P[1] = a + b
 	ufe t2b;
-	ec_add(a, b, TABLE[1], false, true, true, t2b);
+	ec_add(a, b, TABLE[1], pz1, true, true, t2b);
 
 	// P[2] = a + c
-	ec_add(a, c, TABLE[2], false, true, true, t2b);
+	ec_add(a, c, TABLE[2], qz1, true, true, t2b);
 
 	// P[3] = a + b + c
-	ec_add(TABLE[1], c, TABLE[3], false, true, true, t2b);
+	ec_add(TABLE[1], c, TABLE[3], qz1, true, true, t2b);
 
 	// P[4] = a + d
-	ec_add(a, d, TABLE[4], false, true, true, t2b);
+	ec_add(a, d, TABLE[4], qz1, true, true, t2b);
 
 	// P[5] = a + b + d
-	ec_add(TABLE[1], d, TABLE[5], false, true, true, t2b);
+	ec_add(TABLE[1], d, TABLE[5], qz1, true, true, t2b);
 
 	// P[6] = a + c + d
-	ec_add(TABLE[2], d, TABLE[6], false, true, true, t2b);
+	ec_add(TABLE[4], c, TABLE[6], qz1, true, true, t2b);
 
 	// P[7] = a + b + c + d
-	ec_add(TABLE[3], d, TABLE[7], false, true, true, t2b);
+	ec_add(TABLE[5], c, TABLE[7], qz1, true, true, t2b);
 }
 
 /*
