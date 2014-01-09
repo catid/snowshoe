@@ -438,7 +438,13 @@ static CAT_INLINE void gls_morph_ext(const ecpt &P, ecpt &R) {
 	// = (ac - bd) - i(bc + ad)
 	// So t2 = conj(t).
 
-	// t2 <- t1^p
-	fe_conj(P.t, R.t);
+	// w1 <- t1^p
+	fe_conj(P.t, w1);
+
+	// x2 <- wx * x1^p
+	fe_mul(w1, ENDO_WX, R.t);
+
+	// z2 <- z1
+	fe_set(P.z, R.z);
 }
 
