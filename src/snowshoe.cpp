@@ -223,9 +223,16 @@ int snowshoe_mul_gen(const char k_raw[32], char R[64], char mul4) {
 		return -1;
 	}
 
-	// Run the math routine
+	// R = [4]kG
 	ecpt_affine r;
-	ec_mul_gen(k, r, (mul4 != 0));
+	ecpt p;
+	ufe p2b;
+	ec_mul_gen(k, p, p2b);
+	if (mul4 != 0) {
+		ec_dbl(p, p, false, p2b);
+		ec_dbl(p, p, false, p2b);
+	}
+	ec_affine(p, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -240,8 +247,15 @@ int snowshoe_mul_gen(const char k_raw[32], char R[64], char mul4) {
 		return -1;
 	}
 
-	// Run the math routine
-	ec_mul_gen(k, *(ecpt_affine *)R, (mul4 != 0));
+	// R = [4]kG
+	ecpt p;
+	ufe p2b;
+	ec_mul_gen(k, p, p2b);
+	if (mul4 != 0) {
+		ec_dbl(p, p, false, p2b);
+		ec_dbl(p, p, false, p2b);
+	}
+	ec_affine(p, *(ecpt_affine *)R);
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;
@@ -266,8 +280,14 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 		return -1;
 	}
 
-	// Run the math routine
-	ec_mul(k, p1, r);
+	// R = 4kP
+	ecpt p;
+	ufe p2b;
+	ec_expand(p1, p);
+	ec_mul(k, p, true, p, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_affine(p, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -288,7 +308,14 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 		return -1;
 	}
 
-	ec_mul(k, *(const ecpt_affine *)P, *(ecpt_affine *)R);
+	// R = 4kP
+	ecpt p;
+	ufe p2b;
+	ec_expand(*(const ecpt_affine *)P, p);
+	ec_mul(k, p, true, p, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_affine(p, *(ecpt_affine *)R);
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;
@@ -315,8 +342,14 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 		return -1;
 	}
 
-	// Run the math routine
-	ec_simul_gen(k1, k2, p2, r);
+	// R = 4(k1)G + 4(k2)Q
+	ecpt p;
+	ufe p2b;
+	ec_expand(p2, p);
+	ec_simul_gen(k1, k2, p, true, p, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_affine(p, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -340,7 +373,14 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 		return -1;
 	}
 
-	ec_simul_gen(k1, k2, *p2, *(ecpt_affine *)R);
+	// R = 4(k1)G + 4(k2)Q
+	ecpt p;
+	ufe p2b;
+	ec_expand(*p2, p);
+	ec_simul_gen(k1, k2, p, true, p, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_affine(p, *(ecpt_affine *)R);
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;
@@ -367,8 +407,15 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 		return -1;
 	}
 
-	// Run the math routine
-	ec_simul(k1, p1, k2, p2, r);
+	// R = 4(k1)P + 4(k2)Q
+	ecpt p, q;
+	ufe p2b;
+	ec_expand(p1, p);
+	ec_expand(p2, q);
+	ec_simul(k1, p, true, k2, q, true, p, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_affine(p, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -392,7 +439,15 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 		return -1;
 	}
 
-	ec_simul(k1, *p1, k2, *p2, *(ecpt_affine *)R);
+	// R = 4(k1)P + 4(k2)Q
+	ecpt p, q;
+	ufe p2b;
+	ec_expand(*p1, p);
+	ec_expand(*p2, q);
+	ec_simul(k1, p, true, k2, q, true, p, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_dbl(p, p, false, p2b);
+	ec_affine(p, *(ecpt_affine *)R);
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;
