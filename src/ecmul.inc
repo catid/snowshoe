@@ -96,30 +96,6 @@ static CAT_INLINE void ec_mul_engine(ufp &a, ufp &b, const ecpt &P, const ecpt &
 	ec_cond_add(recode_bit, X, P, R, z1, false, t2b);
 }
 
-// R = kP
-static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
-	// Decompose scalar into subscalars
-	ufp a, b;
-	s32 asign, bsign;
-	gls_decompose(k, asign, a, bsign, b);
-
-	// Q = endomorphism(P)
-	ecpt P, Q;
-	gls_morph_ext(P0, Q);
-
-	// Set base point signs
-	ec_cond_neg(asign, P0, P);
-	ec_cond_neg_inplace(bsign, Q);
-
-	// Multiply
-	ecpt X;
-	ufe t2b;
-	ec_mul_engine(a, b, P, Q, z1, X, R, t2b);
-
-	// Copy t2b out
-	fe_set(t2b, r2b);
-}
-
 // R = 4kP (optimized for affine inputs/outputs)
 static void ec_mul_affine(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
 	// Decompose scalar into subscalars
@@ -142,30 +118,10 @@ static void ec_mul_affine(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R)
 	// Set base point sign
 	ec_cond_neg_inplace(asign, P);
 
-	// Precompute multiplication table
-	ecpt table[8];
-	ec_gen_table_2(P, Q, true, table);
-
-	// Recode subscalars
-	u32 recode_bit = ec_recode_scalars_2(a, b, 128);
-
-	// Initialize working point
+	// Multiply
 	ecpt X;
-	ec_table_select_2(table, a, b, 126, true, X);
-
-	// Evaluate
 	ufe t2b;
-	for (int ii = 124; ii >= 0; ii -= 2) {
-		ecpt T;
-		ec_table_select_2(table, a, b, ii, true, T);
-
-		ec_dbl(X, X, false, t2b);
-		ec_dbl(X, X, false, t2b);
-		ec_add(X, T, X, false, false, false, t2b);
-	}
-
-	// If bit == 1, R <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
+	ec_mul_engine(a, b, P, Q, true, X, X, t2b);
 
 	// Multiply by 4 to avoid small subgroup attack
 	ec_dbl(X, X, false, t2b);
@@ -173,6 +129,30 @@ static void ec_mul_affine(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R)
 
 	// Compute affine coordinates in R
 	ec_affine(X, R);
+}
+
+// R = kP
+static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
+	// Decompose scalar into subscalars
+	ufp a, b;
+	s32 asign, bsign;
+	gls_decompose(k, asign, a, bsign, b);
+
+	// Q = endomorphism(P)
+	ecpt P, Q;
+	gls_morph_ext(P0, Q);
+
+	// Set base point signs
+	ec_cond_neg(asign, P0, P);
+	ec_cond_neg_inplace(bsign, Q);
+
+	// Multiply
+	ecpt X;
+	ufe t2b;
+	ec_mul_engine(a, b, P, Q, z1, X, R, t2b);
+
+	// Copy t2b out
+	fe_set(t2b, r2b);
 }
 
 /*

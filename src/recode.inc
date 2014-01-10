@@ -128,7 +128,7 @@ static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, con
 		ec_set(table[k], r);
 	}
 
-	ec_cond_neg(((bits >> 1) & 1) ^ 1, r, r);
+	ec_cond_neg_inplace(((bits >> 1) & 1) ^ 1, r);
 }
 
 /*
@@ -137,7 +137,7 @@ static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, con
  * Using GLV-SAC Precomputation with m=4 [1], assuming window size of 1 bit
  */
 
-static void ec_gen_table_4(const ecpt &a, const ecpt &b, bool pz1, const ecpt &c, const ecpt &d, bool qz1, ecpt TABLE[8]) {
+static CAT_INLINE void ec_gen_table_4(const ecpt &a, const ecpt &b, bool pz1, const ecpt &c, const ecpt &d, bool qz1, ecpt TABLE[8]) {
 	// P[0] = a
 	ec_set(a, TABLE[0]);
 
@@ -224,7 +224,7 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
 
 #endif
 
-	ec_cond_neg(((a.w >> index) & 1) ^ 1, r, r);
+	ec_cond_neg_inplace(((a.w >> index) & 1) ^ 1, r);
 }
 
 /*
@@ -410,7 +410,7 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
 		fe_mul(p.x, p.y, p.t);
 
 		// Apply sign bit
-		ec_cond_neg(s, p, p);
+		ec_cond_neg_inplace(s, p);
 	}
 }
 

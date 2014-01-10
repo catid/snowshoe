@@ -737,22 +737,22 @@ static bool ec_cond_neg_test(const ecpt &P) {
 	ec_set(P, p);
 	ec_neg(p, n);
 
-	ec_cond_neg(0, p, p);
+	ec_cond_neg_inplace(0, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
 
-	ec_cond_neg(1, p, p);
+	ec_cond_neg_inplace(1, p);
 	if (!ec_isequal(n, p)) {
 		return false;
 	}
 
-	ec_cond_neg(1, p, p);
+	ec_cond_neg_inplace(1, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
 
-	ec_cond_neg(0, p, p);
+	ec_cond_neg_inplace(0, p);
 	if (!ec_isequal(P, p)) {
 		return false;
 	}
