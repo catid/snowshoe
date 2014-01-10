@@ -70,6 +70,32 @@ static void ec_mul_gen(const u64 k[4], ecpt &R, ufe &r2b) {
  * Multiplies the point by k and stores the result in R, r2b
  */
 
+static CAT_INLINE void ec_mul_engine(ufp &a, ufp &b, const ecpt &P, const ecpt &Q,
+									 const bool z1, ecpt &X, ecpt &R, ufe &t2b) {
+	// Precompute multiplication table
+	ecpt table[8];
+	ec_gen_table_2(P, Q, z1, table);
+
+	// Recode subscalars
+	u32 recode_bit = ec_recode_scalars_2(a, b, 128);
+
+	// Initialize working point
+	ec_table_select_2(table, a, b, 126, true, X);
+
+	// Evaluate
+	for (int ii = 124; ii >= 0; ii -= 2) {
+		ecpt T;
+		ec_table_select_2(table, a, b, ii, true, T);
+
+		ec_dbl(X, X, false, t2b);
+		ec_dbl(X, X, false, t2b);
+		ec_add(X, T, X, false, false, false, t2b);
+	}
+
+	// If bit == 1, R <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, R, z1, false, t2b);
+}
+
 // R = kP
 static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
 	// Decompose scalar into subscalars
@@ -85,33 +111,48 @@ static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
 	ec_cond_neg(asign, P0, P);
 	ec_cond_neg(bsign, Q, Q);
 
-	// Precompute multiplication table
-	ecpt table[8];
-	ec_gen_table_2(P, Q, z1, table);
-
-	// Recode subscalars
-	u32 recode_bit = ec_recode_scalars_2(a, b, 128);
-
-	// Initialize working point
+	// Multiply
 	ecpt X;
-	ec_table_select_2(table, a, b, 126, true, X);
-
-	// Evaluate
 	ufe t2b;
-	for (int ii = 124; ii >= 0; ii -= 2) {
-		ecpt T;
-		ec_table_select_2(table, a, b, ii, true, T);
-
-		ec_dbl(X, X, false, t2b);
-		ec_dbl(X, X, false, t2b);
-		ec_add(X, T, X, false, false, false, t2b);
-	}
-
-	// If bit == 1, R <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, R, z1, false, t2b);
+	ec_mul_engine(a, b, P, Q, z1, X, R, t2b);
 
 	// Copy t2b out
 	fe_set(t2b, r2b);
+}
+
+// R = 4kP (optimized for affine inputs/outputs)
+static void ec_mul_affine(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R) {
+	// Decompose scalar into subscalars
+	ufp a, b;
+	s32 asign, bsign;
+	gls_decompose(k, asign, a, bsign, b);
+
+	// Q0 = endomorphism of P0
+	ecpt_affine Q0;
+	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
+
+	// Set base point sign
+	ec_cond_neg_affine(bsign, Q0);
+
+	// Expand P, Q to extended coordinates
+	ecpt P, Q;
+	ec_expand(P0, P);
+	ec_expand(Q0, Q);
+
+	// Set base point sign
+	ec_cond_neg(asign, P, P);
+
+	// Multiply
+	ecpt X;
+	ufe t2b;
+	ec_mul_engine(a, b, P, Q, true, X, X, t2b);
+
+	// Multiply by 4 to avoid small subgroup attack
+	ec_dbl(X, X, false, t2b);
+	ec_dbl(X, X, false, t2b);
+
+	// Compute affine coordinates in R
+	ec_affine(X, R);
 }
 
 /*
@@ -129,21 +170,8 @@ static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
  * Performs aG + bP and stores it in R, r2b
  */
 
-// R = aG + bP
-static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
-	// Decompose scalar into subscalars
-	ufp b1, b2;
-	s32 b1sign, b2sign;
-	gls_decompose(b, b1sign, b1, b2sign, b2);
-
-	// Q = endomorphism(P)
-	ecpt P, Q;
-	gls_morph_ext(P0, Q);
-
-	// Set base point signs
-	ec_cond_neg(b1sign, P0, P);
-	ec_cond_neg(b2sign, Q, Q);
-
+static CAT_INLINE void ec_simul_gen_engine(const u64 a[4], ufp &b1, ufp &b2, const ecpt &P, const ecpt &Q,
+									 	   const bool z1, ecpt &X, ufe &t2b) {
 	// Precompute multiplication table
 	ecpt qtable[8];
 	ec_gen_table_2(P, Q, z1, qtable);
@@ -154,11 +182,9 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1
 	u32 recode_bit = ec_recode_scalars_2(b1, b2, 128);
 
 	// Initialize working point
-	ecpt X;
 	ec_table_select_2(qtable, b1, b2, 126, false, X);
 
 	// Evaluate
-	ufe t2b;
 	ecpt T;
 	for (int ii = 124; ii >= 32; ii -= 2) {
 		ec_table_select_2(qtable, b1, b2, ii, false, T);
@@ -184,11 +210,70 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1
 		ec_add(X, T, X, false, false, false, t2b);
 	}
 
-	// If bit == 1, R <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, R, z1, false, t2b);
+	// If bit == 1, X <- X + P1 (inverted logic from [1])
+	if (recode_bit != 0) {
+		ec_add(X, P, X, true, false, false, t2b);
+	}
+}
 
-	// Copy t2b out
+// R = aG + bP
+static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
+	// Decompose scalar into subscalars
+	ufp b1, b2;
+	s32 b1sign, b2sign;
+	gls_decompose(b, b1sign, b1, b2sign, b2);
+
+	// Q = endomorphism(P)
+	ecpt P, Q;
+	gls_morph_ext(P0, Q);
+
+	// Set base point signs
+	ec_cond_neg(b1sign, P0, P);
+	ec_cond_neg(b2sign, Q, Q);
+
+	// Multiply
+	ecpt X;
+	ufe t2b;
+	ec_simul_gen_engine(a, b1, b2, P, Q, z1, X, t2b);
+
+	// Copy result out
+	ec_set(X, R);
 	fe_set(t2b, r2b);
+}
+
+// R = 4aG + 4bP (optimized for affine inputs/outputs)
+static void ec_simul_gen_affine(const u64 a[4], const u64 b[4], const ecpt_affine &P0, ecpt_affine &R) {
+	// Decompose scalar into subscalars
+	ufp b1, b2;
+	s32 b1sign, b2sign;
+	gls_decompose(b, b1sign, b1, b2sign, b2);
+
+	// Q0 = endomorphism of P0
+	ecpt_affine Q0;
+	gls_morph(P0.x, P0.y, Q0.x, Q0.y);
+
+	// Set base point sign
+	ec_cond_neg_affine(b2sign, Q0);
+
+	// Expand base points to extended coordinates
+	ecpt P, Q;
+	ec_expand(P0, P);
+	ec_expand(Q0, Q);
+
+	// Set base point sign
+	ec_cond_neg(b1sign, P, P);
+
+	// Multiply
+	ecpt X;
+	ufe t2b;
+	ec_simul_gen_engine(a, b1, b2, P, Q, true, X, t2b);
+
+	// Multiply by 4 to avoid small subgroup attack
+	ec_dbl(X, X, false, t2b);
+	ec_dbl(X, X, false, t2b);
+
+	// Compute affine coordinates in R
+	ec_affine(X, R);
 }
 
 /*
@@ -202,6 +287,34 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1
  *
  * Performs aP + bQ and stores the result in R
  */
+
+static CAT_INLINE void ec_simul_engine(ufp &a0, ufp &a1, ufp &b0, ufp &b1,
+										   const ecpt &P, const ecpt &Pe,
+										   const ecpt &Q, const ecpt &Qe,
+									 	   const bool pz1, const bool qz1,
+										   ecpt &X, ecpt &R, ufe &t2b) {
+	// Precompute multiplication table
+	ecpt table[8];
+	ec_gen_table_4(P, Pe, pz1, Q, Qe, qz1, table);
+
+	// Recode scalar
+	u32 recode_bit = ec_recode_scalars_4(a0, a1, b0, b1, 127);
+
+	// Initialize working point
+	ec_table_select_4(table, a0, a1, b0, b1, 126, X);
+
+	// Evaluate
+	for (int ii = 125; ii >= 0; --ii) {
+		ecpt T;
+		ec_table_select_4(table, a0, a1, b0, b1, ii, T);
+
+		ec_dbl(X, X, false, t2b);
+		ec_add(X, T, X, false, false, false, t2b);
+	}
+
+	// If bit == 1, R <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, R, pz1, false, t2b);
+}
 
 // R = aP + bQ
 static void ec_simul(const u64 a[4], const ecpt &P0, bool pz1, const u64 b[4], const ecpt &Q0, bool qz1, ecpt &R, ufe &r2b) {
@@ -222,31 +335,53 @@ static void ec_simul(const u64 a[4], const ecpt &P0, bool pz1, const u64 b[4], c
 	ec_cond_neg(b0sign, Q0, Q);
 	ec_cond_neg(b1sign, Qe, Qe);
 
-	// Precompute multiplication table
-	ecpt table[8];
-	ec_gen_table_4(P, Pe, pz1, Q, Qe, qz1, table);
-
-	// Recode scalar
-	u32 recode_bit = ec_recode_scalars_4(a0, a1, b0, b1, 127);
-
-	// Initialize working point
+	// Multiply
 	ecpt X;
-	ec_table_select_4(table, a0, a1, b0, b1, 126, X);
-
-	// Evaluate
 	ufe t2b;
-	for (int ii = 125; ii >= 0; --ii) {
-		ecpt T;
-		ec_table_select_4(table, a0, a1, b0, b1, ii, T);
-
-		ec_dbl(X, X, false, t2b);
-		ec_add(X, T, X, false, false, false, t2b);
-	}
-
-	// If bit == 1, R <- X + P (inverted logic from [1])
-	ec_cond_add(recode_bit, X, P, R, pz1, false, t2b);
+	ec_simul_engine(a0, a1, b0, b1, P, Pe, Q, Qe, pz1, qz1, X, R, t2b);
 
 	// Copy t2b out
 	fe_set(t2b, r2b);
+}
+
+// R = 4aP + 4bQ (optimized for affine inputs/outputs)
+static void ec_simul_affine(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
+	// Decompose scalar into subscalars
+	ufp a0, a1, b0, b1;
+	s32 a0sign, a1sign, b0sign, b1sign;
+	gls_decompose(a, a0sign, a0, a1sign, a1);
+	gls_decompose(b, b0sign, b0, b1sign, b1);
+
+	// Compute endomorphism of base points
+	ecpt_affine Pe, Qe;
+	gls_morph(P.x, P.y, Pe.x, Pe.y);
+	gls_morph(Q.x, Q.y, Qe.x, Qe.y);
+
+	// Set base point signs
+	ec_cond_neg_affine(a1sign, Pe);
+	ec_cond_neg_affine(b1sign, Qe);
+
+	// Expand base points
+	ecpt P0, P1, Q0, Q1;
+	ec_expand(P, P0);
+	ec_expand(Pe, P1);
+	ec_expand(Q, Q0);
+	ec_expand(Qe, Q1);
+
+	// Set base point signs
+	ec_cond_neg(a0sign, P0, P0);
+	ec_cond_neg(b0sign, P0, Q0);
+
+	// Multiply
+	ecpt X;
+	ufe t2b;
+	ec_simul_engine(a0, a1, b0, b1, P0, P1, Q0, Q1, true, true, X, X, t2b);
+
+	// Multiply by 4 to avoid small subgroup attack
+	ec_dbl(X, X, false, t2b);
+	ec_dbl(X, X, false, t2b);
+
+	// Compute affine coordinates in R
+	ec_affine(X, R);
 }
 

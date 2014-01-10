@@ -276,18 +276,12 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	ec_load_xy((const u8*)P, p1);
 
 	// Validate point
-	if (!ec_valid_vartime(p1)) {
+	if (!ec_valid(p1)) {
 		return -1;
 	}
 
-	// R = 4kP
-	ecpt p;
-	ufe p2b;
-	ec_expand(p1, p);
-	ec_mul(k, p, true, p, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_affine(p, r);
+	// Multiply
+	ec_mul_affine(k, p1, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -304,18 +298,12 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	}
 
 	// Validate point
-	if (!ec_valid_vartime(*(const ecpt_affine *)P)) {
+	if (!ec_valid(*(const ecpt_affine *)P)) {
 		return -1;
 	}
 
-	// R = 4kP
-	ecpt p;
-	ufe p2b;
-	ec_expand(*(const ecpt_affine *)P, p);
-	ec_mul(k, p, true, p, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_affine(p, *(ecpt_affine *)R);
+	// Multiply
+	ec_mul_affine(k, *(const ecpt_affine *)P, *(ecpt_affine *)R);
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;
@@ -338,18 +326,12 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 	ec_load_xy((const u8*)Q, p2);
 
 	// Validate point
-	if (!ec_valid_vartime(p2)) {
+	if (!ec_valid(p2)) {
 		return -1;
 	}
 
-	// R = 4(k1)G + 4(k2)Q
-	ecpt p;
-	ufe p2b;
-	ec_expand(p2, p);
-	ec_simul_gen(k1, k2, p, true, p, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_affine(p, r);
+	// Multiply
+	ec_simul_gen_affine(k1, k2, p2, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -369,18 +351,12 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 	}
 
 	// Validate point
-	if (!ec_valid_vartime(*p2)) {
+	if (!ec_valid(*p2)) {
 		return -1;
 	}
 
-	// R = 4(k1)G + 4(k2)Q
-	ecpt p;
-	ufe p2b;
-	ec_expand(*p2, p);
-	ec_simul_gen(k1, k2, p, true, p, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_affine(p, *(ecpt_affine *)R);
+	// Multiply
+	ec_simul_gen_affine(k1, k2, *p2, *(ecpt_affine *)R);
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;
@@ -403,19 +379,12 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 	ec_load_xy((const u8*)Q, p2);
 
 	// Validate points
-	if (!ec_valid_vartime(p1) || !ec_valid_vartime(p2)) {
+	if (!ec_valid(p1) || !ec_valid(p2)) {
 		return -1;
 	}
 
-	// R = 4(k1)P + 4(k2)Q
-	ecpt p, q;
-	ufe p2b;
-	ec_expand(p1, p);
-	ec_expand(p2, q);
-	ec_simul(k1, p, true, k2, q, true, p, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_affine(p, r);
+	// Multiply
+	ec_simul_affine(k1, p1, k2, p2, r);
 
 	// Save result endian-neutral
 	ec_save_xy(r, (u8*)R);
@@ -435,19 +404,12 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 	}
 
 	// Validate points
-	if (!ec_valid_vartime(*p1) || !ec_valid_vartime(*p2)) {
+	if (!ec_valid(*p1) || !ec_valid(*p2)) {
 		return -1;
 	}
 
-	// R = 4(k1)P + 4(k2)Q
-	ecpt p, q;
-	ufe p2b;
-	ec_expand(*p1, p);
-	ec_expand(*p2, q);
-	ec_simul(k1, p, true, k2, q, true, p, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_dbl(p, p, false, p2b);
-	ec_affine(p, *(ecpt_affine *)R);
+	// Multiply
+	ec_simul_affine(k1, *p1, k2, *p2, *(ecpt_affine *)R);
 #endif // CAT_ENDIAN_LITTLE
 
 	return 0;
