@@ -101,48 +101,48 @@ RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 
 `make ecmultest` results (TB off):
 
-+ ec_elligator: `26388` median cycles, `9.9162` avg usec
-+ ec_mul: `130816` median cycles, `48.7032` avg usec
-+ ec_mul_gen: `59924` median cycles, `22.3479` avg usec
-+ ec_simul_gen: `153260` median cycles, `56.9954` avg usec
-+ ec_simul: `192620` median cycles, `71.5722` avg usec
++ ec_elligator: `26360` median cycles, `10.0034` avg usec
++ ec_mul_gen: `59880` median cycles, `22.3703` avg usec
++ ec_mul: `132432` median cycles, `49.3208` avg usec
++ ec_simul_gen: `152176` median cycles, `56.6041` avg usec
++ ec_simul: `191920` median cycles, `71.4146` avg usec
 
 These results serve to justify the benchmarking methodology.  Notice that the
 cycle counts exactly match the laptop version.
 
 `make snowshoetest` results (TB off):
 
-+ Elligator key: `28032` median cycles, `10.5302` avg usec
-+ Elligator encrypt: `60844` median cycles, `22.7009` avg usec
-+ Elligator secret: `135692` median cycles, `50.4965` avg usec
-+ EC-DH client: `133564` median cycles, `49.6967` avg usec
-+ EC-DH server: `133312` median cycles, `49.6051` avg usec
-+ EC-DH-FS client gen: `71336` median cycles, `26.5802` avg usec
-+ EC-DH-FS server proc: `135164` median cycles, `50.2907` avg usec
-+ EC-DH-FS client proc: `197340` median cycles, `73.3433` avg usec
-+ EdDSA sign: `62072` median cycles, `23.1456` avg usec
-+ EdDSA verify: `157820` median cycles, `58.6924` avg usec
++ Elligator key: `28036` median cycles, `10.5447` avg usec
++ Elligator encrypt: `61252` median cycles, `22.86` avg usec
++ Elligator secret: `134484` median cycles, `50.0391` avg usec
++ EC-DH client: `132080` median cycles, `49.1267` avg usec
++ EC-DH server: `131884` median cycles, `49.0553` avg usec
++ EC-DH-FS client gen: `71792` median cycles, `26.7691` avg usec
++ EC-DH-FS server proc: `133708` median cycles, `49.7842` avg usec
++ EC-DH-FS client proc: `191900` median cycles, `71.3993` avg usec
++ EdDSA sign: `62216` median cycles, `23.221` avg usec
++ EdDSA verify: `152220` median cycles, `56.6639` avg usec
 
 `make ecmultest` results (TB on, demonstrating usual walltime):
 
-+ ec_elligator: `19276` median cycles, `7.447` avg usec
-+ ec_mul: `98066` median cycles, `36.7209` avg usec
-+ ec_mul_gen: `43772` median cycles, `16.4915` avg usec
-+ ec_simul_gen: `112284` median cycles, `41.9627` avg usec
-+ ec_simul: `144058` median cycles, `54.0095` avg usec
++ ec_elligator: `19254` median cycles, `7.4897` avg usec
++ ec_mul_gen: `43720` median cycles, `16.4914` avg usec
++ ec_mul: `96658` median cycles, `36.3624` avg usec
++ ec_simul_gen: `111092` median cycles, `41.631` avg usec
++ ec_simul: `140058` median cycles, `52.5315` avg usec
 
 `make snowshoetest` results (TB on, demonstrating usual walltime):
 
-+ Elligator key: `20480` median cycles, `7.8033` avg usec
-+ Elligator encrypt: `44364` median cycles, `16.8112` avg usec
-+ Elligator secret: `99022` median cycles, `37.377` avg usec
-+ EC-DH client: `97484` median cycles, `36.6768` avg usec
-+ EC-DH server: `97292` median cycles, `36.5946` avg usec
-+ EC-DH-FS client gen: `52066` median cycles, `19.6007` avg usec
-+ EC-DH-FS server proc: `98664` median cycles, `37.0712` avg usec
-+ EC-DH-FS client proc: `144004` median cycles, `54.071` avg usec
-+ EdDSA sign: `45312` median cycles, `17.0546` avg usec
-+ EdDSA verify: `115220` median cycles, `43.2367` avg usec
++ Elligator key: `20496` median cycles, `7.7878` avg usec
++ Elligator encrypt: `45148` median cycles, `17.0403` avg usec
++ Elligator secret: `98246` median cycles, `37.0083` avg usec
++ EC-DH client: `96436` median cycles, `36.4391` avg usec
++ EC-DH server: `96272` median cycles, `36.3933` avg usec
++ EC-DH-FS client gen: `52652` median cycles, `19.7906` avg usec
++ EC-DH-FS server proc: `97666` median cycles, `36.6344` avg usec
++ EC-DH-FS client proc: `140234` median cycles, `52.5432` avg usec
++ EdDSA sign: `45784` median cycles, `17.2072` avg usec
++ EdDSA verify: `111148` median cycles, `41.6282` avg usec
 
 
 ##### libsnowshoe.lib on Windows 7 laptop (2.67 GHz Core i7 620M Westmere, Jan 2010):
