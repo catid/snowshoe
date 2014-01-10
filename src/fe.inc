@@ -265,6 +265,7 @@ static int fe_chi(const ufe &x) {
 }
 
 // r = sqrt(x)
+// Note that the sign on the result is not necessarily sgn(x)
 static bool fe_sqrt(const ufe &x, ufe &r, bool check_input_vartime) {
 	// Requires 2FpSqrt 1FpInv 1FpChi, in constant-time
 
@@ -320,8 +321,6 @@ static bool fe_sqrt(const ufe &x, ufe &r, bool check_input_vartime) {
 	fp_add(r.a, r.a, t);
 	fp_inv(t, t);
 	fp_mul(x.b, t, r.b);
-
-	// TODO: The sign of the result is randomly wrong
 
 	return true;
 }

@@ -532,7 +532,13 @@ int snowshoe_elligator_secret(const char k[32], const char C[64],
 	ecpt_affine temp;
 	ec_affine(p, temp);
 	ec_expand(temp, p);
-
+/* This makes the problem clear: The refactored ec_mul function does not work
+ * unless z = 1
+	fe_mul_u(p.x, p.x);
+	fe_mul_u(p.z, p.z);
+	fe_mul_u(p.t, p.t);
+	fe_mul_u(p.y, p.y);
+*/
 	// p = k * p
 	const u64 *key = (const u64 *)k;
 	if (invalid_key(key)) {

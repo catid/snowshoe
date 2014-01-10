@@ -360,24 +360,20 @@ bool fe_add_set_smallk_test() {
 }
 
 static bool fe_sqrt_test(const ufe &a, bool expected_valid) {
-	ufe a2, a1;
-
-	fe_print(a);
-
-	int chi = fe_chi(a);
-	cout << chi << endl;
+	ufe a2, a1, a1n;
 
 	fe_sqr(a, a2);
 	bool valid = fe_sqrt(a2, a1, true);
 
-	fe_print(a2);
-	fe_print(a1);
-
+	int chi = fe_chi(a2);
 	if (chi == -1) {
-		fe_neg(a1, a1);
+		cout << "fe_chi falsely accused a quadratic residue of being a non-residue" << endl;
+		return false;
 	}
 
+	fe_neg(a1, a1n);
 	fe_complete_reduce(a1);
+	fe_complete_reduce(a1n);
 
 	if (expected_valid != valid) {
 		cout << "fe_sqrt failed validation test" << endl;
@@ -388,7 +384,8 @@ static bool fe_sqrt_test(const ufe &a, bool expected_valid) {
 		return true;
 	}
 
-	return fe_isequal_test(a1, a);
+	// Result is +/- the input
+	return fe_isequal_test(a1, a) || fe_isequal_test(a1n, a);
 }
 
 
