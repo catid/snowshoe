@@ -79,7 +79,14 @@ static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
 
 	// Q = endomorphism(P)
 	ecpt P, Q;
-	gls_morph_ext(P0, Q);
+	if (z1) {
+		// Simplify the endomorphism calculation
+		gls_morph(P0.x, P0.y, Q.x, Q.y);
+		fe_mul(Q.x, Q.y, Q.t);
+		fe_set_smallk(1, Q.z);
+	} else {
+		gls_morph_ext(P0, Q);
+	}
 
 	// Set base point signs
 	ec_cond_neg(asign, P0, P);
@@ -138,7 +145,14 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1
 
 	// Q = endomorphism(P)
 	ecpt P, Q;
-	gls_morph_ext(P0, Q);
+	if (z1) {
+		// Simplify the endomorphism calculation
+		gls_morph(P0.x, P0.y, Q.x, Q.y);
+		fe_mul(Q.x, Q.y, Q.t);
+		fe_set_smallk(1, Q.z);
+	} else {
+		gls_morph_ext(P0, Q);
+	}
 
 	// Set base point signs
 	ec_cond_neg(b1sign, P0, P);
@@ -213,8 +227,22 @@ static void ec_simul(const u64 a[4], const ecpt &P0, bool pz1, const u64 b[4], c
 
 	// Q = endomorphism(P)
 	ecpt P, Pe, Q, Qe;
-	gls_morph_ext(P0, Pe);
-	gls_morph_ext(Q0, Qe);
+	if (pz1) {
+		// Simplify the endomorphism calculation
+		gls_morph(P0.x, P0.y, Pe.x, Pe.y);
+		fe_mul(Pe.x, Pe.y, Pe.t);
+		fe_set_smallk(1, Pe.z);
+	} else {
+		gls_morph_ext(P0, Pe);
+	}
+	if (qz1) {
+		// Simplify the endomorphism calculation
+		gls_morph(Q0.x, Q0.y, Qe.x, Qe.y);
+		fe_mul(Qe.x, Qe.y, Qe.t);
+		fe_set_smallk(1, Qe.z);
+	} else {
+		gls_morph_ext(Q0, Qe);
+	}
 
 	// Set base point signs
 	ec_cond_neg(a0sign, P0, P);
