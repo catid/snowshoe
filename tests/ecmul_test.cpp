@@ -616,13 +616,7 @@ bool ec_mul_test(const ecpt_affine &BP) {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ecpt BPx, p;
-		ufe p2b;
-		ec_expand(BP, BPx);
-		ec_mul(k, BPx, true, p, p2b);
-		ec_dbl(p, p, false, p2b);
-		ec_dbl(p, p, false, p2b);
-		ec_affine(p, R2);
+		ec_mul_affine(k, BP, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
@@ -668,14 +662,7 @@ bool ec_simul_test(const ecpt_affine &B1, const ecpt_affine &B2) {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ecpt B1x, B2x, p;
-		ufe p2b;
-		ec_expand(B1, B1x);
-		ec_expand(B2, B2x);
-		ec_simul(k1, B1x, true, k2, B2x, true, p, p2b);
-		ec_dbl(p, p, false, p2b);
-		ec_dbl(p, p, false, p2b);
-		ec_affine(p, R2);
+		ec_simul_affine(k1, B1, k2, B2, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();
@@ -735,13 +722,7 @@ bool ec_simul_gen_test(const ecpt_affine &BP) {
 		double s0 = m_clock.usec();
 		u32 t0 = Clock::cycles();
 
-		ecpt BPx, p;
-		ufe p2b;
-		ec_expand(BP, BPx);
-		ec_simul_gen(k1, k2, BPx, true, p, p2b);
-		ec_dbl(p, p, false, p2b);
-		ec_dbl(p, p, false, p2b);
-		ec_affine(p, R2);
+		ec_simul_gen_affine(k1, k2, BP, R2);
 
 		u32 t1 = Clock::cycles();
 		double s1 = m_clock.usec();

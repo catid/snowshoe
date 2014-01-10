@@ -289,10 +289,10 @@ static void ec_simul_gen_affine(const u64 a[4], const u64 b[4], const ecpt_affin
  */
 
 static CAT_INLINE void ec_simul_engine(ufp &a0, ufp &a1, ufp &b0, ufp &b1,
-										   const ecpt &P, const ecpt &Pe,
-										   const ecpt &Q, const ecpt &Qe,
-									 	   const bool pz1, const bool qz1,
-										   ecpt &X, ecpt &R, ufe &t2b) {
+									   const ecpt &P, const ecpt &Pe,
+									   const ecpt &Q, const ecpt &Qe,
+									   const bool pz1, const bool qz1,
+									   ecpt &X, ecpt &R, ufe &t2b) {
 	// Precompute multiplication table
 	ecpt table[8];
 	ec_gen_table_4(P, Pe, pz1, Q, Qe, qz1, table);
@@ -345,7 +345,7 @@ static void ec_simul(const u64 a[4], const ecpt &P0, bool pz1, const u64 b[4], c
 }
 
 // R = 4aP + 4bQ (optimized for affine inputs/outputs)
-static void ec_simul_affine(const u64 a[4], const ecpt_affine &P, const u64 b[4], const ecpt_affine &Q, ecpt_affine &R) {
+static void ec_simul_affine(const u64 a[4], const ecpt_affine &P0, const u64 b[4], const ecpt_affine &Q0, ecpt_affine &R) {
 	// Decompose scalar into subscalars
 	ufp a0, a1, b0, b1;
 	s32 a0sign, a1sign, b0sign, b1sign;
@@ -353,29 +353,29 @@ static void ec_simul_affine(const u64 a[4], const ecpt_affine &P, const u64 b[4]
 	gls_decompose(b, b0sign, b0, b1sign, b1);
 
 	// Compute endomorphism of base points
-	ecpt_affine Pe, Qe;
-	gls_morph(P.x, P.y, Pe.x, Pe.y);
-	gls_morph(Q.x, Q.y, Qe.x, Qe.y);
+	ecpt_affine P1, Q1;
+	gls_morph(P0.x, P0.y, P1.x, P1.y);
+	gls_morph(Q0.x, Q0.y, Q1.x, Q1.y);
 
 	// Set base point signs
-	ec_cond_neg_affine(a1sign, Pe);
-	ec_cond_neg_affine(b1sign, Qe);
+	ec_cond_neg_affine(a1sign, P1);
+	ec_cond_neg_affine(b1sign, Q1);
 
 	// Expand base points
-	ecpt P0, P1, Q0, Q1;
-	ec_expand(P, P0);
-	ec_expand(Pe, P1);
-	ec_expand(Q, Q0);
-	ec_expand(Qe, Q1);
+	ecpt P, Pe, Q, Qe;
+	ec_expand(P0, P);
+	ec_expand(P1, Pe);
+	ec_expand(Q0, Q);
+	ec_expand(Q1, Qe);
 
 	// Set base point signs
-	ec_cond_neg(a0sign, P0, P0);
-	ec_cond_neg(b0sign, P0, Q0);
+	ec_cond_neg(a0sign, P, P);
+	ec_cond_neg(b0sign, Q, Q);
 
 	// Multiply
 	ecpt X;
 	ufe t2b;
-	ec_simul_engine(a0, a1, b0, b1, P0, P1, Q0, Q1, true, true, X, X, t2b);
+	ec_simul_engine(a0, a1, b0, b1, P, Pe, Q, Qe, true, true, X, X, t2b);
 
 	// Multiply by 4 to avoid small subgroup attack
 	ec_dbl(X, X, false, t2b);
