@@ -298,7 +298,7 @@ int snowshoe_mul(const char k_raw[32], const char P[64], char R[64]) {
 	}
 
 	// Validate point
-	if (!ec_valid(*(const ecpt_affine *)P)) {
+	if (!ec_valid_vartime(*(const ecpt_affine *)P)) {
 		return -1;
 	}
 
@@ -351,7 +351,7 @@ int snowshoe_simul_gen(const char a[32], const char b[32], const char Q[64], cha
 	}
 
 	// Validate point
-	if (!ec_valid(*p2)) {
+	if (!ec_valid_vartime(*p2)) {
 		return -1;
 	}
 
@@ -404,7 +404,7 @@ int snowshoe_simul(const char a[32], const char P[64], const char b[32], const c
 	}
 
 	// Validate points
-	if (!ec_valid(*p1) || !ec_valid(*p2)) {
+	if (!ec_valid_vartime(*p1) || !ec_valid_vartime(*p2)) {
 		return -1;
 	}
 

@@ -205,6 +205,7 @@ bool ec_dh_fs_test() {
 		generate_k(sk_s);
 		snowshoe_secret_gen(sk_s);
 		if (snowshoe_mul_gen(sk_s, pp_s, 0)) {
+			cout << "ec_dh_fs: snowshoe_mul_gen(1) failed at " << iteration << endl;
 			return false;
 		}
 
@@ -213,6 +214,7 @@ bool ec_dh_fs_test() {
 		generate_k(sk_e);
 		snowshoe_secret_gen(sk_e);
 		if (snowshoe_mul_gen(sk_e, pp_e, 0)) {
+			cout << "ec_dh_fs: snowshoe_mul_gen(2) failed at " << iteration << endl;
 			return false;
 		}
 
@@ -224,6 +226,7 @@ bool ec_dh_fs_test() {
 		generate_k(sk_c);
 		snowshoe_secret_gen(sk_c);
 		if (snowshoe_mul_gen(sk_c, pp_c, 0)) {
+			cout << "ec_dh_fs: snowshoe_mul_gen(3) failed at " << iteration << endl;
 			return false;
 		}
 
@@ -244,6 +247,7 @@ bool ec_dh_fs_test() {
 		// d = sk_e + h * sk_s (mod q)
 		snowshoe_mul_mod_q(h, sk_s, sk_e, d);
 		if (snowshoe_mul(d, pp_c, sp_s)) {
+			cout << "ec_dh_fs: snowshoe_mul(4) failed at " << iteration << endl;
 			return false;
 		}
 
@@ -261,6 +265,7 @@ bool ec_dh_fs_test() {
 		// a = h * sk_c (mod q)
 		snowshoe_mul_mod_q(h, sk_c, 0, a);
 		if (snowshoe_simul(sk_c, pp_e, a, pp_s, sp_c)) {
+			cout << "ec_dh_fs: snowshoe_simul(5) failed at " << iteration << endl;
 			return false;
 		}
 
@@ -272,6 +277,7 @@ bool ec_dh_fs_test() {
 
 		for (int ii = 0; ii < 64; ++ii) {
 			if (sp_c[ii] != sp_s[ii]) {
+				cout << "ec_dh_fs: key mismatch at " << iteration << endl;
 				return false;
 			}
 		}

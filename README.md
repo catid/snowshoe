@@ -101,11 +101,11 @@ RDTSC instruction runs at 2.69393 GHz so no correction factor is needed.
 
 `make ecmultest` results (TB off):
 
-+ ec_elligator: `26356` median cycles, `9.9118` avg usec
-+ ec_mul: `134024` median cycles, `49.7329` avg usec
-+ ec_mul_gen: `60016` median cycles, `22.3747` avg usec
-+ ec_simul_gen: `154060` median cycles, `57.1053` avg usec
-+ ec_simul: `197392` median cycles, `73.3666` avg usec
++ ec_elligator: `26388` median cycles, `9.9162` avg usec
++ ec_mul: `130816` median cycles, `48.7032` avg usec
++ ec_mul_gen: `59924` median cycles, `22.3479` avg usec
++ ec_simul_gen: `153260` median cycles, `56.9954` avg usec
++ ec_simul: `192620` median cycles, `71.5722` avg usec
 
 These results serve to justify the benchmarking methodology.  Notice that the
 cycle counts exactly match the laptop version.
