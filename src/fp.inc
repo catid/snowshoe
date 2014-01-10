@@ -228,6 +228,38 @@ static CAT_INLINE void fp_neg(const ufp &a, ufp &r) {
 	fp_sub_reduce(r);
 }
 
+// r = (mask==-1 ? r : -r)
+static CAT_INLINE void fp_neg_mask_inplace(const u64 mask, ufp &r) {
+	// s = -p
+	ufp s;
+	s.w = 0 - r.w;
+
+#if defined(CAT_ASM_ATT) && defined(CAT_WORD_64) && defined(CAT_ISA_X86)
+
+	const u32 m = static_cast<const u32>( mask );
+
+	CAT_ASM_BEGIN
+		"testl %2, %2\n\t"
+		"cmovnzq %3, %0\n\t"
+		"cmovnzq %4, %1"
+		: "+r" (r.i[0]), "+r" (r.i[1])
+		: "r" (m), "r" (s.i[0]), "r" (s.i[1])
+		: "cc"
+	CAT_ASM_END
+
+#else
+
+	// If mask is set, take 's', else take 'r'
+	r.i[0] ^= ((s.i[0] ^ r.i[0]) & mask);
+	r.i[1] ^= ((s.i[1] ^ r.i[1]) & mask);
+
+#endif
+
+	// Note that fp_sub_reduce does nothing for the case of mask==0, since the
+	// high bit will not be set in this case.
+	fp_sub_reduce(r);
+}
+
 // r = (mask==-1 ? p : -p)
 static CAT_INLINE void fp_neg_mask(const u64 mask, const ufp &p, ufp &r) {
 	// s = -p

@@ -109,7 +109,7 @@ static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
 
 	// Set base point signs
 	ec_cond_neg(asign, P0, P);
-	ec_cond_neg(bsign, Q, Q);
+	ec_cond_neg_inplace(bsign, Q);
 
 	// Multiply
 	ecpt X;
@@ -140,12 +140,32 @@ static void ec_mul_affine(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R)
 	ec_expand(Q0, Q);
 
 	// Set base point sign
-	ec_cond_neg(asign, P, P);
+	ec_cond_neg_inplace(asign, P);
 
-	// Multiply
+	// Precompute multiplication table
+	ecpt table[8];
+	ec_gen_table_2(P, Q, true, table);
+
+	// Recode subscalars
+	u32 recode_bit = ec_recode_scalars_2(a, b, 128);
+
+	// Initialize working point
 	ecpt X;
+	ec_table_select_2(table, a, b, 126, true, X);
+
+	// Evaluate
 	ufe t2b;
-	ec_mul_engine(a, b, P, Q, true, X, X, t2b);
+	for (int ii = 124; ii >= 0; ii -= 2) {
+		ecpt T;
+		ec_table_select_2(table, a, b, ii, true, T);
+
+		ec_dbl(X, X, false, t2b);
+		ec_dbl(X, X, false, t2b);
+		ec_add(X, T, X, false, false, false, t2b);
+	}
+
+	// If bit == 1, R <- X + P (inverted logic from [1])
+	ec_cond_add(recode_bit, X, P, X, true, false, t2b);
 
 	// Multiply by 4 to avoid small subgroup attack
 	ec_dbl(X, X, false, t2b);
@@ -229,7 +249,7 @@ static void ec_simul_gen(const u64 a[4], const u64 b[4], const ecpt &P0, bool z1
 
 	// Set base point signs
 	ec_cond_neg(b1sign, P0, P);
-	ec_cond_neg(b2sign, Q, Q);
+	ec_cond_neg_inplace(b2sign, Q);
 
 	// Multiply
 	ecpt X;
@@ -261,7 +281,7 @@ static void ec_simul_gen_affine(const u64 a[4], const u64 b[4], const ecpt_affin
 	ec_expand(Q0, Q);
 
 	// Set base point sign
-	ec_cond_neg(b1sign, P, P);
+	ec_cond_neg_inplace(b1sign, P);
 
 	// Multiply
 	ecpt X;
@@ -331,9 +351,9 @@ static void ec_simul(const u64 a[4], const ecpt &P0, bool pz1, const u64 b[4], c
 
 	// Set base point signs
 	ec_cond_neg(a0sign, P0, P);
-	ec_cond_neg(a1sign, Pe, Pe);
+	ec_cond_neg_inplace(a1sign, Pe);
 	ec_cond_neg(b0sign, Q0, Q);
-	ec_cond_neg(b1sign, Qe, Qe);
+	ec_cond_neg_inplace(b1sign, Qe);
 
 	// Multiply
 	ecpt X;
@@ -369,8 +389,8 @@ static void ec_simul_affine(const u64 a[4], const ecpt_affine &P0, const u64 b[4
 	ec_expand(Q1, Qe);
 
 	// Set base point signs
-	ec_cond_neg(a0sign, P, P);
-	ec_cond_neg(b0sign, Q, Q);
+	ec_cond_neg_inplace(a0sign, P);
+	ec_cond_neg_inplace(b0sign, Q);
 
 	// Multiply
 	ecpt X;

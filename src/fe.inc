@@ -116,6 +116,12 @@ static CAT_INLINE void fe_neg(const ufe &a, ufe &r) {
 	fp_neg(a.b, r.b);
 }
 
+// r = (mask==-1 ? r : -r)
+static CAT_INLINE void fe_neg_mask_inplace(const u64 mask, ufe &r) {
+	fp_neg_mask_inplace(mask, r.a);
+	fp_neg_mask_inplace(mask, r.b);
+}
+
 // r = (mask==-1 ? p : -p)
 static CAT_INLINE void fe_neg_mask(const u64 mask, const ufe &p, ufe &r) {
 	fp_neg_mask(mask, p.a, r.a);
