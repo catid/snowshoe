@@ -444,7 +444,12 @@ static CAT_INLINE void gls_morph_ext(const ecpt &P, ecpt &R) {
 	// x2 <- wx * x1^p
 	fe_mul(w1, ENDO_WX, R.t);
 
-	// z2 <- z1
-	fe_set(P.z, R.z);
+	// For the Z coordinate:
+	// X1 = x1/z1
+	// conj(X1) = conj(x1/z1) = conj(x1) / conj(z1)
+	// So the Z coordinate needs to be fixed also
+
+	// z2 <- z1^p
+	fe_conj(P.z, R.z);
 }
 
