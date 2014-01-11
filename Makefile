@@ -6,7 +6,7 @@
 #OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
 CCPP = clang++ -m64
 CC = clang -m64
-OPTFLAGS = -O3
+OPTFLAGS = -O4
 DBGFLAGS = -g -O0 -DDEBUG
 CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include
 LIBNAME = bin/libsnowshoe.a

@@ -67,7 +67,7 @@ static void ec_gen_table_2_z1(const ecpt &a, const ecpt &b, ecpt TABLE[8]) {
 	ec_add(TABLE[2], b, TABLE[3], true, true, true, t2b);
 }
 
-static void ec_gen_table_2(const ecpt &a, const ecpt &b, bool z1, ecpt TABLE[8]) {
+static CAT_INLINE void ec_gen_table_2(const ecpt &a, const ecpt &b, bool z1, ecpt TABLE[8]) {
 	ecpt bn;
 	ec_neg(b, bn);
 
