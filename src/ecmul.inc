@@ -70,12 +70,8 @@ static void ec_mul_gen(const u64 k[4], ecpt &R, ufe &r2b) {
  * Multiplies the point by k and stores the result in R, r2b
  */
 
-static CAT_INLINE void ec_mul_engine(ufp &a, ufp &b, const ecpt &P, const ecpt &Q,
+static CAT_INLINE void ec_mul_engine(ufp &a, ufp &b, const ecpt &P, const ecpt table[8],
 									 const bool z1, ecpt &X, ecpt &R, ufe &t2b) {
-	// Precompute multiplication table
-	ecpt table[8];
-	ec_gen_table_2(P, Q, z1, table);
-
 	// Recode subscalars
 	u32 recode_bit = ec_recode_scalars_2(a, b, 128);
 
@@ -118,10 +114,14 @@ static void ec_mul_affine(const u64 k[4], const ecpt_affine &P0, ecpt_affine &R)
 	// Set base point sign
 	ec_cond_neg_inplace(asign, P);
 
+	// Precompute multiplication table
+	ecpt table[8];
+	ec_gen_table_2_z1(P, Q, table);
+
 	// Multiply
 	ecpt X;
 	ufe t2b;
-	ec_mul_engine(a, b, P, Q, true, X, X, t2b);
+	ec_mul_engine(a, b, P, table, true, X, X, t2b);
 
 	// Multiply by 4 to avoid small subgroup attack
 	ec_dbl(X, X, false, t2b);
@@ -146,10 +146,14 @@ static void ec_mul(const u64 k[4], const ecpt &P0, bool z1, ecpt &R, ufe &r2b) {
 	ec_cond_neg(asign, P0, P);
 	ec_cond_neg_inplace(bsign, Q);
 
+	// Precompute multiplication table
+	ecpt table[8];
+	ec_gen_table_2(P, Q, z1, table);
+
 	// Multiply
 	ecpt X;
 	ufe t2b;
-	ec_mul_engine(a, b, P, Q, z1, X, R, t2b);
+	ec_mul_engine(a, b, P, table, z1, X, R, t2b);
 
 	// Copy t2b out
 	fe_set(t2b, r2b);

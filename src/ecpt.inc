@@ -572,7 +572,7 @@ static CAT_INLINE s64 ec_gen_mask(const int x, const int y) {
 // r = [-]r
 static CAT_INLINE void ec_cond_neg_inplace(const s32 bit, ecpt &r) {
 	// Generate mask = -1 when bit == 1, else 0
-	const u64 mask = -(s64)bit;
+	const u64 mask = (s64)(-bit);
 
 	// Effectively negate when bit == 1
 	ec_neg_mask_inplace(mask, r);
@@ -581,7 +581,7 @@ static CAT_INLINE void ec_cond_neg_inplace(const s32 bit, ecpt &r) {
 // r = [-]p
 static CAT_INLINE void ec_cond_neg(const s32 bit, const ecpt &p, ecpt &r) {
 	// Generate mask = -1 when bit == 1, else 0
-	const u64 mask = -(s64)bit;
+	const u64 mask = (s64)(-bit);
 
 	// Effectively negate when bit == 1
 	ec_neg_mask(mask, p, r);
@@ -590,7 +590,7 @@ static CAT_INLINE void ec_cond_neg(const s32 bit, const ecpt &p, ecpt &r) {
 // r = [-]r
 static CAT_INLINE void ec_cond_neg_affine(const s32 bit, ecpt_affine &r) {
 	// Generate mask = -1 when bit == 1, else 0
-	const u64 mask = -(s64)bit;
+	const u64 mask = (s64)(-bit);
 
 	// Effectively negate when bit == 1
 	ec_neg_mask_affine(mask, r);
