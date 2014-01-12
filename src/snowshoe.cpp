@@ -150,6 +150,24 @@ void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], ch
 #endif // CAT_ENDIAN_LITTLE
 }
 
+void snowshoe_add_mod_q(const char x[32], const char y[32], char r[32]) {
+#ifndef CAT_ENDIAN_LITTLE
+	u64 x1[4+4];
+	u64 *y1 = x1 + 4;
+
+	ec_load_k(x, x1);
+	ec_load_k(y, y1);
+
+	add_mod_q(x1, y1, x1);
+
+	ec_save_k(x1, r);
+
+	CAT_SECURE_OBJCLR(x1);
+#else
+	add_mod_q((const u64 *)x, (const u64 *)y, (u64 *)r);
+#endif // CAT_ENDIAN_LITTLE
+}
+
 void snowshoe_mod_q(const char x[64], char r[32]) {
 #ifndef CAT_ENDIAN_LITTLE
 	u64 x1[8];

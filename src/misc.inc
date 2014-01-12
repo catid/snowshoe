@@ -417,3 +417,29 @@ static void mul_mod_q(const u64 x[4], const u64 y[4], const u64 z[4], u64 r[4]) 
 	mod_q(p, r);
 }
 
+// r = x + y (mod q)
+static CAT_INLINE void add_mod_q(const u64 x[4], const u64 y[4], u64 r[4]) {
+	u64 z[8];
+
+	// z = x + y
+	u128 sum = (u128)x[0] + y[0];
+	z[0] = (u64)sum;
+	sum = ((u128)x[1] + y[1]) + (u64)(sum >> 64);
+	z[1] = (u64)sum;
+	sum = ((u128)x[2] + y[2]) + (u64)(sum >> 64);
+	z[2] = (u64)sum;
+	sum = ((u128)x[3] + y[3]) + (u64)(sum >> 64);
+	z[3] = (u64)sum;
+
+	// Pad the result out to 512 bits, so that it can be used by mod_q()
+	z[4] = (u64)(sum >> 64);
+	z[5] = 0;
+	z[6] = 0;
+	z[7] = 0;
+
+	// Note this is not incredibly efficient, but I would rather only have to
+	// audit one version of mod_q instead of two.
+
+	mod_q(z, r);
+}
+

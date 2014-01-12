@@ -61,6 +61,11 @@ extern void snowshoe_secret_gen(char k[32]);
 extern void snowshoe_mul_mod_q(const char x[32], const char y[32], const char z[32], char r[32]);
 
 /*
+ * r = (x + y) (mod q)
+ */
+extern void snowshoe_add_mod_q(const char x[32], const char y[32], char r[32]);
+
+/*
  * r = x (mod q)
  */
 extern void snowshoe_mod_q(const char x[64], char r[32]);
