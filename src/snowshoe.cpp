@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2013 Christopher A. Taylor.  All rights reserved.
+	Copyright (c) 2013-2014 Christopher A. Taylor.  All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions are met:
@@ -515,7 +515,7 @@ int snowshoe_elligator_secret(const char k[32], const char C[64],
 	}
 	ec_mul(key, p, false, p, t2b);
 
-	// Fix subgroup attack
+	// Fix small subgroup attack
 	ec_dbl(p, p, false, t2b);
 	ec_dbl(p, p, false, t2b);
 
