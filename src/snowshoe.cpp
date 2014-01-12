@@ -38,7 +38,7 @@
  * + attempt to make the most of the I-cache with tuned inlining.
  *
  * The input-validation functions are not constant time, but that is not
- * going to leak any information about secrets values.  Any functions
+ * going to leak any information about secret values.  Any functions
  * that are not constant-time are commented with warnings.
  */
 
