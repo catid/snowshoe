@@ -772,6 +772,31 @@ bool mod_q_test() {
 	return true;
 }
 
+bool add_mod_q_test() {
+	u64 x[4], y[4], r[4];
+
+	x[0] = 0xffffffffffffffffULL;
+	x[1] = 0xffffffffffffffffULL;
+	x[2] = 0xffffffffffffffffULL;
+	x[3] = 0xffffffffffffffffULL;
+
+	y[0] = 0xffffffffffffffffULL;
+	y[1] = 0xffffffffffffffffULL;
+	y[2] = 0xffffffffffffffffULL;
+	y[3] = 0xffffffffffffffffULL;
+
+	add_mod_q(x, y, r);
+
+	if (r[0] != 0x2C92E389EC3FCB5EULL ||
+		r[1] != 0x3B3D7D67E46F0586ULL ||
+		r[2] != 0xB ||
+		r[3] != 0) {
+		return false;
+	}
+
+	return true;
+}
+
 bool mul_mod_q_test() {
 	u64 x[4], y[4], z[4], r[4];
 
@@ -896,6 +921,7 @@ int main() {
 	assert(mod_q_test());
 
 	assert(mul_mod_q_test());
+	assert(add_mod_q_test());
 
 	assert(ec_gen_table_2_test());
 
