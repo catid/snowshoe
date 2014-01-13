@@ -620,6 +620,17 @@ static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, 
 /*
  * Elligator point decoding [18]
  *
+ * This function "decodes" a random 256-bit integer into a deterministicly
+ * chosen point on the curve, for which the private key is likely unknown.
+ *
+ * The input buffer is used as follows, taken as four 64-bit numbers N0..N3:
+ *
+ * a = (((N1 >> 1) << 64) | N0) + i * (((N3 >> 1) << 64) | N2).
+ * sign_bit = Low bit of N3.
+ *
+ * Note that the low bit of N1 is entirely unused, and the low bit of N3 is
+ * used to twiddle the sign of the curve point X coordinate.
+ *
  * a*x^2 + y^2 = 1 + d*x^2*y^2
  * a = -u
  * d = 109*u
@@ -633,8 +644,15 @@ static CAT_INLINE void ec_cond_add(const s32 bit, const ecpt &a, const ecpt &b, 
  * s = e*z - (1-e)*A/2
  * t^2 = s^3 + A*s^2 + B*s
  *
+ * The twisted Edwards curve Y coordinate is calculated first:
+ *
  * Ey = (t^2 - (a-d)*s^2) / (t^2 + (a-d)*s^2)
+ *
+ * And then the curve equation is used to solve for the X coordinate:
+ *
  * Ex = sqrt((Ey^2 - 1) / (d*Ey^2 - a))
+ *
+ * The sign of Ex is flipped based on the sign_bit described earlier.
  */
 static void ec_elligator_decode(const char a0[32], ecpt_affine &r) {
 	// Unpack random bytes into endian-neutral words
