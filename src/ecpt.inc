@@ -762,6 +762,10 @@ static void ec_elligator_decode(const char a0[32], ecpt_affine &r) {
 	fe_sqrt(x, x, false);
 
 	// r.x = [-]x, based on one of the random input bits
+	// It is clear from the visual shape of a twisted Edwards curve and the curve
+	// equation that +X,-X and +Y,-Y are all valid points (hence group order cofactor 4).
+	// Since the fe_sqrt() produces a somewhat unreliable sign, we are free to pick one
+	// at random based on the input and both are valid.
 	fe_neg_mask(high_mask, x, r.x);
 }
 
