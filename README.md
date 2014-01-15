@@ -905,6 +905,15 @@ and have the same results as a simple double-and-add reference multiplier,
 as demonstrated experimentally by the unit tester.
 
 
+##### Practical Security
+
+Recently Bos, Costello and Miele in [19] analyzed the practical security of the
+BN254 curve.  The endomorphism property and group size of Snowshoe matches this
+curve in ECDLP difficulty.  They claim that using the latest modern techniques,
+BN254, and by extension the Snowshoe curve, offer "126 bits" of security, taking
+roughly 9.486 * 10^23 core years to solve the discrete logarithm.
+
+
 ## References
 
 I am attempting to faithfully reproduce the results of some brilliant people:
@@ -962,6 +971,9 @@ Explores SAB-set comb multiplication and special prime moduli
 
 ##### [18] ["Elligator: Elliptic-curve points indistinguishable from uniform random strings" (Bernstein Hamburg Krasnova Lange 2013)](http://elligator.cr.yp.to/elligator-20130828.pdf)
 Introduces the Elligator-2 point unpacking algorithm, which is implemented by Snowshoe
+
+##### [19] ["Elliptic and Hyperelliptic Curves: a Practical Security Analysis" (Bos Costello Miele 2013)](http://eprint.iacr.org/2013/644.pdf)
+Analyzes the practical security of BN254
 
 
 ## Credits
