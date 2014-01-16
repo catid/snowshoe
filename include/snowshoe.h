@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define SNOWSHOE_VERSION 8
+#define SNOWSHOE_VERSION 9
 
 /*
  * Verify binary compatibility with the Snowshoe API on startup.
@@ -177,16 +177,18 @@ extern int snowshoe_elligator(const char key[32], char E[128]);
 extern int snowshoe_elligator_encrypt(const char k[32], const char E[128], char C[64]);
 
 /*
- * R = k(C - E [+ V])
+ * R = k1 * (C - E) + k2 * V
  *
- * Use Elligator point E to decrypt a point, optionally add a second point,
- * and multiply by a private key k.
+ * Use Elligator point E to decrypt a point, then use it as the second
+ * point in a simultaneous point multiplication.
+ *
+ * The V term is optional.  To disable it, pass a null ptr for k2 and V.
  *
  * Returns 0 on success.
  * Returns non-zero if one of the input parameters is invalid.
  * It is important to check the return value to avoid active attacks.
  */
-extern int snowshoe_elligator_secret(const char k[32], const char C[64], const char E[128], const char V[64], char R[64]);
+extern int snowshoe_elligator_secret(const char k1[32], const char C[64], const char E[128], const char k2[32], const char V[64], char R[64]);
 
 #ifdef __cplusplus
 }

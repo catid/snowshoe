@@ -483,9 +483,9 @@ int snowshoe_elligator_encrypt(const char k[32], const char E[128], char C[64]) 
 	return 0;
 }
 
-// R = k(C - E [+ V])
-int snowshoe_elligator_secret(const char k[32], const char C[64],
-							  const char E[128], const char V[64], char R[64]) {
+// R = k1(C - E) + k2 * V
+int snowshoe_elligator_secret(const char k1[32], const char C[64], const char E[128],
+							  const char k2[32], const char V[64], char R[64]) {
 	// p = C - E
 	ecpt p, q;
 	const ecpt_affine *c = (const ecpt_affine *)C;
@@ -498,22 +498,27 @@ int snowshoe_elligator_secret(const char k[32], const char C[64],
 	ufe t2b;
 	ec_add(q, p, p, true, true, true, t2b);
 
-	// p = p + V
-	const ecpt_affine *v = (const ecpt_affine *)V;
-	if (v) {
+	// If only a single multiplication is required,
+	if (!k2) {
+		// p = k1 * p
+		const u64 *key = (const u64 *)k1;
+		if (invalid_key(key)) {
+			return -1;
+		}
+		ec_mul(key, p, false, p, t2b);
+	} else {
+		// q = V
+		const ecpt_affine *v = (const ecpt_affine *)V;
 		if (!ec_valid_vartime(*v)) {
 			return -1;
 		}
 		ec_expand(*v, q);
-		ec_add(p, q, p, true, true, true, t2b);
-	}
 
-	// p = k * p
-	const u64 *key = (const u64 *)k;
-	if (invalid_key(key)) {
-		return -1;
+		// p = k1 * p + k2 * q
+		const u64 *key1 = (const u64 *)k1;
+		const u64 *key2 = (const u64 *)k2;
+		ec_simul(key1, p, false, key2, q, true, p, t2b);
 	}
-	ec_mul(key, p, false, p, t2b);
 
 	// Fix small subgroup attack
 	ec_dbl(p, p, false, t2b);

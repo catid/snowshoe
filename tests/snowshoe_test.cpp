@@ -456,7 +456,7 @@ static bool ec_elligator_test() {
 		s0 = m_clock.usec();
 		t0 = Clock::cycles();
 
-		if (snowshoe_elligator_secret(y, X, E, 0, Z1)) {
+		if (snowshoe_elligator_secret(y, X, E, 0, 0, Z1)) {
 			cout << "elligator secret y failed" << endl;
 			return false;
 		}
@@ -467,7 +467,7 @@ static bool ec_elligator_test() {
 		ts.push_back(t1 - t0);
 		ws += s1 - s0;
 
-		if (snowshoe_elligator_secret(x, Y, E, 0, Z2)) {
+		if (snowshoe_elligator_secret(x, Y, E, 0, 0, Z2)) {
 			cout << "elligator secret x failed" << endl;
 			return false;
 		}
