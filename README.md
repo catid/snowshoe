@@ -217,7 +217,8 @@ Verify binary API compatibility on startup:
 
 ~~~
 	if (snowshoe_init()) {
-		throw "Buildtime failure: Wrong snowshoe static library";
+		// Buildtime failure: Wrong snowshoe static library
+		exit(1);
 	}
 ~~~
 
@@ -235,7 +236,8 @@ Now generate the server public/private key pair:
 	char pp_s[64];
 	snowshoe_secret_gen(sk_s);
 	if (snowshoe_mul_gen(sk_s, pp_s, 0)) {
-		throw "Secret key was generated wrong (developer error)";
+		// Secret key was generated wrong (developer error)
+		exit(1);
 	}
 ~~~
 
@@ -249,7 +251,8 @@ Generate client public/private key pair:
 	char pp_c[64];
 	snowshoe_secret_gen(sk_c);
 	if (snowshoe_mul_gen(sk_c, pp_c, 0)) {
-		throw "Secret key was generated wrong (developer error)";
+		// Secret key was generated wrong (developer error)
+		exit(1);
 	}
 ~~~
 
