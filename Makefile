@@ -135,5 +135,5 @@ snowshoe_test.o : tests/snowshoe_test.cpp
 
 clean :
 	git submodule update --init
-	-rm fptest fetest endotest ecpttest ecmultest snowshoetest libsnowshoe.a $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
+	-rm fptest fetest endotest ecpttest ecmultest snowshoetest bin/libsnowshoe.a $(shared_test_o) $(fp_test_o) $(fe_test_o) $(endo_test_o) $(ecpt_test_o) $(ecmul_test_o) $(snowshoe_test_o) $(snowshoe_o)
 
