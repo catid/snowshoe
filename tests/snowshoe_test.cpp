@@ -404,7 +404,7 @@ static bool ec_elligator_test() {
 
 	for (int iteration = 0; iteration < 10000; ++iteration) {
 		char key[32];
-		char E[64];
+		char E[128];
 
 		generate_k(key);
 
