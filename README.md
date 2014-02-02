@@ -986,5 +986,5 @@ find it useful and would like to buy me a coffee, consider [tipping](https://www
 
 I appreciate suggestions and criticism from Mike Hamburg on an early version of the software.
 
-Kris <somecretin at gmail> reported GCC build issues that turned out to be important fixes, and I am
-thankful for their input.
+Kris (somecretin at gmail) reported GCC build issues that turned out to be important fixes, and I am
+thankful for the input.
