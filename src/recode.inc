@@ -145,12 +145,7 @@ static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, con
 			// Generate a mask that is -1 if ii == index, else 0
 			const u64 mask = ec_gen_mask(ii, k);
 
-			vec_ecpt vmask = {
-				mask, mask, mask, mask, mask, mask, mask, mask,
-				mask, mask, mask, mask, mask, mask, mask, mask
-			};
-
-			*rp ^= tp[ii] & vmask;
+			*rp ^= tp[ii] & mask;
 		}
 
 #else
@@ -248,12 +243,7 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
 		// Generate a mask that is -1 if ii == index, else 0
 		const u64 mask = ec_gen_mask(ii, k);
 
-		vec_ecpt vmask = {
-			mask, mask, mask, mask, mask, mask, mask, mask,
-			mask, mask, mask, mask, mask, mask, mask, mask
-		};
-
-		*rp ^= tp[ii] & vmask;
+		*rp ^= tp[ii] & mask;
 	}
 	
 #else
@@ -435,11 +425,7 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
 			// Generate a mask that is -1 if jj == index, else 0
 			const u64 mask = ec_gen_mask(jj, d);
 
-			vec_ecpt_affine vmask = {
-				mask, mask, mask, mask, mask, mask, mask, mask
-			};
-
-			*rp ^= tp[jj] & vmask;
+			*rp ^= tp[jj] & mask;
 		}
 	
 #else

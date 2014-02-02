@@ -201,11 +201,7 @@ static CAT_INLINE void ec_xor_mask(const ecpt &a, const u64 mask, ecpt &r) {
 	const vec_ecpt *tp = (const vec_ecpt *)&a;
 	vec_ecpt *rp = (vec_ecpt *)&r;
 
-	vec_ecpt vmask = {
-		mask, mask, mask, mask, mask, mask, mask, mask,
-		mask, mask, mask, mask, mask, mask, mask, mask
-	};
-	*rp ^= *tp & vmask;
+	*rp ^= *tp & mask;
 	
 #else
 
@@ -226,11 +222,7 @@ static CAT_INLINE void ec_xor_mask_affine(const ecpt_affine &a, const u64 mask, 
 	const vec_ecpt_affine *tp = (const vec_ecpt_affine *)&a;
 	vec_ecpt_affine *rp = (vec_ecpt_affine *)&r;
 
-	vec_ecpt_affine vmask = {
-		mask, mask, mask, mask, mask, mask, mask, mask
-	};
-
-	*rp ^= *tp & vmask;
+	*rp ^= *tp & mask;
 	
 #else
 
