@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include <cstdlib>
 using namespace std;
 
 // Math library
@@ -639,7 +640,7 @@ static bool ec_xor_mask_test(const ecpt &P) {
 
 	ec_zero(p);
 
-	u128 mask;
+	u64 mask;
   
 	ecpt z;
 	ec_zero(z);
@@ -647,12 +648,14 @@ static bool ec_xor_mask_test(const ecpt &P) {
 	mask = ec_gen_mask(1, 3);
 	ec_xor_mask(a, mask, p);
 	if (!ec_isequal(z, p)) {
+		cout << "XOR1" << endl;
 		return false;
 	}
 
 	mask = ec_gen_mask(3, 3);
 	ec_xor_mask(a, mask, p);
 	if (!ec_isequal(P, p)) {
+		cout << "XOR12" << endl;
 		return false;
 	}
 

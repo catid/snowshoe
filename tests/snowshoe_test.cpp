@@ -17,7 +17,7 @@ static Clock m_clock;
 //// Test Driver
 
 static void generate_k(char kb[32]) {
-	unsigned int k[16] = {0};
+	u32 k[16] = {0};
 
 	for (int ii = 0; ii < 16; ++ii) {
 		for (int jj = 0; jj < 30; ++jj) {

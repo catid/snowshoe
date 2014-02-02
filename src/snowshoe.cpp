@@ -110,6 +110,18 @@ int _snowshoe_init(int expected_version) {
 		return -1;
 	}
 
+	if (sizeof(ecpt) != 128) {
+		return -1;
+	}
+
+	if (sizeof(ufp) != 16) {
+		return -1;
+	}
+
+	if (sizeof(ufe) != 32) {
+		return -1;
+	}
+
 	return (expected_version == SNOWSHOE_VERSION) ? 0 : -1;
 }
 
@@ -479,6 +491,10 @@ int snowshoe_elligator_encrypt(const char k[32], const char E[128], char C[64]) 
 	// Affine point
 	ecpt_affine *c = (ecpt_affine *)C;
 	ec_affine(K, *c);
+
+	if (!ec_valid_vartime(*c)) {
+		return -1;
+	}
 
 	return 0;
 }
