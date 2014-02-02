@@ -376,7 +376,7 @@ static CAT_INLINE u32 ec_recode_scalar_comb_gen(const u64 k[4], u64 b[4]) {
 	b[0] = (b[0] | (low_mask | d_bit)) ^ (d_bit | ((b[0] >> 1) & low_mask));
 
 	// Recode remaining bits as per [1]
-	for (int i = MG_d; i < MG_l; ++i) {
+	for (int i = MG_d; i < MG_l - 1; ++i) {
 		u32 b_imd = (u32)(b[0] >> (i % MG_d));
 		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
 		u32 bit = b_imd & b_i & 1;
@@ -523,7 +523,7 @@ static u32 ec_recode_scalar_comb_81(const u64 k[4], u64 b[4]) {
 	// for bits 0..(d-1), 0 => -1, 1 => +1
 	b[0] = (b[0] | (low_mask | d_bit)) ^ (d_bit | ((b[0] >> 1) & low_mask));
 
-	for (int i = d; i < l; ++i) {
+	for (int i = d; i < l - 1; ++i) {
 		u32 b_imd = (u32)(b[0] >> (i & 31));
 		u32 b_i = (u32)(b[i >> 6] >> (i & 63));
 		u32 bit = b_imd & b_i & 1;

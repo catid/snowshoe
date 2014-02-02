@@ -735,6 +735,7 @@ bool ec_simul_gen_test(const ecpt_affine &BP) {
 
 		for (int ii = 0; ii < 64; ++ii) {
 			if (a1[ii] != a2[ii]) {
+				cout << "MISMATCH at " << ii << " : " << (int)a1[ii] << "(ref) != " << (int)a2[ii] << "(opt)" << endl;
 				return false;
 			}
 		}
@@ -957,9 +958,9 @@ int main() {
 	// Extra tests:
 	assert(ec_simul_test(bp2, EC_O_AFFINE));
 	assert(ec_simul_test(EC_O_AFFINE, bp1));
-	assert(ec_simul_gen_test(EC_O_AFFINE));
 	assert(ec_mul_test(bp2));
 	assert(ec_mul_test(EC_O_AFFINE));
+	assert(ec_simul_gen_test(EC_O_AFFINE));
 
 	cout << "All tests passed successfully." << endl;
 

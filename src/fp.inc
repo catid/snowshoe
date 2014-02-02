@@ -250,8 +250,8 @@ static CAT_INLINE void fp_neg_mask_inplace(const u64 mask, ufp &r) {
 #else
 
 	// If mask is set, take 's', else take 'r'
-	r.i[0] ^= ((s.i[0] ^ r.i[0]) & mask);
-	r.i[1] ^= ((s.i[1] ^ r.i[1]) & mask);
+	r.i[0] ^= (s.i[0] ^ r.i[0]) & mask;
+	r.i[1] ^= (s.i[1] ^ r.i[1]) & mask;
 
 #endif
 
