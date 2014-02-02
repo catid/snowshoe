@@ -52,7 +52,7 @@ library.arm : library
 
 # Library target
 
-library : CFLAGS += $(DBGFLAGS)
+library : CFLAGS += $(OPTFLAGS)
 library : $(snowshoe_o)
 	ar rcs $(LIBNAME) $(snowshoe_o)
 
@@ -84,10 +84,10 @@ ecmultest : clean $(ecmul_test_o)
 	$(CCPP) $(ecmul_test_o) $(LIBS) -o ecmultest
 	./ecmultest
 
-snowshoetest : CFLAGS += -DUNIT_TEST $(DBGFLAGS)
+snowshoetest : CFLAGS += -DUNIT_TEST $(OPTFLAGS)
 snowshoetest : clean $(snowshoe_test_o) library
 	$(CCPP) $(snowshoe_test_o) $(LIBS) -L./bin -lsnowshoe -o snowshoetest
-
+	./snowshoetest
 
 # Shared objects
 

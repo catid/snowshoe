@@ -492,10 +492,6 @@ int snowshoe_elligator_encrypt(const char k[32], const char E[128], char C[64]) 
 	ecpt_affine *c = (ecpt_affine *)C;
 	ec_affine(K, *c);
 
-	if (!ec_valid_vartime(*c)) {
-		return -1;
-	}
-
 	return 0;
 }
 
