@@ -905,7 +905,7 @@ static void tscTime() {
 int main() {
 	cout << "Snowshoe Unit Tester: EC Scalar Multiplication" << endl;
 
-#ifdef CAT_HAS_VECTOR_EXTENSIONS
+#ifdef CAT_SNOWSHOE_VECTOR_OPT
 	cout << "Using vector extensions for table lookups! <3" << endl;
 #endif
 

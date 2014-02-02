@@ -136,7 +136,7 @@ static void ec_table_select_2(const ecpt *table, const ufp &a, const ufp &b, con
 	if (constant_time) {
 		ec_zero(r);
 
-#ifdef CAT_HAS_VECTOR_EXTENSIONS
+#ifdef CAT_SNOWSHOE_VECTOR_OPT
 
 		const vec_ecpt *tp = (const vec_ecpt *)table;
 		vec_ecpt *rp = (vec_ecpt *)&r;
@@ -239,7 +239,7 @@ static CAT_INLINE void ec_table_select_4(const ecpt *table, const ufp &a, const 
 
 	ec_zero(r);
 
-#ifdef CAT_HAS_VECTOR_EXTENSIONS
+#ifdef CAT_SNOWSHOE_VECTOR_OPT
 
 	const vec_ecpt *tp = (const vec_ecpt *)table;
 	vec_ecpt *rp = (vec_ecpt *)&r;
@@ -426,7 +426,7 @@ static void ec_table_select_comb_gen(const u64 b[4], const int ii, ecpt r[MG_v])
 
 		ec_zero(p);
 
-#ifdef CAT_HAS_VECTOR_EXTENSIONS
+#ifdef CAT_SNOWSHOE_VECTOR_OPT
 
 		const vec_ecpt_affine *tp = (const vec_ecpt_affine *)GEN_TABLE[vp];
 		vec_ecpt_affine *rp = (vec_ecpt_affine *)&p;

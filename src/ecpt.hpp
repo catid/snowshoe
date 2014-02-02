@@ -41,7 +41,18 @@ struct ecpt_z1 {
 	ufe x, y, t;
 };
 
-#ifdef CAT_HAS_VECTOR_EXTENSIONS
+/*
+ * So about vector extensions.
+ *
+ * It turns out that GCC's implementation is very slow compared to Clang's.
+ * On Clang there is a nice performance boost when these are used.
+ * But GCC is actually twice as slow when used in the same way.
+ * Therefore, I only turn on vector extensions when in Clang.
+ */
+
+#ifdef CAT_VECTOR_EXT_CLANG
+
+# define CAT_SNOWSHOE_VECTOR_OPT /* This flag is used by the rest of the code */
 
 typedef u64 vec_ecpt_affine CAT_VECTOR_SIZE(u64, 4*2);
 typedef u64 vec_ecpt CAT_VECTOR_SIZE(u64, 4*4);
