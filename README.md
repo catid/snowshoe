@@ -172,10 +172,17 @@ MSVC2010 build results (CPU at 100%) after applying the correction factor:
 
 #### Usage
 
-This git repo uses submodules so be sure to run `git submodule update --init` to download all the code.
+This git repo uses submodules so be sure to run `git submodule update --init`
+to download all the code.
 
-You can either compile-in the software or link to it.  I recommend statically linking
-the code, since that enables full optimization and speeds up your compilation.
+You can either compile-in the software or link to it.  I recommend statically
+linking the code, since that enables full optimization and speeds up your
+compilation.
+
+The GCC and Clang compilers are supported.  The Intel C++ Compiler and Microsoft
+Visual C++ compilers are not supported because they do not support emulated
+128-bit datatypes.  To integrate this library into a project for a compiler
+other than GCC/Clang, generate a static library and link it in that way.
 
 To build the project you only need to compile `src/snowshoe.cpp`, which includes
 all of the other source files.  Or link to a prebuilt static library under `bin/`
@@ -193,7 +200,8 @@ To build the static library, install command-line Xcode tools and simply run the
 make release
 ~~~
 
-This produces `libsnowshoe.a` with optimizations.
+This produces `libsnowshoe.a` with optimizations.  The GCC and Clang compilers
+are supported, and Clang produces better code of the two.
 
 
 #### Building: Windows
