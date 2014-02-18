@@ -333,18 +333,6 @@ On i7-3520M Ivy Bridge, TB off, using SUPERCOP:
 - ecsimul_gen : (not implemented)
 - ecsimul : (not implemented)
 
-##### kumfp127g [http://eprint.iacr.org/2012/670.pdf](http://eprint.iacr.org/2012/670.pdf):
-
-- Availability : Free, open-source, but not portable (uncommented assembly only)
-- This code is also extremely complex and looks tricky to audit.
-
-On i7-3520M Ivy Bridge, TB off, using SUPERCOP:
-
-- ecmul_gen : (slower) `108kcy`
-- ecmul : (faster) `110kcy`
-- ecsimul_gen : (not implemented)
-- ecsimul : (not implemented)
-
 ##### Hamburg's implementation [http://mikehamburg.com/papers/fff/fff.pdf](http://mikehamburg.com/papers/fff/fff.pdf):
 
 - Availability : Not available online
@@ -372,6 +360,33 @@ On 3.4 GHz i7-3770 Ivy Bridge with TB off:
 - ecmul_gen : (faster) `46kcy`
 - ecmul : (faster) `92kcy`
 - ecsimul_gen : (faster) `111kcy`
+- ecsimul : (not implemented)
+
+##### Kummer strikes back [http://cr.yp.to/hecdh/kummer-20140218.pdf](http://cr.yp.to/hecdh/kummer-20140218.pdf):
+
+- Availability : Equivalently free, open-source, and portable
+
+On Haswell:
+
+- ecmul_gen : (slower) `72kcy`
+- ecmul : (faster) `72kcy`
+- ecsimul_gen : (not implemented)
+- ecsimul : (not implemented)
+
+This looks like the most promising direction for future efficient EC-DH.  This
+will be a huge improvement on Snowshoe when it is more mature.
+
+##### kumfp127g [http://eprint.iacr.org/2012/670.pdf](http://eprint.iacr.org/2012/670.pdf):
+
+- WARNING: It was revealed in [20] that this code is not actually timing-invariant.
+- Availability : Free, open-source, but not portable (uncommented assembly only)
+- This code is also extremely complex and looks tricky to audit.
+
+On i7-3520M Ivy Bridge, TB off, using SUPERCOP:
+
+- ecmul_gen : (slower) `108kcy`
+- ecmul : (faster) `110kcy`
+- ecsimul_gen : (not implemented)
 - ecsimul : (not implemented)
 
 ##### Crypto++ Library 5.6.2
@@ -985,6 +1000,9 @@ Introduces the Elligator-2 point unpacking algorithm, which is implemented by Sn
 
 ##### [19] ["Elliptic and Hyperelliptic Curves: a Practical Security Analysis" (Bos Costello Miele 2013)](http://eprint.iacr.org/2013/644.pdf)
 Analyzes the practical security of BN254
+
+##### [20] ["Kummer strikes back: new DH speed records" (Berstein et al 2014)](http://cr.yp.to/hecdh/kummer-20140218.pdf)
+Reveals timing attacks in existing Kummer code and reports new world-record experimental results
 
 
 ## Credits
