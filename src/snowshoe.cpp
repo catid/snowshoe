@@ -100,6 +100,172 @@ static bool invalid_key(const u64 k[4]) {
 	return false;
 }
 
+
+//// Simple Self-Test
+
+static const ufp CX3 = {
+	{0xB766E7802FB7635FULL, 0x3F42AC9208EEFF87ULL}
+};
+
+static const ufp C1 = {
+	{1, 0}
+};
+
+static const ufp CN1 = {
+	{0xfffffffffffffffeULL, 0x7fffffffffffffffULL}
+};
+
+static bool fp_ops_test() {
+	ufp a0, a1, a2;
+
+	fp_set(CX3, a0);
+
+	// mul, sqrt, chi, reduce, isequal
+
+	fp_mul(a0, a0, a2);
+	fp_sqrt(a2, a1);
+
+	if (fp_chi(a0) == -1) {
+		fp_neg(a1, a1);
+	}
+
+	fp_complete_reduce(a1);
+	if (!fp_isequal_ct(a1, a0)) {
+		return false;
+	}
+
+	// inv, mul, reduce, isequal
+
+	fp_inv(a0, a1);
+	fp_mul(a1, a0, a1);
+	fp_complete_reduce(a1);
+
+	if (!fp_isequal_ct(a1, C1)) {
+		return false;
+	}
+
+	// add, reduce, iszero
+
+	fp_set(CN1, a0);
+	fp_set(C1, a1);
+	fp_add(a0, a1, a1);
+	fp_complete_reduce(a1);
+	if (!fp_iszero_ct(a1)) {
+		return false;
+	}
+
+	return true;
+}
+
+static const u64 TEST_K2[4] = {
+	0x679DFE17D6AC412FULL,
+	0x43F1C74EDC9DC196ULL,
+	0xA8A8D98EDB18E410ULL,
+	0x0985EE47C6F67E9EULL
+};
+
+static bool gls_ops_test() {
+	s32 k1sign, k2sign;
+	ufp k1, k2;
+
+	gls_decompose(TEST_K2, k1sign, k1, k2sign, k2);
+
+	if (k1sign != 0) {
+		return false;
+	}
+	if (k1.i[0] != 0xC7620B2B8C69B128ULL) {
+		return false;
+	}
+	if (k1.i[1] != 0x1354C079D167C5BCULL) {
+		return false;
+	}
+	if (k2sign != 1) {
+		return false;
+	}
+	if (k2.i[0] != 0x132501035CC11F8EULL) {
+		return false;
+	}
+	if (k2.i[1] != 0x12BCB74AF1B58892ULL) {
+		return false;
+	}
+
+	return true;
+}
+
+static bool mul_mod_q_test() {
+	u64 x[4], y[4], z[4], r[4];
+
+	x[0] = 0xFB8A86C9E6022515ULL;
+	x[1] = 0xD97FE1124FD8CC92ULL;
+	x[2] = 0x782777E7572BA130ULL;
+	x[3] = 0x0A64E21CF80B9B64ULL;
+	y[0] = 0xEC7442A2DDA82CE0ULL;
+	y[1] = 0x85F16DA062E80241ULL;
+	y[2] = 0x21309454C67D3636ULL;
+	y[3] = 0xE9296E5F048E01CCULL;
+	z[0] = 0x140A07B4AD54B996ULL;
+	z[1] = 0x5B73600FD51C45CDULL;
+	z[2] = 0xC83C13EF9A0A3AC3ULL;
+	z[3] = 0x003445C52BC607CFULL;
+
+	mul_mod_q(x, y, z, r);
+
+	if (r[0] != 0x9A5FC58C4E29F36EULL ||
+		r[1] != 0x0A03DAB8CF16D699ULL ||
+		r[2] != 0x6F161E3B5D31BBCEULL ||
+		r[3] != 0x063D680741CBB9A1ULL) {
+		return false;
+	}
+
+	x[0] = 0xffffffffffffffffULL;
+	x[1] = 0xffffffffffffffffULL;
+	x[2] = 0xffffffffffffffffULL;
+	x[3] = 0xffffffffffffffffULL;
+	y[0] = EC_Q[0] - 1;
+	y[1] = EC_Q[1];
+	y[2] = EC_Q[2];
+	y[3] = EC_Q[3];
+	z[0] = EC_Q[0] - 1;
+	z[1] = EC_Q[1];
+	z[2] = EC_Q[2];
+	z[3] = EC_Q[3];
+
+	mul_mod_q(x, y, z, r);
+
+	if (r[0] != 0xB851F71EBA7E1BF5ULL ||
+		r[1] != 0x08875560CEA50510ULL ||
+		r[2] != 0xFFFFFFFFFFFFFFFAULL ||
+		r[3] != 0x0FFFFFFFFFFFFFFFULL) {
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ * The purpose of this is to mainly verify that the base Fp field operations
+ * are working properly.  Most of the rest of the code hinges on these working.
+ * There are a few other tests thrown in for other basic components, but
+ * nothing too major.  This catches problems where e.g. Intel C compiler will
+ * compile the code properly but produce incorrect results because it does not
+ * support 128-bit basic datatypes.
+ */
+static bool self_test() {
+	if (!fp_ops_test()) {
+		return false;
+	}
+
+	if (!gls_ops_test()) {
+		return false;
+	}
+
+	if (!mul_mod_q_test()) {
+		return false;
+	}
+
+	return true;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -119,6 +285,10 @@ int _snowshoe_init(int expected_version) {
 	}
 
 	if (sizeof(ufe) != 32) {
+		return -1;
+	}
+
+	if (!self_test()) {
 		return -1;
 	}
 

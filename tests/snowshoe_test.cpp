@@ -530,9 +530,12 @@ int main() {
 
 	// Example of verifying API level on startup:
 
+	double t0 = m_clock.usec();
 	if (snowshoe_init()) {
 		throw "Wrong snowshoe static library is linked";
 	}
+	double t1 = m_clock.usec();
+	cout << "snowshoe_init() ran in " << (t1 - t0) << " usec" << endl;
 
 	assert(ec_elligator_test());
 	assert(ec_dh_test());
