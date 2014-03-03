@@ -3,11 +3,11 @@
 
 #include "Platform.hpp"
 #include "EndianNeutral.hpp"
+#include "BigMath.hpp" // 128-bit math
 
 namespace cat {
 
 
-// Use builtin 128-bit type
 union ufp {
 	u64 i[2];
 	u128 w;
