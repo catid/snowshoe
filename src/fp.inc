@@ -41,7 +41,7 @@ static CAT_INLINE bool fp_isequal_vartime(const ufp a, const ufp b) {
 // WARNING: Inputs must be completely reduced
 static CAT_INLINE bool fp_isequal_ct(const ufp a, const ufp b) {
 	u64 zero = a.i[0] ^ b.i[0];
-	zero |= a.i[1] ^ b.i[1];
+	   zero |= a.i[1] ^ b.i[1];
 
 	u32 z = (u32)zero | (u32)(zero >> 32);
 	return z == 0;
@@ -56,7 +56,7 @@ static CAT_INLINE bool fp_iszero_vartime(const ufp x) {
 		return true;
 	}
 
-	return (x.i[0] != 0) && (x.i[1] != 0);
+	return (x.i[0] == 0) && (x.i[1] == 0);
 }
 
 // Check if x is zero
