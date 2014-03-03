@@ -4,8 +4,8 @@
 #CCPP = g++
 #CC = gcc
 #OPTFLAGS = -O3 -fomit-frame-pointer -funroll-loops
-CCPP = clang++ -m64
-CC = clang -m64
+CCPP = clang++ -m32
+CC = clang -m32
 OPTFLAGS = -O4
 DBGFLAGS = -g -O0 -DDEBUG
 CFLAGS = -Wall -fstrict-aliasing -I./libcat -I./include

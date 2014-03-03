@@ -321,7 +321,7 @@ bool fp_exp_test(const ufp &x, const ufp &e, const ufp &expected) {
 			fp_sqr(r, r);
 		}
 
-		if ((e.w >> ii) & 1) {
+		if ((e.i[ii / 64] >> (ii % 64)) & 1) {
 			fp_mul(r, x, r);
 			seen = true;
 		}
@@ -351,8 +351,7 @@ bool fp_mul_test(const ufp &a, const ufp &b, const ufp &expected) {
 bool fp_set_mask_test() {
 	ufp a, r;
 
-	u128 zero = 0;
-	u128 neg = ~(u128)0;
+	static const u64 zero = 0, neg = ~(u64)0;
 
 	fp_set(CR1, a);
 	fp_set(CR2, r);
@@ -378,8 +377,7 @@ bool fp_set_mask_test() {
 bool fp_xor_mask_test() {
 	ufp a, r;
 
-	u128 zero = 0;
-	u128 neg = ~(u128)0;
+	static const u64 zero = 0, neg = ~(u64)0;
 
 	fp_set(CR1, a);
 	fp_zero(r);
@@ -405,8 +403,7 @@ bool fp_xor_mask_test() {
 bool fp_neg_mask_test() {
 	ufp a, r;
 
-	u128 zero = 0;
-	u128 neg = ~(u128)0;
+	static const u64 zero = 0, neg = ~(u64)0;
 
 	// Verify that passing a -1 mask will leave r unaffected,
 	// and passing 0 will negate r in place
