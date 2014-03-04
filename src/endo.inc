@@ -333,7 +333,7 @@ static void gls_decompose(const u64 k[4], s32 &k1sign, ufp &k1, s32 &k2sign, ufp
 	t[1] = u128_high(sum) + u128_high(prod) + (a1[0] << 62) - a1[1];
 
 	// k1 <- ||k - t|| = k - (z1 * A + z2 * B) and k1sign
-	sum = u128_diff(u128_low(k[0]), t[0]);
+	sum = u128_diff(k[0], t[0]);
 	k1.i[0] = u128_low(sum);
 	k1.i[1] = u128_high(sum) + k[1] - t[1];
 	k1sign = (u32)(k1.i[1] >> 63);

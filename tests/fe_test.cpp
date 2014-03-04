@@ -135,7 +135,7 @@ bool fe_exp_test(const ufe &x, const ufp &e, const ufe &expected) {
 			fe_sqr(r, r);
 		}
 
-		if ((e.w >> ii) & 1) {
+		if ((e.i[ii/64] >> (ii%64)) & 1) {
 			fe_mul(r, x, r);
 			seen = true;
 		}
@@ -251,8 +251,7 @@ bool fe_mulu_test(const ufe &a) {
 bool fe_set_mask_test() {
 	ufe a, r;
 
-	u128 zero = 0;
-	u128 neg = ~(u128)0;
+	static const u64 zero = 0, neg = ~(u64)0;
 
 	fe_set(CXC, a);
 	fe_set(CSR, r);
@@ -278,8 +277,7 @@ bool fe_set_mask_test() {
 bool fe_xor_mask_test() {
 	ufe a, r;
 
-	u128 zero = 0;
-	u128 neg = ~(u128)0;
+	static const u64 zero = 0, neg = ~(u64)0;
 
 	fe_set(CXC, a);
 	fe_zero(r);
@@ -305,8 +303,7 @@ bool fe_xor_mask_test() {
 bool fe_neg_mask_test() {
 	ufe a, r;
 
-	u128 zero = 0;
-	u128 neg = ~(u128)0;
+	static const u64 zero = 0, neg = ~(u64)0;
 
 	// Verify that passing a -1 mask will leave r unaffected,
 	// and passing 0 will negate r in place
