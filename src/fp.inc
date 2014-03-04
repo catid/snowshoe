@@ -153,8 +153,9 @@ static CAT_INLINE void fp_add_reduce(ufp &x) {
 
 #else
 
-	u128_add(x.w, (u32)(u128_high(x.w) >> 63));
+	u32 msb = (u32)(u128_high(x.w) >> 63);
 	u128_clear_msb(x.w);
+	u128_add(x.w, msb);
 
 #endif
 
@@ -213,8 +214,9 @@ static CAT_INLINE void fp_sub_reduce(ufp &x) {
 
 #else
 
-	u128_sub(x.w, (u32)(u128_high(x.w) >> 63));
+	u32 msb = (u32)(u128_high(x.w) >> 63);
 	u128_clear_msb(x.w);
+	u128_sub(x.w, msb);
 
 #endif
 
