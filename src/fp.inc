@@ -287,7 +287,7 @@ static CAT_INLINE void fp_neg_mask(const u64 mask, const ufp p, ufp &r) {
 // r = a + (u32)k
 static CAT_INLINE void fp_add_smallk(const ufp a, const u32 k, ufp &r) {
 	// Uses 1a 1r
-	r.w = u128_sum(a.w, k);
+	r.w = u128_sum(a.w, (u64)k);
 	fp_add_reduce(r);
 }
 
@@ -328,7 +328,7 @@ static CAT_INLINE void fp_sub(const ufp a, const ufp b, ufp &r) {
 // r = a - (u32)k
 static CAT_INLINE void fp_sub_smallk(const ufp a, const u32 k, ufp &r) {
 	// Uses 1a 1r
-	r.w = u128_diff(a.w, k);
+	r.w = u128_diff(a.w, (u64)k);
 	fp_sub_reduce(r);
 }
 

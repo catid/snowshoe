@@ -65,7 +65,7 @@ static void gls_decompose(const u64 k[4], s32 &k1sign, ufp &k1, s32 &k2sign, ufp
 	u128 sum, prod;
 
 	// a1 <- (k << 126) - k = A * k < 2^(252+126 = 378)
-	sum = u128_diff(0, k[0]);
+	sum = u128_diff((u64)0, k[0]);
 	a1[0] = u128_low(sum);
 	u128_borrow_add_sub(sum, k[0] << 62, k[1]);
 	a1[1] = u128_low(sum);
@@ -345,7 +345,7 @@ static void gls_decompose(const u64 k[4], s32 &k1sign, ufp &k1, s32 &k2sign, ufp
 	k1.i[1] = u128_high(sum) + (k1.i[1] ^ mask);
 
 	// t <- (a2 << 126) - a2 = A * a2 < 2^(64 + 126 = 190)
-	sum = u128_diff(0, a2[0]);
+	sum = u128_diff((u64)0, a2[0]);
 	t[0] = u128_low(sum);
 	t[1] = u128_high(sum) + (a2[0] << 62);
 

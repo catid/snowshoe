@@ -109,7 +109,7 @@ static CAT_INLINE void ec_gen_table_2(const ecpt &a, const ecpt &b, bool z1, ecp
 static CAT_INLINE u32 ec_recode_scalars_2(ufp &a, ufp &b, const int len) {
 	u32 lsb = ((u32)u128_low(a.w) & 1) ^ 1;
 
-	u128_sub(a.w, lsb);
+	u128_sub(a.w, (u64)lsb);
 
 	u128_rshift(a.w, 1);
 
@@ -217,7 +217,7 @@ static void ec_gen_table_4(const ecpt &a, const ecpt &b, bool pz1, const ecpt &c
 static CAT_INLINE u32 ec_recode_scalars_4(ufp &a, ufp &b, ufp &c, ufp &d, const int len) {
 	u32 lsb = ((u32)u128_low(a.w) & 1) ^ 1;
 
-	u128_sub(a.w, lsb);
+	u128_sub(a.w, (u64)lsb);
 
 	u128_rshift(a.w, 1);
 

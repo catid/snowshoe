@@ -328,6 +328,8 @@ static bool ec_gen_table_2_test() {
 	return true;
 }
 
+#define VERBOSE_RECODE_TEST
+
 static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 	ufp a1, b1;
 
@@ -355,14 +357,14 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 		u128_lshift(a2.w, 1);
 
 		if (u) {
-			u128_add(a2.w, 1);
+			u128_add(a2.w, (u64)1);
 #ifdef VERBOSE_RECODE_TEST
 			cout << ii << " + 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 #endif
 		} else {
 			// WARNING: This works around a bug in clang where a2.w-- would cause
 			// the wrong result (!)
-			u128_sub(a2.w, 1);
+			u128_sub(a2.w, (u64)1);
 #ifdef VERBOSE_RECODE_TEST
 			cout << ii << " - 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 #endif
@@ -372,18 +374,18 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 
 		if (v) {
 			if (u) {
-				u128_add(b2.w, 1);
+				u128_add(b2.w, (u64)1);
 			} else {
 				// WARNING: This works around a bug in clang 3.0 where a2.w-- would produce
 				// the wrong result (!).  This seems to be fixed in clang 3.3 in Apple LLVM
 				// version 5.0
-				u128_sub(b2.w, 1);
+				u128_sub(b2.w, (u64)1);
 			}
 		}
 	}
 
 	if (lsb == 1) {
-		u128_add(a2.w, 1);
+		u128_add(a2.w, (u64)1);
 	}
 
 #ifdef VERBOSE_RECODE_TEST
