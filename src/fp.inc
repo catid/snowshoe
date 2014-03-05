@@ -284,13 +284,6 @@ static CAT_INLINE void fp_neg_mask(const u64 mask, const ufp p, ufp &r) {
 	fp_sub_reduce(r);
 }
 
-// r = a + (u32)k
-static CAT_INLINE void fp_add_smallk(const ufp a, const u32 k, ufp &r) {
-	// Uses 1a 1r
-	r.w = u128_sum(a.w, (u64)k);
-	fp_add_reduce(r);
-}
-
 /*
  * Reduction from p to 0 is slightly sped up by negating twice.
  *
@@ -311,24 +304,38 @@ static CAT_INLINE void fp_complete_reduce(ufp &r) {
 }
 
 // r = a + b
-static CAT_INLINE void fp_add(const ufp a, const ufp b, ufp &r) {
+static CAT_INLINE void fp_add(const ufp &a, const ufp &b, ufp &r) {
 	// Uses 1a 1r
 	r.w = u128_sum(a.w, b.w);
 	fp_add_reduce(r);
 }
 
 // r = a - b
-static CAT_INLINE void fp_sub(const ufp a, const ufp b, ufp &r) {
+static CAT_INLINE void fp_sub(const ufp &a, const ufp &b, ufp &r) {
 	// Uses 1a 1r
 	r.w = u128_diff(a.w, b.w);
 	fp_sub_reduce(r);
 }
 
+// r = a + (u32)k
+static CAT_INLINE void fp_add_smallk(const ufp &a, const u32 k, ufp &r) {
+	// Uses 1a 1r
+#ifdef CAT_HAS_U128
+	r.w = a.w + k;
+#else
+	r.w = u128_sum(a.w, (u64)k);
+#endif
+	fp_add_reduce(r);
+}
 
 // r = a - (u32)k
-static CAT_INLINE void fp_sub_smallk(const ufp a, const u32 k, ufp &r) {
+static CAT_INLINE void fp_sub_smallk(const ufp &a, const u32 k, ufp &r) {
 	// Uses 1a 1r
+#ifdef CAT_HAS_U128
+	r.w = a.w - k;
+#else
 	r.w = u128_diff(a.w, (u64)k);
+#endif
 	fp_sub_reduce(r);
 }
 
