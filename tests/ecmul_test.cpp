@@ -328,7 +328,7 @@ static bool ec_gen_table_2_test() {
 	return true;
 }
 
-#define VERBOSE_RECODE_TEST
+//#define VERBOSE_RECODE_TEST
 
 static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 	ufp a1, b1;

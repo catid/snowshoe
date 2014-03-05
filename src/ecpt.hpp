@@ -50,7 +50,7 @@ struct ecpt_z1 {
  * Therefore, I only turn on vector extensions when in Clang.
  */
 
-#ifdef CAT_VECTOR_EXT_CLANG
+#if defined(CAT_VECTOR_EXT_CLANG) && defined(CAT_WORD_64)
 
 # define CAT_SNOWSHOE_VECTOR_OPT /* This flag is used by the rest of the code */
 
