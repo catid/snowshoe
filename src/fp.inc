@@ -393,7 +393,6 @@ static CAT_INLINE void fp_mul(const ufp a, const ufp b, ufp &r) {
 	//       = 2^126 - 2^64 + 1
 	// Product is completely reduced
 	ufp high;
-	high.w = u128_prod(u128_high(a.w), u128_high(b.w));
 
 	// Incorporate the high half of middle product into the
 	// high product, so that it can be neglected:
@@ -402,7 +401,8 @@ static CAT_INLINE void fp_mul(const ufp a, const ufp b, ufp &r) {
 	// high <= 2^126 - 2^64 + 1 + (2^64 - 2)
 	//       = 2^126 - 1
 	// Sum is completely reduced
-	u128_add(high.w, u128_high(middle));
+
+	high.w = u128_prod_63_sum(u128_high(a.w), u128_high(b.w), u128_high(middle));
 
 	/*
 	 * The situation is now:
@@ -451,17 +451,19 @@ static CAT_INLINE void fp_mul_smallk(const ufp a, const u32 b, ufp &r) {
 	// Eliminate multiplications by high part of b, which are 0 in this
 	// special case:
 
-	u128 middle = u128_prod(u128_high(a.w), b);
-	// middle <= (2^63-1)(2^32-1)
-	//         = 2^95 - 2^63 - 2^32 + 1
-
 	u128 low = u128_prod(u128_low(a.w), b);
 	// low <= (2^64-1)(2^32-1)
 	//      = 2^96 - 2^64 - 2^32 + 1
 
-	u128_add(middle, u128_high(low));
+	// middle = (high half of a) * b
+	// middle <= (2^63-1)(2^32-1)
+	//         = 2^95 - 2^63 - 2^32 + 1
+
+	// middle += (high half of low)
 	// middle <= 2^95 - 2^63 - 2^32 + 1 - (2^32) - (1)
 	//         = 2^95 - 2^63 - 2^33
+
+	u128 middle = u128_prod_63_sum(u128_high(a.w), b, u128_high(low));
 
 	// Only calculate a 64-bit sum for high in this special case:
 
@@ -494,7 +496,7 @@ static CAT_INLINE void fp_sqr(const ufp a, ufp &r) {
 	u128_add(middle, u128_high(low));
 
 	ufp high;
-	high.w = u128_prod_sum(y, y, u128_high(middle));
+	high.w = u128_prod_63_sum(y, y, u128_high(middle));
 
 	u128_lshift(high.w, 1);
 	u128_or(high.w, u128_low(middle) >> 63);
