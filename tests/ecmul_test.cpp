@@ -345,45 +345,45 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 
 	// Follow the recoded bits to reconstruct the original scalars
 	ufp a2, b2;
-	a2.w = 0;
-	b2.w = 0;
+	u128_set(a2.w, 0);
+	u128_set(b2.w, 0);
 
 	for (int ii = 127; ii >=0; ii--) {
-		u32 u = (a1.w >> ii) & 1;
-		u32 v = (b1.w >> ii) & 1;
+		u32 u = u128_get_bits(a1.w, ii) & 1;
+		u32 v = u128_get_bits(b1.w, ii) & 1;
 
-		a2.w <<= 1;
+		u128_lshift(a2.w, 1);
 
 		if (u) {
-			a2.w = a2.w + 1;
+			u128_add(a2.w, 1);
 #ifdef VERBOSE_RECODE_TEST
 			cout << ii << " + 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 #endif
 		} else {
 			// WARNING: This works around a bug in clang where a2.w-- would cause
 			// the wrong result (!)
-			a2.w = a2.w - 1;
+			u128_sub(a2.w, 1);
 #ifdef VERBOSE_RECODE_TEST
 			cout << ii << " - 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 #endif
 		}
 
-		b2.w <<= 1;
+		u128_lshift(b2.w, 1);
 
 		if (v) {
 			if (u) {
-				b2.w = b2.w + 1;
+				u128_add(b2.w, 1);
 			} else {
 				// WARNING: This works around a bug in clang 3.0 where a2.w-- would produce
 				// the wrong result (!).  This seems to be fixed in clang 3.3 in Apple LLVM
 				// version 5.0
-				b2.w = b2.w - 1;
+				u128_sub(b2.w, 1);
 			}
 		}
 	}
 
 	if (lsb == 1) {
-		a2.w++;
+		u128_add(a2.w, 1);
 	}
 
 #ifdef VERBOSE_RECODE_TEST
@@ -391,12 +391,12 @@ static bool ec_recode_scalars_2_test(ufp a, ufp b) {
 	cout << "a2 = 0x" << hex << a2.i[0] << "ULL, 0x" << a2.i[1] << "ULL" << endl;
 #endif
 
-	if (a.w != a2.w) {
+	if (!fp_isequal_vartime(a, a2)) {
 		cout << "Recoding a failed" << endl;
 		return false;
 	}
 
-	if (b.w != b2.w) {
+	if (!fp_isequal_vartime(b, b2)) {
 		cout << "Recoding b failed" << endl;
 		return false;
 	}
@@ -424,6 +424,7 @@ static CAT_INLINE bool ec_isequal(const ecpt &a, const ecpt &b) {
 static bool ec_table_select_2_test_try(ecpt *table, u32 a, u32 b, int expected) {
 	ufp a1, b1;
 	ecpt r;
+
 	a1.i[0] = a;
 	b1.i[0] = b;
 
