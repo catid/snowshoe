@@ -595,8 +595,8 @@ static bool ec_neg_test(const ecpt &P) {
 
 static bool ec_gen_mask_test(const ecpt &P) {
 	int x, y;
-	u128 mask;
-	const u128 N = (s128)(-1);
+	u64 mask;
+	static const u64 N = ~(u64)0;
 
 	x = 0;
 	y = 0;
@@ -667,7 +667,7 @@ static bool ec_set_mask_test() {
 
 	ec_zero(p);
 
-	u128 mask;
+	u64 mask;
   
 	ecpt z;
 	ec_zero(z);
@@ -705,7 +705,7 @@ static bool ec_neg_mask_test(const ecpt &P) {
 	ec_set(P, p);
 	ec_neg(p, n);
 
-	u128 mask;
+	u64 mask;
   
 	mask = ec_gen_mask(1, 3);
 	ec_neg_mask(mask, p, p);
@@ -801,7 +801,6 @@ static bool ec_cond_add_test(const ecpt &P) {
 }
 
 static bool ec_elligator_test() {
-	ufe x;
 	ecpt_affine r;
 
 	for (int ii = 0; ii < 1000000; ++ii) {
