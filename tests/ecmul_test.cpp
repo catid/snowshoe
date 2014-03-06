@@ -603,7 +603,7 @@ bool ec_mul_gen_test() {
 }
 
 bool ec_mul_test(const ecpt_affine &BP) {
-	u64 k[4] = {0};
+	u64 k[4];
 	ecpt_affine R1, R2;
 	u8 a1[64], a2[64];
 
@@ -858,7 +858,7 @@ static bool ec_elligator_test() {
 	double wall = 0;
 
 	for (int ii = 0; ii < 10000; ++ii) {
-		char n[32];
+		char n[32] = {0};
 		random_k((u64*)n);
 
 		double s0 = m_clock.usec();
@@ -943,7 +943,7 @@ int main() {
 
 	assert(ec_table_select_2_test());
 
-	u64 bk1[4], bk2[4];
+	u64 bk1[4] = {0}, bk2[4] = {0};
 	ecpt_affine bp1, bp2;
 	random_k(bk1);
 	random_k(bk2);
